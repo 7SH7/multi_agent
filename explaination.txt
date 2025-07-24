@@ -1,0 +1,104 @@
+🚨 완전히 빠진 파일들
+❌ 누락된 핵심 파일들:
+core/session_manager.py - FastAPI에서 사용하지만 구현 안됨
+config/settings.py - 환경설정 필요
+models/data_models.py - 언급은 있지만 내용 없음
+requirements.txt - 의존성 패키지 목록
+🆕 새로 구현해야 할 파일들:
+config/issue_database.py - ASBP 이슈 데이터
+config/rag_config.py - RAG 설정
+agents/rag_classifier.py - RAG 기반 분류기
+agents/gpt_agent.py - GPT 전문가
+agents/gemini_agent.py - Gemini 전문가
+agents/clova_agent.py - CLOVA 전문가
+agents/debate_moderator.py - Claude 토론 진행자
+core/dynamic_branch.py - 동적 Agent 선택기
+core/enhanced_workflow.py - 새 워크플로우
+
+
+----
+
+<최근 ver>
+multi_agent_chatbot/
+├── 📁 config/                              # 설정 파일들
+│   ├── __init__.py
+│   ├── equipment_thresholds.py             # EDA 팀 박스분석 기준값 ✅
+│   ├── issue_database.py                   # ASBP- 이슈 코드 DB 🆕
+│   └── settings.py                         # 환경설정 (Redis, API키 등) 🆕
+│
+├── 📁 models/                              # 데이터 모델
+│   ├── __init__.py
+│   ├── agent_state.py                      # LangGraph 상태 정의 ✅
+│   └── response_models.py                  # API 응답 모델 🆕
+│
+├── 📁 agents/                              # Agent 구현체들
+│   ├── __init__.py
+│   ├── rag_classifier.py                   # RAG 분류 및 검색 🆕
+│   ├── gpt_agent.py                        # GPT 전문가 Agent 🆕
+│   ├── gemini_agent.py                     # Gemini 전문가 Agent 🆕
+│   ├── clova_agent.py                      # Clova 전문가 Agent 🆕
+│   └── debate_moderator.py                 # Claude 토론 진행자 🆕
+│
+├── 📁 core/                                # 핵심 로직
+│   ├── __init__.py
+│   ├── dynamic_branch.py                   # 동적 Agent 선택기 🆕
+│   ├── enhanced_workflow.py                # 새로운 LangGraph 워크플로우 🆕
+│   └── session_manager.py                  # 세션별 상태 관리 🆕
+│
+├── 📁 api/                                 # API 레이어
+│   ├── __init__.py
+│   ├── main.py                             # FastAPI 앱 (업그레이드) 🔄
+│   └── dependencies.py                     # 의존성 주입 🆕
+│
+├── 📁 utils/                               # 유틸리티 함수들
+│   ├── __init__.py
+│   ├── llm_clients.py                      # LLM API 클라이언트들 🆕
+│   ├── rag_engines.py                      # Chroma, ES 엔진 🆕
+│   └── validators.py                       # 입력 검증 함수들 🆕
+│
+├── 📁 tests/                               # 테스트 코드
+│   ├── __init__.py
+│   ├── test_agents/                        # Agent별 테스트
+│   │   ├── test_rag_classifier.py
+│   │   ├── test_gpt_agent.py
+│   │   └── test_debate_moderator.py
+│   ├── test_core/                          # 핵심 로직 테스트
+│   │   ├── test_workflow.py
+│   │   └── test_session_manager.py
+│   └── test_api/                           # API 테스트
+│       └── test_main.py
+│
+├── 📁 data/                                # 데이터 파일들
+│   ├── knowledge_base/                     # 지식 베이스
+│   │   ├── equipment_manuals/              # 장비 매뉴얼 (PDF, 텍스트)
+│   │   ├── case_studies/                   # 해결 사례
+│   │   └── safety_guides/                  # 안전 가이드
+│   └── embeddings/                         # 벡터 임베딩 저장소
+│       └── chroma_db/                      # Chroma DB 파일들
+│
+├── 📁 scripts/                             # 스크립트들
+│   ├── setup_database.py                   # DB 초기 설정 🆕
+│   ├── load_knowledge_base.py              # 지식베이스 로딩 🆕
+│   └── migrate_old_data.py                 # 기존 데이터 마이그레이션 🆕
+│
+├── 📁 logs/                                # 로그 파일들
+│   ├── app.log
+│   ├── agent_responses/                    # Agent 응답 로그
+│   └── session_logs/                       # 세션별 로그
+│
+├── 📁 docs/                                # 문서화
+│   ├── api_docs.md                         # API 문서
+│   ├── agent_specs.md                      # Agent 명세
+│   └── deployment_guide.md                 # 배포 가이드
+│
+├── .env                                    # 환경 변수 🆕
+├── .env.example                            # 환경 변수 예시 🆕
+├── .gitignore                              # Git 무시 파일
+├── requirements.txt                        # Python 패키지 의존성 🆕
+├── docker-compose.yml                      # Docker 구성 🆕
+├── Dockerfile                              # Docker 이미지 🆕
+└── README.md                               # 프로젝트 설명
+
+
+지금까지 설치한 pip 내역들 저장하기
+pip freeze > requirements.txt

@@ -1,0 +1,61 @@
+rules:
+  - id: core-architecture-guideline
+    description: >
+      All code must follow the system architecture of the multi_agent_chatbot project,
+      including modular directory structure, Redis session key usage, and LangGraph workflow.
+    scope: all
+    enforcement: soft
+    message: >
+      Code should align with the defined structure: FastAPI + LangGraph + Redis + MySQL/PostgreSQL,
+      and follow the modular layout (agents/, core/, api/).
+
+  - id: agent-persona-consistency
+    description: >
+      Each agent must behave in accordance with its assigned persona and role.
+    scope: agents/
+    enforcement: strict
+    message: >
+      gpt_agent must prioritize safety and logic.
+      gemini_agent must focus on technical accuracy and data-driven insight.
+      clova_agent must offer practical, field-efficient advice.
+      debate_moderator (Claude) must synthesize conflicting views through structured debate.
+
+  - id: dynamic-routing-enforcement
+    description: >
+      DynamicBranch must selectively activate only the necessary agents based on classified issue type.
+    scope: core/dynamic_branch.py
+    enforcement: soft
+    message: >
+      Avoid hardcoding agent calls. Use category-based selection logic to optimize agent routing.
+
+  - id: debate-process-required
+    description: >
+      Final answers must go through the DebateModerator for synthesis unless explicitly bypassed with justification.
+    scope: core/debate_moderator.py
+    enforcement: strict
+    message: >
+      Skipping the debate step breaks robust decision-making. Only bypass with architectural rationale.
+
+  - id: redis-structure-integrity
+    description: >
+      Redis keys and data structure must follow the defined session format and agent response schema.
+    scope: core/session_manager.py
+    enforcement: strict
+    message: >
+      Use chatbot_session:{session_id} hash with keys like agent_responses, rag_context, final_recommendation.
+
+  - id: rag-accuracy-enforcement
+    description: >
+      All answers must be grounded in RAG (ChromaDB + Elasticsearch) before generation.
+    scope: core/rag_classifier.py
+    enforcement: soft
+    message: >
+      Ensure that RAG search precedes agent generation to reduce hallucinations and maintain factual grounding.
+
+  - id: korean-response-policy
+    description: >
+      All responses, comments, and output from agents or assistants must be written in Korean unless explicitly stated otherwise.
+    scope: all
+    enforcement: strict
+    message: >
+      모든 코드 설명, 코멘트, 출력 메시지는 한국어로 작성되어야 합니다. (단, 요청이 있는 경우 예외 허용)

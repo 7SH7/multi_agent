@@ -1,0 +1,44 @@
+{
+  "safety_guidelines": {
+    "general_rules": [
+      {
+        "rule_id": "SAFE_001",
+        "title": "개인보호구 착용",
+        "description": "모든 작업 시 적절한 개인보호구를 착용해야 합니다",
+        "requirements": [
+          "안전모: 머리 부상 방지",
+          "안전화: 발가락 보호 및 미끄럼 방지",
+          "보안경: 눈 보호",
+          "안전장갑: 손 보호 (단, 회전 장비 근처에서는 금지)"
+        ],
+        "mandatory": true,
+        "penalty": "작업 중단 및 안전교육 이수"
+      }
+    ],
+    "equipment_specific": {
+      "press": [
+        {
+          "safety_id": "PRESS_SAFE_001",
+          "title": "압력 시스템 작업 안전",
+          "precautions": [
+            "작업 전 반드시 압력 완전 배출",
+            "압력 배출 확인 후 작업 시작",
+            "고압 호스 연결 상태 점검",
+            "안전 차단 장치 정상 작동 확인"
+          ],
+          "emergency_procedures": [
+            "압력 이상 시 즉시 비상정지 버튼 작동",
+            "대피 경로 확보 및 현장 대피",
+            "안전관리자 및 응급실 연락"
+          ]
+        }
+      ]
+    },
+    "emergency_contacts": {
+      "fire_department": "119",
+      "safety_manager": "010-1234-5678",
+      "maintenance_team": "010-2345-6789",
+      "medical_emergency": "119"
+    }
+  }
+}
