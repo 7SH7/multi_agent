@@ -1,6 +1,5 @@
 import asyncio
 import chromadb
-from chromadb.config import Settings
 from elasticsearch import AsyncElasticsearch
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
@@ -18,10 +17,8 @@ class RAGResult:
 
 class ChromaEngine:
     def __init__(self):
-        self.client = chromadb.Client(Settings(
-            chroma_db_impl="duckdb+parquet",
-            persist_directory="data/embeddings/chromadb"
-        ))
+        # 새로운 ChromaDB 클라이언트 방식
+        self.client = chromadb.PersistentClient(path="data/embeddings/chromadb")
         self.collection_name = "manufacturing_knowledge"
         self.collection = None
         self._initialize_collection()
@@ -91,15 +88,38 @@ class ElasticsearchEngine:
             'host': 'localhost',
             'port': 9200,
             'scheme': 'http'
-        }])
+        }], 
+        retry_on_timeout=True,
+        max_retries=10)
         self.index_name = "manufacturing_docs"
         self._initialize_index()
 
     def _initialize_index(self):
         asyncio.create_task(self._create_index_if_not_exists())
 
+    async def _wait_for_elasticsearch(self, max_retries=30, delay=2):
+        """Elasticsearch 서버가 준비될 때까지 기다림"""
+        for attempt in range(max_retries):
+            try:
+                await self.client.cluster.health(wait_for_status='yellow', timeout='5s')
+                print(f"Elasticsearch 연결 성공 (시도 {attempt + 1})")
+                return True
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    print(f"Elasticsearch 연결 시도 {attempt + 1} 실패, {delay}초 후 재시도...")
+                    await asyncio.sleep(delay)
+                else:
+                    print(f"Elasticsearch 연결 최종 실패: {e}")
+                    return False
+        return False
+
     async def _create_index_if_not_exists(self):
         try:
+            # Elasticsearch가 준비될 때까지 기다림
+            if not await self._wait_for_elasticsearch():
+                print("Elasticsearch 서버에 연결할 수 없어 인덱스 생성을 건너뜁니다.")
+                return
+                
             exists = await self.client.indices.exists(index=self.index_name)
             if not exists:
                 mapping = {

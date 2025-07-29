@@ -12,6 +12,12 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from config.settings import DATABASE_URL, settings
+from models.database_models import (
+    ChatbotSession, ChatMessage, ChatbotIssue,
+    PressDefectDetectionLog, PressFaultDetectionLog,
+    WeldingMachineDefectDetectionLog, PaintingSurfaceDefectDetectionLog,
+    PaintingProcessEquipmentDefectDetectionLog, VehicleAssemblyProcessDefectDetectionLog
+)
 
 
 class DatabaseSetup:
@@ -278,7 +284,7 @@ class DatabaseSetup:
                 'table': 'WeldingMachineDefectDetectionLog',
                 'data': (
                 'weld_001', 2, datetime.now(), 1.2, 1.5, 1.8, 2.1, 2.4, 2.7, 3.0, 3.3, 3.6, 3.9, 4.2, 4.5, 4.8, 5.1,
-                5.4, 5.7, 6.0, 6.3, 6.6, 6.9, 7.2, 7.5, 7.8, 8.1, 8.4, 'WELD-DEFECT-001', False)
+                5.4, 5.7, 6.0, 6.3, 6.6, 6.9, 7.2, 7.5, 7.8, 8.1, 8.4, 8.7, 'WELD-DEFECT-001', False)
             }
         ]
 
@@ -301,6 +307,153 @@ class DatabaseSetup:
                 print(f"✅ Sample data inserted into '{log_data['table']}'")
             except Exception as e:
                 print(f"❌ Error inserting sample data: {e}")
+
+    async def validate_schema(self) -> Dict[str, Any]:
+        """데이터베이스 스키마 검증"""
+        validation_results = {
+            'tables_exist': {},
+            'columns_match': {},
+            'indexes_exist': {},
+            'foreign_keys_exist': {},
+            'overall_status': True,
+            'errors': []
+        }
+        
+        # 예상 테이블 목록
+        expected_tables = [
+            'ChatbotSession', 'ChatMessage', 'ChatbotIssue',
+            'PressDefectDetectionLog', 'PressFaultDetectionLog',
+            'WeldingMachineDefectDetectionLog', 'PaintingSurfaceDefectDetectionLog',
+            'PaintingProcessEquipmentDefectDetectionLog', 'VehicleAssemblyProcessDefectDetectionLog'
+        ]
+        
+        async with self.connection.cursor() as cursor:
+            try:
+                # 1. 테이블 존재 확인
+                await cursor.execute("SHOW TABLES")
+                existing_tables = [row[0] for row in await cursor.fetchall()]
+                
+                for table in expected_tables:
+                    exists = table in existing_tables
+                    validation_results['tables_exist'][table] = exists
+                    if not exists:
+                        validation_results['errors'].append(f"테이블 '{table}' 누락")
+                        validation_results['overall_status'] = False
+                
+                # 2. 각 테이블의 컬럼 구조 검증
+                table_columns = {
+                    'ChatbotSession': ['chatbotSessionId', 'startedAt', 'endedAt', 'isReported', 'issue', 'isTerminated', 'userId'],
+                    'ChatMessage': ['chatMessageId', 'chatMessage', 'chatbotSessionId', 'sender', 'sentAt'],
+                    'ChatbotIssue': ['issue', 'processType', 'modeType', 'modeLogId'],
+                    'PressDefectDetectionLog': ['id', 'machineId', 'timeStamp', 'machineName', 'itemNo', 'pressTime', 'pressure1', 'pressure2', 'pressure3', 'detectCluster', 'detectType', 'issue', 'isSolved'],
+                }
+                
+                for table_name, expected_columns in table_columns.items():
+                    if table_name in existing_tables:
+                        await cursor.execute(f"DESCRIBE {table_name}")
+                        actual_columns = [row[0] for row in await cursor.fetchall()]
+                        
+                        missing_columns = set(expected_columns) - set(actual_columns)
+                        validation_results['columns_match'][table_name] = {
+                            'missing': list(missing_columns),
+                            'status': len(missing_columns) == 0
+                        }
+                        
+                        if missing_columns:
+                            validation_results['errors'].append(f"테이블 '{table_name}'에서 컬럼 누락: {', '.join(missing_columns)}")
+                            validation_results['overall_status'] = False
+                
+                # 3. 중요 인덱스 존재 확인
+                critical_indexes = {
+                    'ChatbotSession': ['idx_userId', 'idx_startedAt'],
+                    'ChatMessage': ['idx_sessionId', 'idx_sentAt'],
+                    'ChatbotIssue': ['idx_processType', 'idx_modeType']
+                }
+                
+                for table_name, expected_indexes in critical_indexes.items():
+                    if table_name in existing_tables:
+                        await cursor.execute(f"SHOW INDEX FROM {table_name}")
+                        actual_indexes = [row[2] for row in await cursor.fetchall() if row[2] != 'PRIMARY']
+                        
+                        missing_indexes = set(expected_indexes) - set(actual_indexes)
+                        validation_results['indexes_exist'][table_name] = {
+                            'missing': list(missing_indexes),
+                            'status': len(missing_indexes) == 0
+                        }
+                        
+                        if missing_indexes:
+                            validation_results['errors'].append(f"테이블 '{table_name}'에서 인덱스 누락: {', '.join(missing_indexes)}")
+                
+                # 4. 외래 키 제약조건 확인
+                await cursor.execute("""
+                    SELECT TABLE_NAME, COLUMN_NAME, CONSTRAINT_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME
+                    FROM information_schema.KEY_COLUMN_USAGE 
+                    WHERE REFERENCED_TABLE_SCHEMA = DATABASE() AND REFERENCED_TABLE_NAME IS NOT NULL
+                """)
+                foreign_keys = await cursor.fetchall()
+                
+                expected_fks = [
+                    ('ChatMessage', 'chatbotSessionId', 'ChatbotSession', 'chatbotSessionId')
+                ]
+                
+                existing_fks = [(fk[0], fk[1], fk[3], fk[4]) for fk in foreign_keys]
+                missing_fks = [fk for fk in expected_fks if fk not in existing_fks]
+                
+                validation_results['foreign_keys_exist'] = {
+                    'missing': missing_fks,
+                    'status': len(missing_fks) == 0
+                }
+                
+                if missing_fks:
+                    for fk in missing_fks:
+                        validation_results['errors'].append(f"외래 키 누락: {fk[0]}.{fk[1]} -> {fk[2]}.{fk[3]}")
+                        validation_results['overall_status'] = False
+
+            except Exception as e:
+                validation_results['errors'].append(f"스키마 검증 중 오류: {str(e)}")
+                validation_results['overall_status'] = False
+        
+        return validation_results
+    
+    async def repair_schema(self, validation_results: Dict[str, Any]) -> bool:
+        """스키마 문제 자동 복구"""
+        print("🔧 스키마 복구 시작...")
+        
+        try:
+            # 누락된 테이블 생성
+            for table_name, exists in validation_results['tables_exist'].items():
+                if not exists:
+                    print(f"📋 테이블 '{table_name}' 생성 중...")
+                    await self.create_tables()  # 모든 테이블 다시 생성
+                    break
+            
+            # 누락된 인덱스 생성
+            async with self.connection.cursor() as cursor:
+                index_sql = {
+                    ('ChatbotSession', 'idx_userId'): "CREATE INDEX idx_userId ON ChatbotSession(userId)",
+                    ('ChatbotSession', 'idx_startedAt'): "CREATE INDEX idx_startedAt ON ChatbotSession(startedAt)",
+                    ('ChatMessage', 'idx_sessionId'): "CREATE INDEX idx_sessionId ON ChatMessage(chatbotSessionId)",
+                    ('ChatMessage', 'idx_sentAt'): "CREATE INDEX idx_sentAt ON ChatMessage(sentAt)",
+                    ('ChatbotIssue', 'idx_processType'): "CREATE INDEX idx_processType ON ChatbotIssue(processType)",
+                    ('ChatbotIssue', 'idx_modeType'): "CREATE INDEX idx_modeType ON ChatbotIssue(modeType)"
+                }
+                
+                for table_name, index_info in validation_results['indexes_exist'].items():
+                    for missing_index in index_info['missing']:
+                        sql_key = (table_name, missing_index)
+                        if sql_key in index_sql:
+                            try:
+                                await cursor.execute(index_sql[sql_key])
+                                print(f"✅ 인덱스 '{missing_index}' 생성됨")
+                            except Exception as e:
+                                print(f"❌ 인덱스 '{missing_index}' 생성 실패: {e}")
+            
+            print("✅ 스키마 복구 완료")
+            return True
+            
+        except Exception as e:
+            print(f"❌ 스키마 복구 실패: {e}")
+            return False
 
     async def close(self):
         """Close database connection"""
@@ -330,8 +483,111 @@ async def insert_initial_data():
         await db_setup.close()
 
 
+async def validate_database_schema():
+    """데이터베이스 스키마 검증"""
+    print("🔍 데이터베이스 스키마 검증 시작...")
+    
+    db_setup = DatabaseSetup()
+    try:
+        await db_setup.connect()
+        validation_results = await db_setup.validate_schema()
+        
+        print("\n📋 검증 결과:")
+        print("=" * 50)
+        
+        # 테이블 존재 확인 결과
+        print("📂 테이블 존재 확인:")
+        for table, exists in validation_results['tables_exist'].items():
+            status = "✅" if exists else "❌"
+            print(f"   {status} {table}")
+        
+        # 컬럼 일치 확인 결과
+        if validation_results['columns_match']:
+            print("\n🏗️  컬럼 구조 확인:")
+            for table, info in validation_results['columns_match'].items():
+                status = "✅" if info['status'] else "❌"
+                print(f"   {status} {table}")
+                if info['missing']:
+                    print(f"      누락된 컬럼: {', '.join(info['missing'])}")
+        
+        # 인덱스 존재 확인 결과
+        if validation_results['indexes_exist']:
+            print("\n🔍 인덱스 확인:")
+            for table, info in validation_results['indexes_exist'].items():
+                status = "✅" if info['status'] else "❌"
+                print(f"   {status} {table}")
+                if info['missing']:
+                    print(f"      누락된 인덱스: {', '.join(info['missing'])}")
+        
+        # 외래 키 확인 결과
+        fk_status = "✅" if validation_results['foreign_keys_exist']['status'] else "❌"
+        print(f"\n🔗 외래 키: {fk_status}")
+        if validation_results['foreign_keys_exist']['missing']:
+            for fk in validation_results['foreign_keys_exist']['missing']:
+                print(f"   누락: {fk[0]}.{fk[1]} -> {fk[2]}.{fk[3]}")
+        
+        # 전체 상태
+        overall_status = "✅ 정상" if validation_results['overall_status'] else "❌ 문제 발견"
+        print(f"\n🎯 전체 상태: {overall_status}")
+        
+        # 오류 목록
+        if validation_results['errors']:
+            print("\n⚠️  발견된 문제:")
+            for error in validation_results['errors']:
+                print(f"   • {error}")
+        
+        return validation_results
+        
+    except Exception as e:
+        print(f"❌ 스키마 검증 실패: {e}")
+        raise
+    finally:
+        await db_setup.close()
+
+async def setup_database_with_validation():
+    """검증과 함께 데이터베이스 설정"""
+    print("🚀 완전한 데이터베이스 설정 시작...")
+
+    db_setup = DatabaseSetup()
+    try:
+        await db_setup.connect()
+        await db_setup.create_tables()
+        await db_setup.insert_initial_data()
+        
+        # 스키마 검증 실행
+        print("\n🔍 스키마 검증 중...")
+        validation_results = await db_setup.validate_schema()
+        
+        if not validation_results['overall_status']:
+            print("⚠️  스키마 문제 발견, 자동 복구 시도 중...")
+            repair_success = await db_setup.repair_schema(validation_results)
+            
+            if repair_success:
+                # 복구 후 재검증
+                print("🔄 복구 후 재검증 중...")
+                validation_results = await db_setup.validate_schema()
+        
+        if validation_results['overall_status']:
+            print("🎉 데이터베이스 설정 및 검증 완료!")
+        else:
+            print("⚠️  일부 문제가 남아있습니다. 수동 확인이 필요합니다.")
+            for error in validation_results['errors']:
+                print(f"   • {error}")
+
+        # 최종 확인
+        async with db_setup.connection.cursor() as cursor:
+            await cursor.execute("SHOW TABLES")
+            tables = await cursor.fetchall()
+            print(f"📊 최종 테이블 수: {len(tables)}")
+
+    except Exception as e:
+        print(f"❌ 데이터베이스 설정 실패: {e}")
+        raise
+    finally:
+        await db_setup.close()
+
 async def setup_database():
-    """Complete database setup"""
+    """Complete database setup (기존 호환성 유지)"""
     print("🚀 Starting database setup...")
 
     db_setup = DatabaseSetup()
@@ -355,4 +611,19 @@ async def setup_database():
 
 
 if __name__ == "__main__":
-    asyncio.run(setup_database())
+    import argparse
+    
+    parser = argparse.ArgumentParser(description="Smart Factory 데이터베이스 관리")
+    parser.add_argument('--validate', action='store_true', help='스키마 검증만 실행')
+    parser.add_argument('--setup', action='store_true', help='데이터베이스 설정 (기본값)')
+    parser.add_argument('--setup-with-validation', action='store_true', help='검증과 함께 데이터베이스 설정')
+    
+    args = parser.parse_args()
+    
+    if args.validate:
+        asyncio.run(validate_database_schema())
+    elif args.setup_with_validation:
+        asyncio.run(setup_database_with_validation())
+    else:
+        # 기본값: 기존 설정 방식 (하위 호환성)
+        asyncio.run(setup_database())

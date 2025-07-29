@@ -377,4 +377,5 @@ checkpoints/
 docs/build/
 docs/_build/
 
-# End of https://www.toptal.com/developers/gitignore/api/pycharm,python
+.big_proj_venv
+.venv

@@ -25,8 +25,7 @@ class ClovaAgent(BaseAgent):
         super().__init__(config)
 
         # Clova API 설정
-        self.client_id = LLM_CONFIGS["naver"]["client_id"]
-        self.client_secret = LLM_CONFIGS["naver"]["client_secret"]
+        self.api_key = LLM_CONFIGS["naver"]["api_key"]
         self.api_url = "https://clovastudio.stream.ntruss.com/testapp/v1/chat-completions/HCX-003"
 
     async def analyze_and_respond(self, state: AgentState) -> AgentResponse:
@@ -78,8 +77,7 @@ class ClovaAgent(BaseAgent):
         """Clova API 호출"""
 
         headers = {
-            "X-NCP-CLOVASTUDIO-API-KEY": self.client_id,
-            "X-NCP-APIGW-API-KEY": self.client_secret,
+            "X-NCP-APIGW-TEST-API-KEY": self.api_key,
             "Content-Type": "application/json"
         }
 

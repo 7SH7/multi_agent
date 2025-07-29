@@ -1,0 +1,260 @@
+services:
+  # ===========================================
+  # 메인 애플리케이션 (Multi-Agent Chatbot)
+  # ===========================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: multi-agent-chatbot-app
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      chroma:
+        condition: service_started
+    env_file:
+      - .env
+    environment:
+      # Docker 내부 서비스 호스트명으로 오버라이드
+      # Using local MySQL instead of Docker MySQL
+      # - DATABASE_URL=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CHROMA_HOST=chroma
+      - CHROMA_PORT=8000
+      - ELASTICSEARCH_HOST=elasticsearch
+      - ELASTICSEARCH_PORT=9200
+      - PYTHONPATH=/app
+      - ENVIRONMENT=production
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./backups:/app/backups
+      - chatbot_embeddings:/app/data/embeddings
+    networks:
+      - chatbot-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ===========================================
+  # MySQL 데이터베이스 (로컬 MySQL 사용으로 주석처리)
+  # ===========================================
+  # mysql:
+  #   image: mysql:8.0
+  #   container_name: multi-agent-mysql
+  #   ports:
+  #     - "3306:3306"
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+  #     - MYSQL_DATABASE=${MYSQL_DATABASE}
+  #     - MYSQL_USER=${MYSQL_USER}
+  #     - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+  #     - MYSQL_CHARACTER_SET_SERVER=utf8mb4
+  #     - MYSQL_COLLATION_SERVER=utf8mb4_unicode_ci
+  #   volumes:
+  #     - mysql_data:/var/lib/mysql
+  #     - ./scripts/init-mysql.sql:/docker-entrypoint-initdb.d/init.sql:ro
+  #   networks:
+  #     - chatbot-network
+  #   restart: unless-stopped
+  #   command: >
+  #     --default-authentication-plugin=mysql_native_password
+  #     --character-set-server=utf8mb4
+  #     --collation-server=utf8mb4_unicode_ci
+  #     --sql-mode=STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO
+  #   healthcheck:
+  #     test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER}", "-p${MYSQL_PASSWORD}"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 5
+  #     start_period: 60s
+
+  # ===========================================
+  # Redis (세션 관리 및 캐시)
+  # ===========================================
+  redis:
+    image: redis:7-alpine
+    container_name: multi-agent-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      # - ./config/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    networks:
+      - chatbot-network
+    restart: unless-stopped
+    command: redis-server
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ===========================================
+  # Elasticsearch (검색 엔진)
+  # ===========================================
+  elasticsearch:
+    image: elasticsearch:8.11.0
+    container_name: multi-agent-elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - node.name=elasticsearch-node
+      - cluster.name=chatbot-cluster
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+      - ./config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+    networks:
+      - chatbot-network
+    restart: unless-stopped
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health?wait_for_status=green&timeout=1s || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ===========================================
+  # ChromaDB (벡터 데이터베이스)
+  # ===========================================
+  chroma:
+    image: chromadb/chroma:latest
+    container_name: multi-agent-chroma
+    ports:
+      - "8001:8000"
+    environment:
+      - CHROMA_SERVER_HOST=0.0.0.0
+      - CHROMA_SERVER_HTTP_PORT=8000
+      - CHROMA_SERVER_CORS_ALLOW_ORIGINS=["*"]
+      - ANONYMIZED_TELEMETRY=False
+      - ALLOW_RESET=True
+    volumes:
+      - chroma_data:/chroma/chroma
+      - ./data/embeddings:/app/embeddings
+    networks:
+      - chatbot-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ===========================================
+  # 선택사항: Nginx (리버스 프록시)
+  # ===========================================
+  nginx:
+    image: nginx:alpine
+    container_name: multi-agent-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - app
+    networks:
+      - chatbot-network
+    restart: unless-stopped
+    profiles:
+      - production  # docker-compose --profile production up 으로 실행시에만 시작
+
+  # ===========================================
+  # 선택사항: Prometheus (모니터링)
+  # ===========================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: multi-agent-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - chatbot-network
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  # ===========================================
+  # 선택사항: Grafana (대시보드)
+  # ===========================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: multi-agent-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=grafana123
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/datasources:/etc/grafana/provisioning/datasources
+      - ./config/grafana/dashboards:/etc/grafana/provisioning/dashboards
+    depends_on:
+      - prometheus
+    networks:
+      - chatbot-network
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+# ===========================================
+# 네트워크 설정
+# ===========================================
+networks:
+  chatbot-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# ===========================================
+# 볼륨 설정 (데이터 지속성)
+# ===========================================
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+  chroma_data:
+    driver: local
+  chatbot_embeddings:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local

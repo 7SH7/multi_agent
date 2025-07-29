@@ -8,7 +8,7 @@ from pydantic import BaseModel, ValidationError
 
 from models.agent_state import AgentState
 from models.response_models import ChatResponse, SessionInfoResponse, HealthResponse
-from core.enhanced_workflow import create_enhanced_workflow
+from core.enhanced_workflow import get_enhanced_workflow
 from core.session_manager import SessionManager
 from core.monitoring import get_system_monitor
 from api.dependencies import (
@@ -38,18 +38,56 @@ def create_application() -> FastAPI:
         redoc_url="/redoc"
     )
     
-    # Add middleware
+    # CORS 설정 - 보안 강화
+    from config.settings import settings
+    
+    # 환경별 허용 오리진 설정
+    if settings.DEBUG:
+        # 개발 환경 - 로컬 개발 서버 허용
+        allowed_origins = [
+            "http://localhost:3000",  # React 개발 서버
+            "http://localhost:3001",  # 추가 프론트엔드 서버
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:3001",
+            "http://localhost:8080",  # Vue.js 개발 서버
+            "http://127.0.0.1:8080",
+        ]
+        allowed_hosts = ["localhost", "127.0.0.1", "testserver"]
+    else:
+        # 운영 환경 - 실제 도메인만 허용
+        allowed_origins = [
+            "https://smartfactory.company.com",  # 실제 운영 도메인으로 교체
+            "https://app.smartfactory.company.com",  # 앱 서브도메인
+            "https://dashboard.smartfactory.company.com",  # 대시보드 서브도메인
+        ]
+        allowed_hosts = [
+            "smartfactory.company.com",
+            "app.smartfactory.company.com", 
+            "dashboard.smartfactory.company.com",
+            "localhost"  # Docker 내부 통신용
+        ]
+    
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # Configure properly in production
+        allow_origins=allowed_origins,
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],  # 필요한 메서드만 허용
+        allow_headers=[
+            "Accept",
+            "Accept-Language", 
+            "Content-Language",
+            "Content-Type",
+            "Authorization",
+            "X-API-Key",
+            "X-Requested-With",
+        ],  # 필요한 헤더만 허용
+        expose_headers=["X-Process-Time"],  # 응답에서 노출할 헤더
+        max_age=600,  # 프리플라이트 요청 캐시 시간 (초)
     )
     
     app.add_middleware(
         TrustedHostMiddleware, 
-        allowed_hosts=["*"]  # Configure properly in production
+        allowed_hosts=allowed_hosts
     )
     
     # Add routes
@@ -210,6 +248,90 @@ def create_application() -> FastAPI:
             raise HTTPException(status_code=404, detail="세션을 찾을 수 없습니다")
         
         return {"message": "세션이 종료되었습니다", "session_id": session_id}
+    
+    @app.get("/ping")
+    async def ping():
+        """단순 ping - 의존성 없는 헬스체크"""
+        return {"status": "ok", "timestamp": datetime.now().isoformat()}
+    
+    @app.post("/chat/test", response_model=ChatResponse)
+    async def chat_test_endpoint(
+        request: ChatRequest,
+        session_manager: SessionManager = Depends(get_session_manager),
+        workflow_manager = Depends(get_workflow_manager),
+        monitor = Depends(get_monitor_dep)
+    ):
+        """API 키 없이 테스트할 수 있는 챗봇 엔드포인트"""
+        
+        try:
+            # Get or create session
+            if request.session_id:
+                session_data = await session_manager.get_session(request.session_id)
+                if not session_data:
+                    raise HTTPException(status_code=404, detail="세션을 찾을 수 없습니다")
+                session_id = request.session_id
+            else:
+                session_data = await session_manager.create_session(
+                    user_id=request.user_id,
+                    issue_code=request.issue_code
+                )
+                session_id = session_data.session_id
+            
+            # Update conversation count
+            await session_manager.increment_conversation_count(session_id)
+            
+            # Prepare agent state
+            agent_state = AgentState()
+            agent_state.update({
+                'session_id': session_id,
+                'user_message': request.user_message,
+                'issue_code': request.issue_code,
+                'user_id': request.user_id or 'test_user',
+                'conversation_context': session_data.conversation_history,
+                'metadata': {
+                    'request_time': datetime.now().isoformat(),
+                    'is_test': True
+                }
+            })
+            
+            # Execute workflow
+            result = await workflow_manager.execute(agent_state)
+            
+            if not result.success:
+                raise HTTPException(status_code=500, detail=f"워크플로우 실행 실패: {result.error_message}")
+            
+            # Update session with conversation
+            await session_manager.add_conversation(
+                session_id, 
+                request.user_message, 
+                result.final_state.get('final_response', '답변 생성 실패')
+            )
+            
+            # Record metrics
+            monitor.record_histogram("workflow_execution_time", result.execution_time)
+            monitor.increment_counter("successful_conversations")
+            
+            return ChatResponse(
+                response=result.final_state.get('final_response', '답변 생성 실패'),
+                session_id=session_id,
+                confidence_score=result.final_state.get('confidence_score', 0.5),
+                processing_time=result.execution_time,
+                agents_used=result.final_state.get('selected_agents', []),
+                workflow_steps=result.steps_completed,
+                knowledge_sources=result.final_state.get('knowledge_sources', []),
+                metadata={
+                    'workflow_success': result.success,
+                    'session_conversations': session_data.conversation_count + 1,
+                    'test_mode': True
+                }
+            )
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"챗봇 테스트 처리 중 오류 발생: {str(e)}")
+            monitor.increment_counter("failed_conversations")
+            raise HTTPException(status_code=500, detail=f"서버 내부 오류: {str(e)}")
     
     @app.get("/health", response_model=HealthResponse)
     async def health_check(monitor = Depends(get_monitor_dep)):
