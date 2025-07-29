@@ -181,8 +181,7 @@ class RAGClassifier:
             confidence += 0.2
 
         # 키워드 매칭 수에 따른 가중치
-        if hasattr(self, '_last_keyword_matches'):
-            confidence += min(0.1, self._last_keyword_matches * 0.02)
+        
 
         return min(0.95, confidence)
 

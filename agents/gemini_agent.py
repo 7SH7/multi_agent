@@ -2,7 +2,7 @@
 
 import google.generativeai as genai
 from datetime import datetime
-from typing import Dict, Any
+from typing import Dict, Any, List
 from models.agent_state import AgentState
 from agents.base_agent import BaseAgent, AgentConfig, AgentResponse, AgentError
 from config.settings import LLM_CONFIGS

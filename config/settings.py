@@ -10,12 +10,17 @@ class Settings(BaseSettings):
     # API Keys
     OPENAI_API_KEY: str = ""
     GOOGLE_AI_API_KEY: str = ""
-    NAVER_CLIENT_ID: str = ""
-    NAVER_CLIENT_SECRET: str = ""
+    NAVER_API_KEY: str = ""
     ANTHROPIC_API_KEY: str = ""
 
     # Database Configuration
     DATABASE_URL: str = "mysql://chatbot_user:chatbot_password@localhost:3306/chatbot_db"
+    
+    # MySQL 자격증명 (Docker용)
+    MYSQL_ROOT_PASSWORD: str = ""
+    MYSQL_DATABASE: str = "chatbot_db"
+    MYSQL_USER: str = "chatbot_user"
+    MYSQL_PASSWORD: str = ""
 
     # Redis Configuration
     REDIS_HOST: str = "localhost"
@@ -39,6 +44,7 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     SESSION_TIMEOUT_HOURS: int = 24
     MAX_CONVERSATION_COUNT: int = 50
+    MAX_REQUEST_SIZE: int = 10 * 1024 * 1024
 
     # Agent Configuration
     CONFIDENCE_THRESHOLD: float = 0.75
@@ -49,6 +55,10 @@ class Settings(BaseSettings):
     API_HOST: str = "0.0.0.0"
     API_PORT: int = 8000
     API_WORKERS: int = 1
+
+    # Docker/Runtime Configuration
+    PYTHONPATH: str = ""
+    ENVIRONMENT: str = "development"
 
     class Config:
         env_file = ".env"
@@ -84,15 +94,14 @@ LLM_CONFIGS = {
         "temperature": 0.2
     },
     "naver": {
-        "client_id": settings.NAVER_CLIENT_ID,
-        "client_secret": settings.NAVER_CLIENT_SECRET,
+        "api_key": settings.NAVER_API_KEY,
         "model": "HCX-003",
         "max_tokens": 2000,
         "temperature": 0.2
     },
     "anthropic": {
         "api_key": settings.ANTHROPIC_API_KEY,
-        "model": "claude-3-5-sonnet-20241022",
+        "model": "claude-3-5-sonnet-20240620",
         "max_tokens": 2000,
         "temperature": 0.2
     }

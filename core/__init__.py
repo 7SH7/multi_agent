@@ -7,7 +7,7 @@ from .dynamic_branch import (
 )
 
 from .enhanced_workflow import (
-    enhanced_workflow,
+    get_enhanced_workflow,
     create_enhanced_workflow,
     WorkflowState,
     WorkflowResult
@@ -32,7 +32,7 @@ __all__ = [
     'SelectionRule',
 
     # Workflow Management
-    'enhanced_workflow',
+    'get_enhanced_workflow',
     'create_enhanced_workflow',
     'WorkflowState',
     'WorkflowResult',

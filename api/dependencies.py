@@ -4,7 +4,7 @@ from fastapi import HTTPException, Depends, Request, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from core.session_manager import SessionManager
-from core.enhanced_workflow import create_enhanced_workflow
+from core.enhanced_workflow import get_enhanced_workflow
 from core.monitoring import get_system_monitor
 from config.settings import APP_CONFIG, LLM_CONFIGS
 from utils.validators import RequestValidator
@@ -63,11 +63,12 @@ def get_session_manager() -> SessionManager:
 def get_workflow_manager():
     global _workflow_manager
     if _workflow_manager is None:
-        _workflow_manager = create_enhanced_workflow()
+        _workflow_manager = get_enhanced_workflow()
     return _workflow_manager
 
 def get_system_monitor():
-    return get_system_monitor()
+    from core.monitoring import get_system_monitor as get_monitor
+    return get_monitor()
 
 async def validate_request(request: Request) -> Dict[str, Any]:
     """Request validation"""

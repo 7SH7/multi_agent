@@ -2,7 +2,7 @@ from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
 from datetime import datetime
 import asyncio
-from langgraph import StateGraph, END
+from langgraph.graph import StateGraph, END
 from models.agent_state import AgentState
 from agents.rag_classifier import RAGClassifier
 from agents.gpt_agent import GPTAgent
@@ -85,7 +85,7 @@ class EnhancedWorkflowManager:
         return await self.rag_classifier.classify_and_search(state)
 
     async def _execute_agent_selector(self, state: AgentState) -> AgentState:
-        return await self.agent_selector.select_agents_async(state)
+        return self.agent_selector.select_agents(state)
 
     async def _execute_gpt_agent(self, state: AgentState) -> AgentState:
         selected_agents = state.get('selected_agents', [])
@@ -178,5 +178,12 @@ def create_enhanced_workflow() -> EnhancedWorkflowManager:
         _workflow_manager = EnhancedWorkflowManager()
     return _workflow_manager
 
-# For backward compatibility
-enhanced_workflow = create_enhanced_workflow()
+# For backward compatibility - lazy initialization
+enhanced_workflow = None
+
+def get_enhanced_workflow() -> EnhancedWorkflowManager:
+    """지연 초기화로 workflow 반환"""
+    global enhanced_workflow
+    if enhanced_workflow is None:
+        enhanced_workflow = create_enhanced_workflow()
+    return enhanced_workflow

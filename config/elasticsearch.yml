@@ -1,0 +1,105 @@
+# ==========================================
+# Smart Factory Elasticsearch 설정 파일
+# ==========================================
+
+# 클러스터 설정
+cluster.name: smartfactory-cluster
+node.name: smartfactory-node-1
+
+# 네트워크 설정
+network.host: 0.0.0.0
+http.port: 9200
+transport.port: 9300
+
+# 노드 역할 설정
+node.roles: [ master, data, data_content, data_hot, data_warm, data_cold, ingest, ml, remote_cluster_client, transform ]
+
+# 디스커버리 설정 (단일 노드)
+discovery.type: single-node
+
+# 경로 설정
+path.data: /usr/share/elasticsearch/data
+path.logs: /usr/share/elasticsearch/logs
+
+# 메모리 설정
+bootstrap.memory_lock: false
+
+# 보안 설정 (개발환경)
+xpack.security.enabled: false
+xpack.security.enrollment.enabled: false
+xpack.security.http.ssl.enabled: false
+xpack.security.transport.ssl.enabled: false
+
+# 모니터링 설정
+xpack.monitoring.collection.enabled: true
+
+# 라이센스 설정
+xpack.license.self_generated.type: basic
+
+# HTTP 설정
+http.cors.enabled: true
+http.cors.allow-origin: "*"
+http.cors.allow-headers: "X-Requested-With,Content-Type,Content-Length,Authorization"
+
+# 인덱스 설정
+action.auto_create_index: true
+action.destructive_requires_name: false
+
+# 로깅 설정
+logger.org.elasticsearch.deprecation: warn
+
+# JVM 힙 크기 제한 (Docker 환경)
+# -Xms1g -Xmx1g 는 docker-compose.yaml에서 설정
+
+# 스마트 팩토리 전용 설정
+
+# 인덱스 템플릿 자동 생성 허용
+indices.id_field_data.enabled: true
+
+# 검색 성능 최적화
+search.max_buckets: 65536
+indices.query.bool.max_clause_count: 4096
+
+# 인덱스 새로고침 간격 (실시간 검색용)
+index.refresh_interval: 1s
+
+# 샤드 설정 (단일 노드이므로 복제본 없음)
+index.number_of_shards: 1
+index.number_of_replicas: 0
+
+# 인덱스 최적화
+index.max_result_window: 100000
+
+# 필드 매핑 제한
+index.mapping.total_fields.limit: 2000
+index.mapping.depth.limit: 50
+index.mapping.nested_fields.limit: 100
+index.mapping.nested_objects.limit: 10000
+
+# 캐시 설정
+indices.fielddata.cache.size: 40%
+indices.requests.cache.size: 2%
+
+# 스크립트 설정
+script.painless.regex.enabled: true
+script.painless.regex.limit-factor: 6
+
+# 집계 최적화
+search.max_async_search_response_size: 10mb
+
+# 스레드풀 설정
+thread_pool.search.size: 4
+thread_pool.search.queue_size: 1000
+thread_pool.write.size: 4
+thread_pool.write.queue_size: 200
+
+# 느린 쿼리 로그 설정
+index.search.slowlog.threshold.query.warn: 10s
+index.search.slowlog.threshold.query.info: 5s
+index.search.slowlog.threshold.query.debug: 2s
+index.search.slowlog.threshold.query.trace: 500ms
+
+index.search.slowlog.threshold.fetch.warn: 1s
+index.search.slowlog.threshold.fetch.info: 800ms
+index.search.slowlog.threshold.fetch.debug: 500ms
+index.search.slowlog.threshold.fetch.trace: 200ms
