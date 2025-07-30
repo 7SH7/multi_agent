@@ -206,6 +206,34 @@ class SessionManager:
             print(f"Error cleaning up sessions: {e}")
             return 0
 
+    async def increment_conversation_count(self, session_id: str) -> bool:
+        """세션의 대화 카운트 증가"""
+        session_data = await self.get_session(session_id)
+        if not session_data:
+            return False
+        
+        session_data.conversation_count += 1
+        return await self.update_session(session_data)
+
+    async def add_conversation(self, session_id: str, user_message: str, bot_response: str) -> bool:
+        """세션에 대화 기록 추가"""
+        session_data = await self.get_session(session_id)
+        if not session_data:
+            return False
+        
+        # 대화 기록을 metadata에 저장
+        if 'conversation_history' not in session_data.metadata:
+            session_data.metadata['conversation_history'] = []
+        
+        session_data.metadata['conversation_history'].append({
+            'user_message': user_message,
+            'bot_response': bot_response,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+        session_data.conversation_count += 1
+        return await self.update_session(session_data)
+
     async def get_session_stats(self) -> Dict[str, Any]:
         redis_client = await self._get_redis_client()
 

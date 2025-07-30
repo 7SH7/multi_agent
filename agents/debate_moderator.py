@@ -75,9 +75,16 @@ class DebateModerator:
 
         responses_text = ""
         for agent_name, response_data in agent_responses.items():
-            specialty = response_data.get('specialty', '')
-            response = response_data.get('response', '')
-            confidence = response_data.get('confidence', 0)
+            # AgentResponse 객체인 경우 속성으로 접근
+            if hasattr(response_data, 'specialty'):
+                specialty = response_data.specialty
+                response = response_data.response
+                confidence = response_data.confidence
+            else:
+                # dict인 경우 get으로 접근
+                specialty = response_data.get('specialty', '')
+                response = response_data.get('response', '')
+                confidence = response_data.get('confidence', 0)
 
             responses_text += f"\n=== {agent_name} 전문가 ({specialty}) ===\n"
             responses_text += f"신뢰도: {confidence:.2f}\n"
@@ -110,7 +117,7 @@ JSON 형식으로 응답해주세요:
 """
 
         try:
-            response = await self.claude_client.messages.create(
+            response = self.claude_client.messages.create(
                 model=self.model,
                 max_tokens=1200,
                 messages=[{"role": "user", "content": analysis_prompt}],
@@ -153,7 +160,11 @@ JSON 형식으로 응답해주세요:
         for agent in participants:
             agent_data = agent_responses[agent]
             description = self.participant_descriptions.get(agent, f"{agent} 전문가")
-            response = agent_data.get('response', '')[:500]  # 응답 요약
+            # AgentResponse 객체인 경우 속성으로 접근
+            if hasattr(agent_data, 'response'):
+                response = agent_data.response[:500]  # 응답 요약
+            else:
+                response = agent_data.get('response', '')[:500]  # 응답 요약
 
             debate_prompt += f"""
 {description}:
@@ -205,7 +216,7 @@ JSON 형식으로 응답:
 """
 
         try:
-            response = await self.claude_client.messages.create(
+            response = self.claude_client.messages.create(
                 model=self.model,
                 max_tokens=2800,
                 messages=[{"role": "user", "content": debate_prompt}],
@@ -291,7 +302,7 @@ JSON 형식:
 """
 
         try:
-            response = await self.claude_client.messages.create(
+            response = self.claude_client.messages.create(
                 model=self.model,
                 max_tokens=2500,
                 messages=[{"role": "user", "content": synthesis_prompt}],
@@ -323,25 +334,94 @@ JSON 형식:
                 "synthesized_at": datetime.now().isoformat()
             }
 
-    def handle_single_agent_response(self, state: AgentState) -> AgentState:
-        """단일 Agent 응답 처리"""
+    async def handle_single_agent_response(self, state: AgentState) -> AgentState:
+        """단일 Agent 응답 처리 - 더욱 체계적인 구조화"""
         agent_responses = state.get('agent_responses', {})
+        user_question = state.get('user_message', '')
 
         if len(agent_responses) == 1:
             agent_name, response_data = list(agent_responses.items())[0]
+            
+            # AgentResponse 객체인 경우 속성으로 접근
+            if hasattr(response_data, 'response'):
+                agent_response = response_data.response
+                agent_confidence = response_data.confidence
+            else:
+                # dict인 경우 get으로 접근
+                agent_response = response_data.get('response', '')
+                agent_confidence = response_data.get('confidence', 0.7)
+            
+            # Claude를 사용해 단일 응답을 구조화
+            try:
+                structure_prompt = f"""
+다음 {agent_name} 전문가의 응답을 체계적으로 구조화해주세요:
 
-            final_recommendation = {
-                "executive_summary": f"{agent_name} 전문가의 분석 결과를 제시합니다.",
-                "single_agent_response": response_data.get('response', ''),
-                "confidence_level": response_data.get('confidence', 0.7),
-                "note": "단일 전문가 의견이므로 추가 검토를 권장합니다.",
-                "recommended_followup": "다른 전문가 의견도 함께 검토해보시기 바랍니다.",
-                "synthesized_at": datetime.now().isoformat()
-            }
+사용자 질문: {user_question}
+전문가 응답: {agent_response}
+
+다음 JSON 형식으로 구조화해주세요:
+{{
+    "executive_summary": "핵심 해결책 요약 (2-3문장)",
+    "immediate_actions": [
+        {{"step": 1, "action": "즉시 조치사항", "time": "소요시간", "priority": "high/medium/low"}}
+    ],
+    "detailed_solution": [
+        {{"phase": "단계명", "actions": ["세부행동1", "세부행동2"], "estimated_time": "예상시간"}}
+    ],
+    "cost_estimation": {{
+        "parts": "부품비용", 
+        "labor": "인건비", 
+        "total": "총비용"
+    }},
+    "safety_precautions": ["안전수칙1", "안전수칙2"],
+    "prevention_measures": ["예방법1", "예방법2"],
+    "success_indicators": ["성공지표1", "성공지표2"],
+    "alternative_approaches": ["대안1", "대안2"],
+    "expert_consensus": "{agent_name} 전문가의 단독 분석 결과",
+    "confidence_level": {agent_confidence},
+    "recommended_followup": "후속조치 권장사항"
+}}
+"""
+                
+                response = self.claude_client.messages.create(
+                    model=self.model,
+                    max_tokens=2000,
+                    messages=[{"role": "user", "content": structure_prompt}],
+                    temperature=0.3
+                )
+                
+                final_recommendation = json.loads(response.content[0].text)
+                logger.info(f"단일 Agent 응답 구조화 완료: {agent_name}")
+                
+            except Exception as e:
+                logger.error(f"단일 Agent 응답 구조화 실패: {str(e)}")
+                # 폴백: 기본 구조
+                final_recommendation = {
+                    "executive_summary": f"{agent_name} 전문가의 분석 결과를 제시합니다.",
+                    "immediate_actions": [{"step": 1, "action": "전문가 의견 검토", "time": "즉시", "priority": "medium"}],
+                    "detailed_solution": [{"phase": "분석 결과", "actions": [agent_response[:200] + "..."], "estimated_time": "N/A"}],
+                    "cost_estimation": {"parts": "분석 필요", "labor": "분석 필요", "total": "분석 필요"},
+                    "safety_precautions": ["전문가 권장사항 준수"],
+                    "prevention_measures": ["정기 점검 실시"],
+                    "success_indicators": ["문제 해결 확인"],
+                    "alternative_approaches": ["다른 전문가 의견 추가 검토"],
+                    "expert_consensus": f"{agent_name} 단독 분석",
+                    "confidence_level": agent_confidence,
+                    "recommended_followup": "다른 전문가 의견도 함께 검토해보시기 바랍니다."
+                }
         else:
             final_recommendation = {
-                "error": "분석할 Agent 응답이 없습니다.",
-                "synthesized_at": datetime.now().isoformat()
+                "executive_summary": "분석할 전문가 응답이 없습니다.",
+                "immediate_actions": [],
+                "detailed_solution": [],
+                "cost_estimation": {"parts": "N/A", "labor": "N/A", "total": "N/A"},
+                "safety_precautions": [],
+                "prevention_measures": [],
+                "success_indicators": [],
+                "alternative_approaches": [],
+                "expert_consensus": "분석 실패",
+                "confidence_level": 0.0,
+                "recommended_followup": "시스템 관리자에게 문의하세요."
             }
 
         state.update({
@@ -356,14 +436,30 @@ JSON 형식:
 
         # 가장 높은 신뢰도의 Agent 응답 선택
         if agent_responses:
-            best_agent = max(agent_responses.items(),
-                            key=lambda x: x[1].get('confidence', 0))
+            # 신뢰도 기준으로 최고 Agent 선택
+            def get_confidence(item):
+                agent_data = item[1]
+                if hasattr(agent_data, 'confidence'):
+                    return agent_data.confidence
+                else:
+                    return agent_data.get('confidence', 0)
+            
+            best_agent = max(agent_responses.items(), key=get_confidence)
+            best_agent_data = best_agent[1]
+            
+            # AgentResponse 객체인 경우 속성으로 접근
+            if hasattr(best_agent_data, 'response'):
+                primary_response = best_agent_data.response
+                confidence_level = best_agent_data.confidence
+            else:
+                primary_response = best_agent_data.get('response', '')
+                confidence_level = best_agent_data.get('confidence', 0.5)
 
             fallback_recommendation = {
                 "executive_summary": "토론 진행 중 오류가 발생하여 최고 신뢰도 전문가 의견을 제시합니다.",
-                "primary_response": best_agent[1].get('response', ''),
+                "primary_response": primary_response,
                 "primary_agent": best_agent[0],
-                "confidence_level": best_agent[1].get('confidence', 0.5),
+                "confidence_level": confidence_level,
                 "fallback": True,
                 "note": "토론 시뮬레이션에 실패했으나, 개별 전문가 분석은 정상적으로 완료되었습니다.",
                 "synthesized_at": datetime.now().isoformat()

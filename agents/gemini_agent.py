@@ -42,8 +42,20 @@ class GeminiAgent(BaseAgent):
         try:
             logger.info(f"Gemini Agent 분석 시작 - 모델: {self.model}")
 
-            # Gemini API 호출
-            response = await self._generate_content_async(prompt)
+            # Gemini API 호출 (재시도 포함)
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    response = await self._generate_content_async(prompt)
+                    break
+                except Exception as e:
+                    if "overloaded" in str(e) and attempt < max_retries - 1:
+                        wait_time = 2 ** attempt  # 지수 백오프: 1s, 2s, 4s
+                        logger.warning(f"Gemini 과부하, {wait_time}초 후 재시도 ({attempt + 1}/{max_retries})")
+                        import asyncio
+                        await asyncio.sleep(wait_time)
+                        continue
+                    raise e
 
             response_text = response.text
             confidence = self.calculate_confidence(len(response_text))

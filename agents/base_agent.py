@@ -32,6 +32,8 @@ class AgentResponse(BaseModel):
     focus_areas: List[str]
     timestamp: str
     error: Optional[str] = None
+    
+    model_config = {"protected_namespaces": ()}
 
 class AgentError(Exception):
     """Agent 관련 예외"""

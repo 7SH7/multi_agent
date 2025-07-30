@@ -26,7 +26,9 @@ class ClovaAgent(BaseAgent):
 
         # Clova API 설정
         self.api_key = LLM_CONFIGS["naver"]["api_key"]
+        self.api_key_id = LLM_CONFIGS["naver"].get("api_key_id", "")  # 설정에서 가져오기
         self.api_url = "https://clovastudio.stream.ntruss.com/testapp/v1/chat-completions/HCX-003"
+        self.request_id = "test-request-id"
 
     async def analyze_and_respond(self, state: AgentState) -> AgentResponse:
         """Clova 기반 실무 분석"""
@@ -77,8 +79,10 @@ class ClovaAgent(BaseAgent):
         """Clova API 호출"""
 
         headers = {
-            "X-NCP-APIGW-TEST-API-KEY": self.api_key,
-            "Content-Type": "application/json"
+            "X-NCP-APIGW-API-KEY": self.api_key,
+            "X-NCP-APIGW-API-KEY-ID": self.api_key_id,  # 설정에서 가져온 API Key ID
+            "Content-Type": "application/json",
+            "Accept": "application/json"
         }
 
         payload = {
@@ -101,18 +105,71 @@ class ClovaAgent(BaseAgent):
             "includeAiFilters": True
         }
 
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(
-                self.api_url,
-                headers=headers,
-                json=payload
-            )
+        try:
+            logger.info(f"Clova API 호출 - URL: {self.api_url}")
+            logger.info(f"Clova API 키 길이: {len(self.api_key)}")
+            
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(
+                    self.api_url,
+                    headers=headers,
+                    json=payload
+                )
 
-            if response.status_code != 200:
-                error_msg = f"Clova API 오류: {response.status_code} - {response.text}"
-                raise AgentError(error_msg, self.name, "API_ERROR")
+                logger.info(f"Clova API 응답 코드: {response.status_code}")
+                
+                if response.status_code == 401:
+                    logger.warning(f"Clova API 인증 실패 - 응답: {response.text}")
+                    return self._create_fallback_response(prompt)
+                elif response.status_code != 200:
+                    error_msg = f"Clova API 오류: {response.status_code} - {response.text}"
+                    logger.error(error_msg)
+                    return self._create_fallback_response(prompt)
 
-            return response.json()
+                return response.json()
+                
+        except Exception as e:
+            logger.error(f"Clova API 호출 중 예외 발생: {str(e)}")
+            return self._create_fallback_response(prompt)
+
+    def _create_fallback_response(self, prompt: str) -> Dict[str, Any]:
+        """Clova API 실패 시 fallback 응답 생성"""
+        fallback_content = f"""
+실무 전문가 관점에서의 분석 (오프라인 모드):
+
+{prompt[:200]}...에 대한 실무적 해결 방안:
+
+1. 현장 상황 점검
+   - 문제 발생 빈도와 패턴 확인
+   - 기존 해결 시도 내역 검토
+   - 현재 사용 중인 도구 및 자원 파악
+
+2. 비용 효율적 해결책
+   - 기존 장비 활용 방안 검토
+   - 단계적 개선 계획 수립
+   - 예산 범위 내 실현 가능한 대안 제시
+
+3. 실행 계획
+   - 우선순위에 따른 단계별 접근
+   - 작업자 교육 및 안전 고려사항
+   - 효과 측정 및 지속적 개선 방안
+
+※ 현재 Clova API 연결 이슈로 인해 제한된 분석 결과입니다.
+보다 정확한 분석을 위해서는 API 연결 상태를 확인해주세요.
+"""
+        
+        return {
+            "result": {
+                "message": {
+                    "content": fallback_content.strip()
+                }
+            },
+            "usage": {
+                "input_tokens": len(prompt) // 4,
+                "output_tokens": len(fallback_content) // 4,
+                "total_tokens": (len(prompt) + len(fallback_content)) // 4
+            }
+        }
 
     def get_system_prompt(self) -> str:
         """Clova Agent 시스템 프롬프트"""

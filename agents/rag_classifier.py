@@ -130,43 +130,53 @@ class RAGClassifier:
     async def perform_hybrid_search(self, question: str, issue_info: Dict) -> Dict[str, Any]:
         """하이브리드 RAG 검색"""
 
+        # 검색 키워드 구성
+        search_keywords = issue_info.get('search_keywords', [])
+        if isinstance(search_keywords, list):
+            enhanced_query = f"{question} {' '.join(search_keywords)}"
+        else:
+            enhanced_query = question
+
+        logger.info(f"검색 쿼리: {enhanced_query}")
+
+        # 각 검색 엔진 개별 처리 (하나가 실패해도 다른 것은 계속)
+        chroma_results = []
+        elasticsearch_results = []
+        search_errors = []
+
+        # ChromaDB 검색
         try:
-            # 검색 키워드 구성
-            search_keywords = issue_info.get('search_keywords', [])
-            if isinstance(search_keywords, list):
-                enhanced_query = f"{question} {' '.join(search_keywords)}"
-            else:
-                enhanced_query = question
-
-            logger.info(f"검색 쿼리: {enhanced_query}")
-
-            # 병렬 검색 실행
             chroma_results = await self.chroma_engine.search(enhanced_query, top_k=5)
-            elasticsearch_results = await self.elasticsearch_engine.search(enhanced_query, top_k=5)
-
-            # 결과 통합
-            unified_context = {
-                'chroma_results': chroma_results,
-                'elasticsearch_results': elasticsearch_results,
-                'search_query': enhanced_query,
-                'issue_context': issue_info,
-                'searched_at': datetime.now().isoformat(),
-                'total_results': len(chroma_results) + len(elasticsearch_results)
-            }
-
-            logger.info(f"검색 완료 - ChromaDB: {len(chroma_results)}개, Elasticsearch: {len(elasticsearch_results)}개")
-
-            return unified_context
-
+            logger.info(f"ChromaDB 검색 성공: {len(chroma_results)}개 결과")
         except Exception as e:
-            logger.error(f"RAG 검색 오류: {str(e)}")
-            return {
-                'error': f"검색 실패: {str(e)}",
-                'chroma_results': [],
-                'elasticsearch_results': [],
-                'search_query': question,
-                'searched_at': datetime.now().isoformat()
-            }
+            logger.warning(f"ChromaDB 검색 실패: {str(e)}")
+            search_errors.append(f"ChromaDB: {str(e)}")
+
+        # Elasticsearch 검색
+        try:
+            elasticsearch_results = await self.elasticsearch_engine.search(enhanced_query, top_k=5)
+            logger.info(f"Elasticsearch 검색 성공: {len(elasticsearch_results)}개 결과")
+        except Exception as e:
+            logger.warning(f"Elasticsearch 검색 실패: {str(e)}")
+            search_errors.append(f"Elasticsearch: {str(e)}")
+
+        # 결과 통합
+        unified_context = {
+            'chroma_results': chroma_results,
+            'elasticsearch_results': elasticsearch_results,
+            'search_query': enhanced_query,
+            'issue_context': issue_info,
+            'searched_at': datetime.now().isoformat(),
+            'total_results': len(chroma_results) + len(elasticsearch_results),
+            'search_errors': search_errors if search_errors else None
+        }
+
+        logger.info(f"검색 완료 - ChromaDB: {len(chroma_results)}개, Elasticsearch: {len(elasticsearch_results)}개")
+        
+        if search_errors:
+            logger.warning(f"검색 중 일부 오류: {'; '.join(search_errors)}")
+
+        return unified_context
 
     def calculate_classification_confidence(self, issue_info: Dict, category: str) -> float:
         """분류 신뢰도 계산"""

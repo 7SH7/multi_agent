@@ -5,6 +5,9 @@ from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, ValidationError
+import logging
+
+logger = logging.getLogger(__name__)
 
 from models.agent_state import AgentState
 from models.response_models import ChatResponse, SessionInfoResponse, HealthResponse
@@ -200,7 +203,11 @@ def create_application() -> FastAPI:
                 detailed_solution=final_recommendation.get('detailed_solution', []),
                 immediate_actions=final_recommendation.get('immediate_actions', []),
                 safety_precautions=final_recommendation.get('safety_precautions', []),
-                cost_estimation=final_recommendation.get('cost_estimation', {}),
+                cost_estimation=final_recommendation.get('cost_estimation', {
+                    'parts': '분석 필요',
+                    'labor': '분석 필요', 
+                    'total': '분석 필요'
+                }),
                 confidence_level=final_recommendation.get('confidence_level', 0.5),
                 participating_agents=list(result_state.get('agent_responses', {}).keys()),
                 debate_rounds=len(result_state.get('debate_rounds', [])),
@@ -287,7 +294,7 @@ def create_application() -> FastAPI:
                 'user_message': request.user_message,
                 'issue_code': request.issue_code,
                 'user_id': request.user_id or 'test_user',
-                'conversation_context': session_data.conversation_history,
+                'conversation_context': session_data.metadata.get('conversation_history', []),
                 'metadata': {
                     'request_time': datetime.now().isoformat(),
                     'is_test': True
@@ -311,19 +318,28 @@ def create_application() -> FastAPI:
             monitor.record_histogram("workflow_execution_time", result.execution_time)
             monitor.increment_counter("successful_conversations")
             
+            # Build final recommendation from result
+            final_recommendation = result.final_state.get('final_recommendation', {})
+            
             return ChatResponse(
-                response=result.final_state.get('final_response', '답변 생성 실패'),
                 session_id=session_id,
-                confidence_score=result.final_state.get('confidence_score', 0.5),
+                conversation_count=session_data.conversation_count + 1,
+                response_type='test',
+                executive_summary=final_recommendation.get('executive_summary', result.final_state.get('final_response', '답변 생성 실패')),
+                detailed_solution=final_recommendation.get('detailed_solution', []),
+                immediate_actions=final_recommendation.get('immediate_actions', []),
+                safety_precautions=final_recommendation.get('safety_precautions', []),
+                cost_estimation=final_recommendation.get('cost_estimation', {
+                    'parts': '분석 필요',
+                    'labor': '분석 필요', 
+                    'total': '분석 필요'
+                }),
+                confidence_level=final_recommendation.get('confidence_level', result.final_state.get('confidence_score', 0.5)),
+                participating_agents=result.final_state.get('selected_agents', []),
+                debate_rounds=len(result.final_state.get('debate_rounds', [])),
                 processing_time=result.execution_time,
-                agents_used=result.final_state.get('selected_agents', []),
-                workflow_steps=result.steps_completed,
-                knowledge_sources=result.final_state.get('knowledge_sources', []),
-                metadata={
-                    'workflow_success': result.success,
-                    'session_conversations': session_data.conversation_count + 1,
-                    'test_mode': True
-                }
+                processing_steps=result.steps_completed,
+                timestamp=datetime.now().isoformat()
             )
             
         except HTTPException:
@@ -375,6 +391,10 @@ def create_application() -> FastAPI:
             raise HTTPException(status_code=404, detail="세션을 찾을 수 없습니다")
         
         return {"message": "세션이 삭제되었습니다", "session_id": session_id}
+    
+    # Individual Agent 라우터 추가
+    from api.agent_endpoints import agent_router
+    app.include_router(agent_router)
     
     return app
 
