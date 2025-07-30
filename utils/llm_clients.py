@@ -33,6 +33,17 @@ class OpenAIClient:
         self.model = LLM_CONFIGS['openai']['model']
         self.max_tokens = LLM_CONFIGS['openai']['max_tokens']
 
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.close()
+
+    async def close(self):
+        """리소스 정리"""
+        if hasattr(self.client, '_client') and hasattr(self.client._client, 'aclose'):
+            await self.client._client.aclose()
+
     async def generate_response(self, messages: List[Dict[str, str]],
                                 temperature: float = 0.2) -> LLMResponse:
         try:
@@ -60,9 +71,9 @@ class OpenAIClient:
 
 class GeminiClient:
     def __init__(self):
-        genai.configure(api_key=LLM_CONFIGS['gemini']['api_key'])
-        self.model = genai.GenerativeModel(LLM_CONFIGS['gemini']['model'])
-        self.max_tokens = LLM_CONFIGS['gemini']['max_tokens']
+        genai.configure(api_key=LLM_CONFIGS['google']['api_key'])
+        self.model = genai.GenerativeModel(LLM_CONFIGS['google']['model'])
+        self.max_tokens = LLM_CONFIGS['google']['max_tokens']
 
     async def generate_response(self, messages: List[Dict[str, str]],
                                 temperature: float = 0.2) -> LLMResponse:
@@ -81,7 +92,7 @@ class GeminiClient:
 
             return LLMResponse(
                 content=response.text,
-                model=LLM_CONFIGS['gemini']['model'],
+                model=LLM_CONFIGS['google']['model'],
                 tokens_used=response.usage_metadata.total_token_count if hasattr(response, 'usage_metadata') else 0,
                 confidence=0.82,
                 timestamp=datetime.now(),
@@ -108,17 +119,15 @@ class GeminiClient:
 
 class ClovaClient:
     def __init__(self):
-        self.client_id = LLM_CONFIGS['clova']['client_id']
-        self.client_secret = LLM_CONFIGS['clova']['client_secret']
-        self.api_url = LLM_CONFIGS['clova']['api_url']
-        self.model = LLM_CONFIGS['clova']['model']
+        self.api_key = LLM_CONFIGS['naver']['api_key']
+        self.api_url = "https://clovastudio.stream.ntruss.com/testapp/v1/chat-completions/HCX-003"
+        self.model = LLM_CONFIGS['naver']['model']
 
     async def generate_response(self, messages: List[Dict[str, str]],
                                 temperature: float = 0.2) -> LLMResponse:
         try:
             headers = {
-                'X-NCP-APIGW-API-KEY-ID': self.client_id,
-                'X-NCP-APIGW-API-KEY': self.client_secret,
+                'X-NCP-APIGW-TEST-API-KEY': self.api_key,
                 'Content-Type': 'application/json'
             }
 
@@ -126,10 +135,14 @@ class ClovaClient:
             prompt = self._convert_messages_to_prompt(messages)
 
             data = {
-                'model': self.model,
                 'messages': [{'role': 'user', 'content': prompt}],
+                'topP': 0.8,
+                'topK': 0,
+                'maxTokens': LLM_CONFIGS['naver']['max_tokens'],
                 'temperature': temperature,
-                'max_tokens': LLM_CONFIGS['clova']['max_tokens']
+                'repeatPenalty': 5.0,
+                'stopBefore': [],
+                'includeAiFilters': True
             }
 
             response = await asyncio.to_thread(
@@ -138,7 +151,7 @@ class ClovaClient:
             response.raise_for_status()
 
             result = response.json()
-            content = result['choices'][0]['message']['content']
+            content = result.get('result', {}).get('message', {}).get('content', '')
 
             return LLMResponse(
                 content=content,
@@ -159,36 +172,51 @@ class ClovaClient:
 
 class AnthropicClient:
     def __init__(self):
-        self.client = anthropic.Anthropic(
+        self.client = anthropic.AsyncAnthropic(
             api_key=LLM_CONFIGS['anthropic']['api_key']
         )
         self.model = LLM_CONFIGS['anthropic']['model']
         self.max_tokens = LLM_CONFIGS['anthropic']['max_tokens']
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.close()
+
+    async def close(self):
+        """리소스 정리"""
+        await self.client.close()
 
     async def generate_response(self, messages: List[Dict[str, str]],
                                 temperature: float = 0.2) -> LLMResponse:
         try:
             # Convert messages format for Claude
             claude_messages = []
-            system_message = ""
+            system_message = None
 
             for msg in messages:
                 if msg['role'] == 'system':
                     system_message = msg['content']
-                else:
+                elif msg['role'] in ['user', 'assistant']:
                     claude_messages.append({
                         'role': msg['role'],
                         'content': msg['content']
                     })
 
-            response = await asyncio.to_thread(
-                self.client.messages.create,
-                model=self.model,
-                messages=claude_messages,
-                system=system_message if system_message else None,
-                max_tokens=self.max_tokens,
-                temperature=temperature
-            )
+            # API 파라미터 구성
+            create_params = {
+                "model": self.model,
+                "messages": claude_messages,
+                "max_tokens": self.max_tokens,
+                "temperature": temperature
+            }
+            
+            # system 메시지가 있으면 올바른 형식으로 추가
+            if system_message:
+                create_params["system"] = system_message  # 문자열로 전달 (최신 버전에서 지원)
+
+            response = await self.client.messages.create(**create_params)
 
             return LLMResponse(
                 content=response.content[0].text,
@@ -198,11 +226,20 @@ class AnthropicClient:
                 timestamp=datetime.now(),
                 metadata={
                     'input_tokens': response.usage.input_tokens,
-                    'output_tokens': response.usage.output_tokens
+                    'output_tokens': response.usage.output_tokens,
+                    'api_version': '0.60.0'
                 }
             )
         except Exception as e:
             raise LLMError(f"Anthropic API 오류: {str(e)}")
+    
+    async def generate_simple_response(self, messages: List[Dict[str, str]]) -> str:
+        """대화 형태의 간단한 응답 생성"""
+        try:
+            response = await self.generate_response(messages)
+            return response.content
+        except Exception as e:
+            return f"Claude 응답 생성 중 오류가 발생했습니다: {str(e)}"
 
 
 def get_llm_client(client_type: str):

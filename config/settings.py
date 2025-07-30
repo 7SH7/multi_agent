@@ -13,8 +13,21 @@ class Settings(BaseSettings):
     NAVER_API_KEY: str = ""
     ANTHROPIC_API_KEY: str = ""
 
-    # Database Configuration
-    DATABASE_URL: str = "mysql://chatbot_user:chatbot_password@localhost:3306/chatbot_db"
+    # Database Configuration - Individual components
+    DB_HOST: str = "localhost:3306"
+    DB_NAME: str = "chatbot_db"
+    DB_USERNAME: str = "chatbot_user"
+    DB_PASSWORD: str = ""
+    
+    # Computed DATABASE_URL property
+    @property
+    def DATABASE_URL(self) -> str:
+        # Extract host and port from DB_HOST
+        if '://' in self.DB_HOST:
+            host_part = self.DB_HOST.split('://')[-1]
+        else:
+            host_part = self.DB_HOST
+        return f"mysql://{self.DB_USERNAME}:{self.DB_PASSWORD}@{host_part}/{self.DB_NAME}"
     
     # MySQL 자격증명 (Docker용)
     MYSQL_ROOT_PASSWORD: str = ""
@@ -59,6 +72,10 @@ class Settings(BaseSettings):
     # Docker/Runtime Configuration
     PYTHONPATH: str = ""
     ENVIRONMENT: str = "development"
+    
+    # Admin API Keys
+    ADMIN_API_KEY: str = "admin-key-test-123"
+    USER_API_KEY: str = "user-key-test-456"
 
     class Config:
         env_file = ".env"

@@ -90,19 +90,25 @@ class ElasticsearchEngine:
             'scheme': 'http'
         }], 
         retry_on_timeout=True,
-        max_retries=10)
+        max_retries=3,
+        request_timeout=5)
         self.index_name = "manufacturing_docs"
-        self._initialize_index()
+        self.is_available = False
+        self._initialized = False
 
-    def _initialize_index(self):
-        asyncio.create_task(self._create_index_if_not_exists())
+    async def _initialize_index(self):
+        """지연 초기화 - 첫 번째 사용 시에만 호출됨"""
+        if not self._initialized:
+            await self._create_index_if_not_exists()
+            self._initialized = True
 
-    async def _wait_for_elasticsearch(self, max_retries=30, delay=2):
+    async def _wait_for_elasticsearch(self, max_retries=3, delay=1):
         """Elasticsearch 서버가 준비될 때까지 기다림"""
         for attempt in range(max_retries):
             try:
-                await self.client.cluster.health(wait_for_status='yellow', timeout='5s')
+                await self.client.cluster.health(wait_for_status='yellow', timeout='3s')
                 print(f"Elasticsearch 연결 성공 (시도 {attempt + 1})")
+                self.is_available = True
                 return True
             except Exception as e:
                 if attempt < max_retries - 1:
@@ -110,6 +116,7 @@ class ElasticsearchEngine:
                     await asyncio.sleep(delay)
                 else:
                     print(f"Elasticsearch 연결 최종 실패: {e}")
+                    self.is_available = False
                     return False
         return False
 
@@ -164,6 +171,9 @@ class ElasticsearchEngine:
             print(f"Elasticsearch 인덱스 생성 오류: {e}")
 
     async def add_documents(self, documents: List[Dict[str, Any]]) -> bool:
+        # 지연 초기화
+        await self._initialize_index()
+        
         try:
             actions = []
             for doc in documents:
@@ -189,6 +199,13 @@ class ElasticsearchEngine:
             return False
 
     async def search(self, query: str, top_k: int = 5) -> List[RAGResult]:
+        # 지연 초기화
+        await self._initialize_index()
+        
+        # Elasticsearch가 사용 불가능한 경우 빈 결과 반환
+        if not self.is_available:
+            return []
+            
         try:
             search_body = {
                 "query": {
@@ -225,15 +242,27 @@ class ElasticsearchEngine:
             return rag_results
         except Exception as e:
             print(f"Elasticsearch 검색 오류: {e}")
+            self.is_available = False  # 연결 상태 업데이트
             return []
 
     async def close(self):
-        await self.client.close()
+        """Elasticsearch 클라이언트 리소스 정리"""
+        try:
+            await self.client.close()
+        except Exception as e:
+            print(f"Elasticsearch 클라이언트 종료 중 오류: {e}")
 
 class HybridRAGEngine:
     def __init__(self):
         self.chroma_engine = ChromaEngine()
         self.elasticsearch_engine = ElasticsearchEngine()
+
+    async def close(self):
+        """하이브리드 RAG 엔진 리소스 정리"""
+        try:
+            await self.elasticsearch_engine.close()
+        except Exception as e:
+            print(f"HybridRAGEngine 종료 중 오류: {e}")
 
     async def search(self, query: str, top_k: int = 5) -> List[RAGResult]:
         # 병렬로 두 엔진에서 검색

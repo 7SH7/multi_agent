@@ -379,3 +379,4 @@ docs/_build/
 
 .big_proj_venv
 .venv
+.claude
