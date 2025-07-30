@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     GOOGLE_AI_API_KEY: str = ""
     NAVER_API_KEY: str = ""
+    NAVER_API_KEY_ID: str = ""  # Naver Cloud Platform API Key ID
     ANTHROPIC_API_KEY: str = ""
 
     # Database Configuration - Individual components
@@ -74,8 +75,8 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     
     # Admin API Keys
-    ADMIN_API_KEY: str = "admin-key-test-123"
-    USER_API_KEY: str = "user-key-test-456"
+    ADMIN_API_KEY: str = ""
+    USER_API_KEY: str = ""
 
     class Config:
         env_file = ".env"
@@ -112,6 +113,7 @@ LLM_CONFIGS = {
     },
     "naver": {
         "api_key": settings.NAVER_API_KEY,
+        "api_key_id": settings.NAVER_API_KEY_ID,
         "model": "HCX-003",
         "max_tokens": 2000,
         "temperature": 0.2

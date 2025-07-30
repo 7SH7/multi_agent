@@ -26,6 +26,7 @@ class ClovaAgent(BaseAgent):
 
         # Clova API 설정
         self.api_key = LLM_CONFIGS["naver"]["api_key"]
+        self.api_key_id = LLM_CONFIGS["naver"].get("api_key_id", "")  # 설정에서 가져오기
         self.api_url = "https://clovastudio.stream.ntruss.com/testapp/v1/chat-completions/HCX-003"
         self.request_id = "test-request-id"
 
@@ -79,7 +80,7 @@ class ClovaAgent(BaseAgent):
 
         headers = {
             "X-NCP-APIGW-API-KEY": self.api_key,
-            "X-NCP-APIGW-API-KEY-ID": "nv-d86a9fb8b8cd4063aba76db7ae7e2f67",  # API Key ID
+            "X-NCP-APIGW-API-KEY-ID": self.api_key_id,  # 설정에서 가져온 API Key ID
             "Content-Type": "application/json",
             "Accept": "application/json"
         }
