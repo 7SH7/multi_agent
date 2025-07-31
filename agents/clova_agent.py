@@ -39,6 +39,11 @@ class ClovaAgent(BaseAgent):
         rag_context = state.get('rag_context', {})
         issue_classification = state.get('issue_classification', {})
         conversation_history = state.get('conversation_history', [])
+        
+        # 동적 토큰 한계 계산
+        from utils.token_manager import get_token_manager
+        token_manager = get_token_manager()
+        dynamic_max_tokens = token_manager.get_agent_specific_limit('clova', state)
 
         # 프롬프트 구성
         prompt = self.build_practical_prompt(user_question, rag_context, issue_classification, conversation_history)
@@ -47,7 +52,7 @@ class ClovaAgent(BaseAgent):
             logger.info(f"Clova Agent 분석 시작 - 모델: {self.model}")
 
             # Clova API 호출
-            response_data = await self._call_clova_api(prompt)
+            response_data = await self._call_clova_api(prompt, dynamic_max_tokens)
 
             response_text = response_data.get('result', {}).get('message', {}).get('content', '')
 
@@ -76,7 +81,7 @@ class ClovaAgent(BaseAgent):
             logger.error(f"Clova Agent 분석 오류: {str(e)}")
             raise AgentError(f"실무 분석 중 오류가 발생했습니다: {str(e)}", self.name, "ANALYSIS_ERROR")
 
-    async def _call_clova_api(self, prompt: str) -> Dict[str, Any]:
+    async def _call_clova_api(self, prompt: str, max_tokens: int = None) -> Dict[str, Any]:
         """Clova API 호출"""
 
         headers = {
@@ -99,7 +104,7 @@ class ClovaAgent(BaseAgent):
             ],
             "topP": 0.8,
             "topK": 0,
-            "maxTokens": self.config.max_tokens,
+            "maxTokens": max_tokens or self.config.max_tokens,
             "temperature": self.config.temperature,
             "repeatPenalty": 5.0,
             "stopBefore": [],

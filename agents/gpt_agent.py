@@ -37,6 +37,11 @@ class GPTAgent(BaseAgent):
         rag_context = state.get('rag_context', {})
         issue_classification = state.get('issue_classification', {})
         conversation_history = state.get('conversation_history', [])
+        
+        # 동적 토큰 한계 계산
+        from utils.token_manager import get_token_manager
+        token_manager = get_token_manager()
+        dynamic_max_tokens = token_manager.get_agent_specific_limit('gpt', state)
 
         # 프롬프트 구성
         prompt = self.build_analysis_prompt(user_question, rag_context, issue_classification, conversation_history)
@@ -51,7 +56,7 @@ class GPTAgent(BaseAgent):
                     {"role": "user", "content": prompt}
                 ],
                 temperature=self.config.temperature,
-                max_tokens=self.config.max_tokens
+                max_tokens=dynamic_max_tokens
             )
 
             response_text = response.choices[0].message.content

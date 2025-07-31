@@ -18,7 +18,8 @@ class DebateModerator:
             api_key=LLM_CONFIGS["anthropic"]["api_key"]
         )
         self.model = LLM_CONFIGS["anthropic"]["model"]
-        self.max_tokens = LLM_CONFIGS["anthropic"]["max_tokens"]
+        from config.settings import AGENT_TOKEN_LIMITS
+        self.max_tokens = AGENT_TOKEN_LIMITS["debate"]
         self.temperature = LLM_CONFIGS["anthropic"]["temperature"]
 
         # 참여자 설명
@@ -120,12 +121,28 @@ JSON 형식으로 응답해주세요:
         try:
             response = self.claude_client.messages.create(
                 model=self.model,
-                max_tokens=1200,
+                max_tokens=self.max_tokens,
                 messages=[{"role": "user", "content": analysis_prompt}],
                 temperature=self.temperature
             )
 
-            analysis_result = json.loads(response.content[0].text)
+            try:
+                response_text = response.content[0].text.strip()
+                # JSON 문자열 정리
+                if response_text.startswith('```json'):
+                    response_text = response_text.split('```json')[1].split('```')[0].strip()
+                elif response_text.startswith('```'):
+                    response_text = response_text.split('```')[1].split('```')[0].strip()
+                
+                analysis_result = json.loads(response_text)
+            except json.JSONDecodeError as e:
+                logger.warning(f"차이 분석 결과 파싱 실패: {str(e)}")
+                # 기본 구조 반환
+                analysis_result = {
+                    "differences": ["파싱 오류로 인해 차이점을 정확히 분석할 수 없습니다."],
+                    "common_points": ["두 Agent 모두 문제 해결에 도움이 되는 조언을 제공했습니다."],
+                    "synthesis_needed": True
+                }
             logger.info("응답 차이 분석 완료")
             return analysis_result
 
@@ -219,12 +236,41 @@ JSON 형식으로 응답:
         try:
             response = self.claude_client.messages.create(
                 model=self.model,
-                max_tokens=2800,
+                max_tokens=self.max_tokens,
                 messages=[{"role": "user", "content": debate_prompt}],
                 temperature=self.temperature
             )
 
-            debate_result = json.loads(response.content[0].text)
+            try:
+                response_text = response.content[0].text.strip()
+                # JSON 문자열 정리
+                if response_text.startswith('```json'):
+                    response_text = response_text.split('```json')[1].split('```')[0].strip()
+                elif response_text.startswith('```'):
+                    response_text = response_text.split('```')[1].split('```')[0].strip()
+                
+                debate_result = json.loads(response_text)
+            except json.JSONDecodeError as e:
+                logger.warning(f"토론 결과 파싱 실패: {str(e)}")
+                # 기본 구조 반환
+                debate_result = {
+                    "debate_rounds": [
+                        {
+                            "round": 1,
+                            "topic": "전문가 의견 종합",
+                            "discussions": [
+                                {"speaker": "시스템", "statement": "JSON 파싱 오류로 인해 토론 시뮬레이션을 완료할 수 없습니다."}
+                            ]
+                        }
+                    ],
+                    "consensus_points": [
+                        "전문가들의 의견을 종합하여 최적의 해결책을 제시합니다.",
+                        "각 전문가의 강점을 활용한 통합 접근법을 적용합니다."
+                    ],
+                    "final_agreement": "파싱 오류가 발생했지만 전문가들의 개별 분석은 정상적으로 완료되었습니다.",
+                    "synthesis_notes": "JSON 파싱 실패로 인해 상세한 토론 시뮬레이션을 제공할 수 없습니다."
+                }
+            
             debate_result['moderated_at'] = datetime.now().isoformat()
             debate_result['participants'] = participants
 
@@ -319,12 +365,47 @@ JSON 형식:
         try:
             response = self.claude_client.messages.create(
                 model=self.model,
-                max_tokens=2500,
+                max_tokens=self.max_tokens,
                 messages=[{"role": "user", "content": synthesis_prompt}],
                 temperature=self.temperature
             )
 
-            final_solution = json.loads(response.content[0].text)
+            try:
+                response_text = response.content[0].text.strip()
+                # JSON 문자열 정리
+                if response_text.startswith('```json'):
+                    response_text = response_text.split('```json')[1].split('```')[0].strip()
+                elif response_text.startswith('```'):
+                    response_text = response_text.split('```')[1].split('```')[0].strip()
+                
+                final_solution = json.loads(response_text)
+            except json.JSONDecodeError as e:
+                logger.warning(f"최종 솔루션 파싱 실패: {str(e)}")
+                # 기본 구조 반환 - 전문가 응답을 활용
+                consensus_summary = ', '.join(debate_results.get('consensus_points', ['전문가 의견 통합']))[:200]
+                final_solution = {
+                    "executive_summary": f"전문가 분석을 바탕으로 한 종합 해결책을 제시합니다: {consensus_summary}",
+                    "immediate_actions": [
+                        {"step": 1, "action": "전문가 권장사항 검토", "time": "즉시", "priority": "high", "responsible": "담당자"}
+                    ],
+                    "detailed_solution": [
+                        {"phase": "1단계: 분석", "actions": ["전문가 의견 종합 검토"], "estimated_time": "30분", "resources": "분석 자료"}
+                    ],
+                    "cost_estimation": {
+                        "parts": "상세 분석 필요", 
+                        "labor": "전문가 상담 비용", 
+                        "total": "추후 산정",
+                        "cost_breakdown": ["전문가 분석 비용"]
+                    },
+                    "safety_precautions": ["전문가 권장 안전수칙 준수"],
+                    "prevention_measures": ["정기적인 전문가 상담"],
+                    "success_indicators": ["문제 해결 확인"],
+                    "alternative_approaches": ["추가 전문가 의견 수렴"],
+                    "expert_consensus": f"참여 전문가: {', '.join(agent_responses.keys())}",
+                    "confidence_level": 0.75,
+                    "recommended_followup": "전문가 권장사항을 단계별로 실행하여 문제를 해결하시기 바랍니다."
+                }
+            
             final_solution.update({
                 "synthesized_at": datetime.now().isoformat(),
                 "participating_agents": list(agent_responses.keys()),
@@ -414,7 +495,7 @@ JSON 형식:
                 
                 response = self.claude_client.messages.create(
                     model=self.model,
-                    max_tokens=2000,
+                    max_tokens=self.max_tokens,
                     messages=[{"role": "user", "content": structure_prompt}],
                     temperature=0.3
                 )

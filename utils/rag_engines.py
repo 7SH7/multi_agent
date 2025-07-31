@@ -166,7 +166,8 @@ class ElasticsearchEngine:
 
                 await self.client.indices.create(
                     index=self.index_name,
-                    body=mapping
+                    mappings=mapping["mappings"],
+                    settings=mapping["settings"]
                 )
         except Exception as e:
             print(f"Elasticsearch 인덱스 생성 오류: {e}")
@@ -222,7 +223,8 @@ class ElasticsearchEngine:
 
             response = await self.client.search(
                 index=self.index_name,
-                body=search_body
+                query=search_body["query"],
+                size=search_body["size"]
             )
 
             rag_results = []

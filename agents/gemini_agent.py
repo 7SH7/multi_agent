@@ -36,12 +36,17 @@ class GeminiAgent(BaseAgent):
         rag_context = state.get('rag_context', {})
         issue_classification = state.get('issue_classification', {})
         conversation_history = state.get('conversation_history', [])
+        
+        # 동적 토큰 한계 계산  
+        from utils.token_manager import get_token_manager
+        token_manager = get_token_manager()
+        dynamic_max_tokens = token_manager.get_agent_specific_limit('gemini', state)
 
         # 프롬프트 구성
         prompt = self.build_technical_prompt(user_question, rag_context, issue_classification, conversation_history)
 
         try:
-            logger.info(f"Gemini Agent 분석 시작 - 모델: {self.model}")
+            logger.info(f"Gemini Agent 분석 시작 - 모델: {self.model}, 토큰 한계: {dynamic_max_tokens}")
 
             # Gemini API 호출 (재시도 포함)
             max_retries = 3

@@ -75,7 +75,7 @@ class EnhancedWorkflowManager:
         )
 
         # Agent execution routing
-        workflow.add_conditional_edges("gpt_agent", self._route_after_gpt, {"continue": "gemini_agent", "debate": "debate_moderator"})
+        workflow.add_conditional_edges("gpt_agent", self._route_after_gpt, {"continue_gemini": "gemini_agent", "continue_clova": "clova_agent", "debate": "debate_moderator"})
         workflow.add_conditional_edges("gemini_agent", self._route_after_gemini, {"continue": "clova_agent", "debate": "debate_moderator"})
         workflow.add_conditional_edges("clova_agent", self._route_after_clova, {"debate": "debate_moderator"})
 
@@ -120,10 +120,16 @@ class EnhancedWorkflowManager:
         selected_agents = state.get('selected_agents', [])
         # 대소문자 구분 없이 체크
         if any(agent.lower() == 'clova' for agent in selected_agents):
-            response = await self.clova_agent.analyze_and_respond(state)
-            agent_responses = state.get('agent_responses', {})
-            agent_responses['Clova'] = response  # 대문자로 저장
-            state['agent_responses'] = agent_responses
+            try:
+                logger.info("Clova Agent 실행 시작")
+                response = await self.clova_agent.analyze_and_respond(state)
+                agent_responses = state.get('agent_responses', {})
+                agent_responses['Clova'] = response  # 대문자로 저장
+                state['agent_responses'] = agent_responses
+                logger.info("Clova Agent 실행 성공")
+            except Exception as e:
+                logger.error(f"Clova Agent 실행 실패: {str(e)}")
+                # 에러가 발생해도 workflow는 계속 진행
         return state
 
     async def _execute_debate_moderator(self, state: AgentState) -> AgentState:
@@ -139,7 +145,15 @@ class EnhancedWorkflowManager:
         selected_agents = state.get('selected_agents', [])
         # 대소문자 구분 없이 체크
         has_gemini = any(agent.lower() == 'gemini' for agent in selected_agents)
-        return "continue" if has_gemini else "debate"
+        has_clova = any(agent.lower() == 'clova' for agent in selected_agents)
+        
+        # Gemini가 있으면 Gemini로, 없고 Clova만 있으면 직접 Clova로, 둘 다 없으면 토론으로
+        if has_gemini:
+            return "continue_gemini"  # gemini_agent로
+        elif has_clova:
+            return "continue_clova"   # clova_agent로 직접
+        else:
+            return "debate"
 
     def _route_after_gemini(self, state: AgentState) -> str:
         selected_agents = state.get('selected_agents', [])

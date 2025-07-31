@@ -97,31 +97,49 @@ REDIS_CONFIG = {
     "decode_responses": True
 }
 
+# Token limit configurations by usage type
+TOKEN_LIMITS = {
+    "base": 100,           # 기본 응답 (간단한 질문/답변)
+    "detailed": 300,       # 상세 분석 (기술적 설명, 단계별 가이드) 
+    "debate": 500,         # 토론/종합 (여러 Agent 의견 통합)
+    "emergency": 50,       # 긴급/간단 (에러 메시지, 간단 확인)
+    "technical": 400       # 기술 특화 (Gemini 등 기술 분석용)
+}
+
+# Agent별 기본 토큰 한계 설정
+AGENT_TOKEN_LIMITS = {
+    "gpt": TOKEN_LIMITS["detailed"],      # 200 - 구조화된 단계별 설명
+    "gemini": TOKEN_LIMITS["technical"],  # 400 - 상세한 기술 분석
+    "clova": TOKEN_LIMITS["detailed"],    # 300 - 실무적 단계별 가이드  
+    "claude": TOKEN_LIMITS["base"],       # 100 - 간결한 요약
+    "debate": TOKEN_LIMITS["debate"]      # 500 - 토론/종합용
+}
+
 # LLM configurations
 LLM_CONFIGS = {
     "openai": {
         "api_key": settings.OPENAI_API_KEY,
         "model": "gpt-4o-mini",
-        "max_tokens": 100,
+        "max_tokens": AGENT_TOKEN_LIMITS["gpt"],
         "temperature": 0.2
     },
     "google": {
         "api_key": settings.GOOGLE_AI_API_KEY,
-        "model": "gemini-2.5-flash-lite",
-        "max_tokens": 100,
+        "model": "gemini-2.5-flash-lite", 
+        "max_tokens": AGENT_TOKEN_LIMITS["gemini"],
         "temperature": 0.2
     },
     "naver": {
         "api_key": settings.NAVER_API_KEY,
         "api_key_id": settings.NAVER_API_KEY_ID,
         "model": "HCX-003",
-        "max_tokens": 100,
+        "max_tokens": AGENT_TOKEN_LIMITS["clova"],
         "temperature": 0.2
     },
     "anthropic": {
         "api_key": settings.ANTHROPIC_API_KEY,
         "model": "claude-3-5-sonnet-20240620",
-        "max_tokens": 100,
+        "max_tokens": AGENT_TOKEN_LIMITS["claude"],
         "temperature": 0.2
     }
 }
