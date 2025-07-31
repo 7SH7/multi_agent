@@ -53,28 +53,9 @@ logger.org.elasticsearch.deprecation: warn
 
 # 스마트 팩토리 전용 설정
 
-# 인덱스 템플릿 자동 생성 허용
-indices.id_field_data.enabled: true
-
 # 검색 성능 최적화
 search.max_buckets: 65536
 indices.query.bool.max_clause_count: 4096
-
-# 인덱스 새로고침 간격 (실시간 검색용)
-index.refresh_interval: 1s
-
-# 샤드 설정 (단일 노드이므로 복제본 없음)
-index.number_of_shards: 1
-index.number_of_replicas: 0
-
-# 인덱스 최적화
-index.max_result_window: 100000
-
-# 필드 매핑 제한
-index.mapping.total_fields.limit: 2000
-index.mapping.depth.limit: 50
-index.mapping.nested_fields.limit: 100
-index.mapping.nested_objects.limit: 10000
 
 # 캐시 설정
 indices.fielddata.cache.size: 40%
@@ -93,13 +74,5 @@ thread_pool.search.queue_size: 1000
 thread_pool.write.size: 4
 thread_pool.write.queue_size: 200
 
-# 느린 쿼리 로그 설정
-index.search.slowlog.threshold.query.warn: 10s
-index.search.slowlog.threshold.query.info: 5s
-index.search.slowlog.threshold.query.debug: 2s
-index.search.slowlog.threshold.query.trace: 500ms
-
-index.search.slowlog.threshold.fetch.warn: 1s
-index.search.slowlog.threshold.fetch.info: 800ms
-index.search.slowlog.threshold.fetch.debug: 500ms
-index.search.slowlog.threshold.fetch.trace: 200ms
+# 인덱스 레벨 설정은 템플릿으로 별도 관리
+# (index.* 설정들은 elasticsearch.yml이 아닌 인덱스 템플릿에서 설정)

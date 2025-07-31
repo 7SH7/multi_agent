@@ -102,26 +102,26 @@ LLM_CONFIGS = {
     "openai": {
         "api_key": settings.OPENAI_API_KEY,
         "model": "gpt-4o-mini",
-        "max_tokens": 2000,
+        "max_tokens": 100,
         "temperature": 0.2
     },
     "google": {
         "api_key": settings.GOOGLE_AI_API_KEY,
-        "model": "gemini-1.5-flash",
-        "max_tokens": 2000,
+        "model": "gemini-2.5-flash-lite",
+        "max_tokens": 100,
         "temperature": 0.2
     },
     "naver": {
         "api_key": settings.NAVER_API_KEY,
         "api_key_id": settings.NAVER_API_KEY_ID,
         "model": "HCX-003",
-        "max_tokens": 2000,
+        "max_tokens": 100,
         "temperature": 0.2
     },
     "anthropic": {
         "api_key": settings.ANTHROPIC_API_KEY,
         "model": "claude-3-5-sonnet-20240620",
-        "max_tokens": 2000,
+        "max_tokens": 100,
         "temperature": 0.2
     }
 }

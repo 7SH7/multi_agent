@@ -52,16 +52,16 @@ class DynamicAgentSelector:
             }
         }
 
-        # 카테고리별 선택 규칙
+        # 카테고리별 선택 규칙 (Gemini 일시 비활성화)
         self.selection_rules = {
             "전기문제": SelectionRule(
                 category="전기문제",
-                agents=["GPT", "Gemini"],
+                agents=["GPT", "Clova"],
                 confidence_threshold=0.75
             ),
             "기계문제": SelectionRule(
                 category="기계문제",
-                agents=["Gemini", "Clova"],
+                agents=["GPT", "Clova"],
                 confidence_threshold=0.70
             ),
             "품질문제": SelectionRule(
@@ -71,9 +71,9 @@ class DynamicAgentSelector:
             ),
             "안전문제": SelectionRule(
                 category="안전문제",
-                agents=["GPT", "Gemini", "Clova"],  # 안전은 모든 관점 필요
+                agents=["GPT", "Clova"],  # Gemini 제외
                 confidence_threshold=0.80,
-                max_agents=3
+                max_agents=2
             ),
             "비용문제": SelectionRule(
                 category="비용문제",
@@ -82,7 +82,7 @@ class DynamicAgentSelector:
             ),
             "긴급문제": SelectionRule(
                 category="긴급문제",
-                agents=["GPT", "Gemini"],  # 빠른 응답
+                agents=["GPT", "Clova"],  # Gemini 제외
                 confidence_threshold=0.75
             ),
             "일반문제": SelectionRule(

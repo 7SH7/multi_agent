@@ -28,7 +28,7 @@ class ClovaAgent(BaseAgent):
         self.api_key = LLM_CONFIGS["naver"]["api_key"]
         self.api_key_id = LLM_CONFIGS["naver"].get("api_key_id", "")  # 설정에서 가져오기
         self.api_url = "https://clovastudio.stream.ntruss.com/testapp/v1/chat-completions/HCX-003"
-        self.request_id = "test-request-id"
+        self.request_id = "smartfactory-request"
 
     async def analyze_and_respond(self, state: AgentState) -> AgentResponse:
         """Clova 기반 실무 분석"""
@@ -38,9 +38,10 @@ class ClovaAgent(BaseAgent):
         user_question = state.get('user_message', '')
         rag_context = state.get('rag_context', {})
         issue_classification = state.get('issue_classification', {})
+        conversation_history = state.get('conversation_history', [])
 
         # 프롬프트 구성
-        prompt = self.build_practical_prompt(user_question, rag_context, issue_classification)
+        prompt = self.build_practical_prompt(user_question, rag_context, issue_classification, conversation_history)
 
         try:
             logger.info(f"Clova Agent 분석 시작 - 모델: {self.model}")
@@ -79,10 +80,10 @@ class ClovaAgent(BaseAgent):
         """Clova API 호출"""
 
         headers = {
-            "X-NCP-APIGW-API-KEY": self.api_key,
-            "X-NCP-APIGW-API-KEY-ID": self.api_key_id,  # 설정에서 가져온 API Key ID
+            "Authorization": f"Bearer {self.api_key}",
+            "X-NCP-CLOVASTUDIO-REQUEST-ID": self.request_id,
             "Content-Type": "application/json",
-            "Accept": "application/json"
+            "Accept": "text/event-stream"
         }
 
         payload = {
@@ -126,12 +127,67 @@ class ClovaAgent(BaseAgent):
                     logger.error(error_msg)
                     return self._create_fallback_response(prompt)
 
-                return response.json()
+                # 스트리밍 응답 파싱
+                return self._parse_streaming_response(response.text)
                 
         except Exception as e:
             logger.error(f"Clova API 호출 중 예외 발생: {str(e)}")
             return self._create_fallback_response(prompt)
 
+    def _parse_streaming_response(self, response_text: str) -> Dict[str, Any]:
+        """Clova 스트리밍 응답 파싱"""
+        try:
+            lines = response_text.strip().split('\n')
+            content_parts = []
+            input_tokens = 0
+            output_tokens = 0
+            
+            for line in lines:
+                if line.startswith('data:'):
+                    try:
+                        import json
+                        data_str = line[5:].strip()  # 'data:' 제거
+                        if data_str and data_str != '[DONE]':
+                            data = json.loads(data_str)
+                            if 'message' in data and 'content' in data['message']:
+                                content_parts.append(data['message']['content'])
+                            if 'inputLength' in data:
+                                input_tokens = data['inputLength']
+                            if 'outputLength' in data:
+                                output_tokens += data['outputLength']
+                    except json.JSONDecodeError:
+                        continue
+            
+            full_content = ''.join(content_parts)
+            
+            return {
+                "result": {
+                    "message": {
+                        "content": full_content if full_content else "응답을 생성할 수 없습니다."
+                    }
+                },
+                "usage": {
+                    "input_tokens": input_tokens,
+                    "output_tokens": output_tokens,
+                    "total_tokens": input_tokens + output_tokens
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"스트리밍 응답 파싱 오류: {str(e)}")
+            return {
+                "result": {
+                    "message": {
+                        "content": "응답 파싱 중 오류가 발생했습니다."
+                    }
+                },
+                "usage": {
+                    "input_tokens": 0,
+                    "output_tokens": 0,
+                    "total_tokens": 0
+                }
+            }
+    
     def _create_fallback_response(self, prompt: str) -> Dict[str, Any]:
         """Clova API 실패 시 fallback 응답 생성"""
         fallback_content = f"""
@@ -192,7 +248,7 @@ class ClovaAgent(BaseAgent):
 
 실무진이 바로 적용할 수 있는 구체적이고 현실적인 조언을 제공해주세요."""
 
-    def build_practical_prompt(self, question: str, rag_context: Dict, issue_info: Dict) -> str:
+    def build_practical_prompt(self, question: str, rag_context: Dict, issue_info: Dict, conversation_history: List = None) -> str:
         """실무 중심 프롬프트 구성"""
 
         # 실무 사례 추출
@@ -200,8 +256,26 @@ class ClovaAgent(BaseAgent):
         if rag_context.get('elasticsearch_results'):
             practical_cases += "유사 사례 및 해결 방법:\n"
             for i, result in enumerate(rag_context['elasticsearch_results'][:3], 1):
-                content = result.get('content', '')[:200]
+                # RAGResult 객체와 dictionary 둘 다 처리
+                if hasattr(result, 'content'):
+                    content = result.content[:200]
+                else:
+                    content = result.get('content', '')[:200]
                 practical_cases += f"{i}. {content}...\n"
+
+        # 대화 기록 정리 (실무 관점)
+        conversation_context = ""
+        if conversation_history:
+            conversation_context = "\n이전 현장 상담 기록:\n"
+            for i, conv in enumerate(conversation_history[-3:], 1):  # 최근 3개만
+                if isinstance(conv, dict):
+                    user_msg = conv.get('user_message', '')
+                    timestamp = conv.get('timestamp', '')
+                    agents_used = conv.get('agents_used', [])
+                    if user_msg:
+                        conversation_context += f"{i}. [{timestamp[:16]}] 현장 문의: {user_msg}\n"
+                        if agents_used:
+                            conversation_context += f"   → 상담 전문가: {', '.join(agents_used)}\n"
 
         # 비용 및 실무 정보
         practical_context = ""
@@ -217,12 +291,15 @@ class ClovaAgent(BaseAgent):
         return f"""
 현장 문제: {question}
 
+{conversation_context}
+
 {practical_context}
 
 참고 사례:
 {practical_cases}
 
-현장 전문가 관점에서 다음을 중점적으로 분석해주세요:
+현장 전문가 관점에서 다음을 중점적으로 분석해주세요.
+이전 현장 상담이 있다면 그 연속성을 고려하여 답변하세요:
 
 1. 현장에서 바로 적용 가능한 해결책
 2. 최소 비용으로 최대 효과를 내는 방법

@@ -5,7 +5,7 @@ from typing import Optional
 from pydantic import BaseModel
 import logging
 
-from core.conversation_manager import conversation_manager
+# 기존 conversation_manager 제거 - SessionManager로 완전 대체
 from agents.gpt_agent import GPTAgent
 from agents.gemini_agent import GeminiAgent  
 from agents.clova_agent import ClovaAgent
@@ -52,22 +52,54 @@ def get_agent(agent_name: str):
     return _agents[agent_name]
 
 async def process_agent_request(agent_name: str, request: AgentChatRequest) -> AgentChatResponse:
-    """공통 Agent 요청 처리"""
+    """Agent별 독립 세션으로 대화 연속성 보장"""
     try:
-        # 세션 ID 처리
-        session_id = request.session_id
-        if not session_id:
-            session_id = conversation_manager.create_session()
+        from core.session_manager import SessionManager
+        from datetime import datetime
         
-        # 기존 대화 히스토리 가져오기
-        messages = conversation_manager.get_messages_for_model(session_id)
+        session_manager = SessionManager()
         
-        # 사용자 메시지 추가
-        conversation_manager.add_message(session_id, "user", request.message)
-        messages.append({"role": "user", "content": request.message})
+        # Agent별 고유 세션 ID 생성
+        if request.session_id:
+            session_id = request.session_id
+        else:
+            # Agent별 기본 세션: gpt_user_session, gemini_user_session 등
+            session_id = f"{agent_name}_user_session"
         
-        # Agent 가져오기 및 응답 생성
+        # 세션 생성 또는 기존 세션 사용
+        session_data = await session_manager.get_session(session_id)
+        if not session_data:
+            session_data = await session_manager.create_session(
+                user_id=f"user_{agent_name}",
+                issue_code=None
+            )
+            # 새로 생성된 세션은 Agent별 고유 ID 사용
+            if not request.session_id:
+                session_id = f"{agent_name}_user_session"
+                # 실제 생성된 세션을 Agent별 ID로 덮어쓰기
+                original_session_id = session_data.session_id
+                session_data.session_id = session_id
+                await session_manager.update_session(session_data)
+        
+        # 이전 대화 기록 가져오기
+        conversation_history = await session_manager.get_conversation_history(session_id)
+        
+        # Agent 실행 및 응답 생성
         agent = get_agent(agent_name)
+        
+        # 대화 기록을 메시지 형태로 변환
+        messages = []
+        for conv in conversation_history:
+            if isinstance(conv, dict):
+                user_msg = conv.get('user_message', '')
+                bot_response = conv.get('bot_response', '')
+                if user_msg:
+                    messages.append({"role": "user", "content": user_msg})
+                if bot_response:
+                    messages.append({"role": "assistant", "content": bot_response})
+        
+        # 현재 메시지 추가
+        messages.append({"role": "user", "content": request.message})
         
         # Agent별 응답 생성 방식
         if agent_name == "claude":
@@ -114,11 +146,11 @@ async def process_agent_request(agent_name: str, request: AgentChatRequest) -> A
                 response_text = f"{agent_name} Agent의 응답 메서드를 찾을 수 없습니다."
                 model_details = {"error": f"No suitable method found for {agent_name}"}
         
-        # 응답을 히스토리에 추가
-        conversation_manager.add_message(
-            session_id, "assistant", response_text, 
-            agent_name=agent_name, 
-            metadata=model_details
+        # 응답을 공통 세션에 저장
+        await session_manager.add_conversation(
+            session_id, 
+            request.message, 
+            f"[{agent_name}] {response_text}"
         )
         
         # 응답 생성
@@ -128,7 +160,7 @@ async def process_agent_request(agent_name: str, request: AgentChatRequest) -> A
             session_id=session_id,
             agent_name=agent_name,
             model_details=model_details,
-            conversation_length=len(conversation_manager.get_history(session_id)),
+            conversation_length=len(conversation_history) + 1,
             timestamp=datetime.now().isoformat()
         )
         
@@ -173,27 +205,44 @@ async def chat_with_clova(request: AgentChatRequest):
 @agent_router.post("/session/new")
 async def create_new_session():
     """새 대화 세션 생성"""
-    session_id = conversation_manager.create_session()
-    return {"session_id": session_id, "message": "새 세션이 생성되었습니다."}
+    from core.session_manager import SessionManager
+    session_manager = SessionManager()
+    session_data = await session_manager.create_session(user_id="agent_user")
+    return {"session_id": session_data.session_id, "message": "새 세션이 생성되었습니다."}
 
 @agent_router.get("/session/{session_id}")
 async def get_session_info(session_id: str):
     """세션 정보 조회"""
-    return conversation_manager.get_session_info(session_id)
+    from core.session_manager import SessionManager
+    session_manager = SessionManager()
+    session_data = await session_manager.get_session(session_id)
+    if session_data:
+        return {
+            "session_id": session_data.session_id,
+            "user_id": session_data.user_id,
+            "created_at": session_data.created_at.isoformat(),
+            "updated_at": session_data.updated_at.isoformat()
+        }
+    else:
+        raise HTTPException(status_code=404, detail="세션을 찾을 수 없습니다.")
 
 @agent_router.get("/session/{session_id}/history")
-async def get_conversation_history(session_id: str):
+async def get_conversation_history_endpoint(session_id: str):
     """대화 히스토리 조회"""
-    history = conversation_manager.get_history(session_id)
+    from core.session_manager import SessionManager
+    session_manager = SessionManager()
+    history = await session_manager.get_conversation_history(session_id)
     return {
         "session_id": session_id,
-        "messages": [msg.dict() for msg in history]
+        "messages": history
     }
 
 @agent_router.delete("/session/{session_id}")
 async def clear_session(session_id: str):
     """세션 초기화"""
-    success = conversation_manager.clear_session(session_id)
+    from core.session_manager import SessionManager
+    session_manager = SessionManager()
+    success = await session_manager.clear_session(session_id)
     if success:
         return {"message": f"세션 {session_id}가 초기화되었습니다."}
     else:

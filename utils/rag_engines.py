@@ -91,7 +91,9 @@ class ElasticsearchEngine:
         }], 
         retry_on_timeout=True,
         max_retries=3,
-        request_timeout=5)
+        request_timeout=5,
+        # 버전 호환성 이슈로 인해 비활성화 상태 유지
+        )
         self.index_name = "manufacturing_docs"
         self.is_available = False
         self._initialized = False
@@ -134,11 +136,11 @@ class ElasticsearchEngine:
                         "properties": {
                             "content": {
                                 "type": "text",
-                                "analyzer": "korean"
+                                "analyzer": "standard"
                             },
                             "title": {
                                 "type": "text",
-                                "analyzer": "korean"
+                                "analyzer": "standard"
                             },
                             "category": {
                                 "type": "keyword"
@@ -154,9 +156,8 @@ class ElasticsearchEngine:
                     "settings": {
                         "analysis": {
                             "analyzer": {
-                                "korean": {
-                                    "type": "custom",
-                                    "tokenizer": "nori_tokenizer"
+                                "standard": {
+                                    "type": "standard"
                                 }
                             }
                         }
@@ -209,19 +210,14 @@ class ElasticsearchEngine:
         try:
             search_body = {
                 "query": {
-                    "multi_match": {
-                        "query": query,
-                        "fields": ["content^2", "title^1.5"],
-                        "type": "best_fields",
-                        "fuzziness": "AUTO"
+                    "bool": {
+                        "should": [
+                            {"match": {"content": {"query": query, "boost": 2}}},
+                            {"match": {"title": {"query": query, "boost": 1.5}}}
+                        ]
                     }
                 },
-                "size": top_k,
-                "highlight": {
-                    "fields": {
-                        "content": {}
-                    }
-                }
+                "size": top_k
             }
 
             response = await self.client.search(

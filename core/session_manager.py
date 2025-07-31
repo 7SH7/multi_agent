@@ -157,6 +157,10 @@ class SessionManager:
             print(f"Error deleting session {session_id}: {e}")
             return False
 
+    async def clear_session(self, session_id: str) -> bool:
+        """세션 초기화 (delete_session의 별칭)"""
+        return await self.delete_session(session_id)
+
     async def list_active_sessions(self, user_id: str = None) -> List[SessionData]:
         redis_client = await self._get_redis_client()
 
@@ -233,6 +237,32 @@ class SessionManager:
         
         session_data.conversation_count += 1
         return await self.update_session(session_data)
+
+    async def add_conversation_detailed(self, session_id: str, conversation_data: Dict[str, Any]) -> bool:
+        """세션에 상세한 대화 기록 추가 (확장된 형태)"""
+        session_data = await self.get_session(session_id)
+        if not session_data:
+            return False
+        
+        # 대화 기록을 metadata에 저장
+        if 'conversation_history' not in session_data.metadata:
+            session_data.metadata['conversation_history'] = []
+        
+        # 타임스탬프 자동 추가
+        if 'timestamp' not in conversation_data:
+            conversation_data['timestamp'] = datetime.now().isoformat()
+        
+        session_data.metadata['conversation_history'].append(conversation_data)
+        session_data.conversation_count += 1
+        return await self.update_session(session_data)
+
+    async def get_conversation_history(self, session_id: str) -> List[Dict[str, Any]]:
+        """세션의 대화 기록 조회"""
+        session_data = await self.get_session(session_id)
+        if not session_data:
+            return []
+        
+        return session_data.metadata.get('conversation_history', [])
 
     async def get_session_stats(self) -> Dict[str, Any]:
         redis_client = await self._get_redis_client()

@@ -35,9 +35,10 @@ class GeminiAgent(BaseAgent):
         user_question = state.get('user_message', '')
         rag_context = state.get('rag_context', {})
         issue_classification = state.get('issue_classification', {})
+        conversation_history = state.get('conversation_history', [])
 
         # 프롬프트 구성
-        prompt = self.build_technical_prompt(user_question, rag_context, issue_classification)
+        prompt = self.build_technical_prompt(user_question, rag_context, issue_classification, conversation_history)
 
         try:
             logger.info(f"Gemini Agent 분석 시작 - 모델: {self.model}")
@@ -88,7 +89,7 @@ class GeminiAgent(BaseAgent):
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, self.model_instance.generate_content, prompt)
 
-    def build_technical_prompt(self, question: str, rag_context: Dict, issue_info: Dict) -> str:
+    def build_technical_prompt(self, question: str, rag_context: Dict, issue_info: Dict, conversation_history: List = None) -> str:
         """기술적 분석 프롬프트 구성"""
 
         # 기술 데이터 추출
@@ -96,9 +97,27 @@ class GeminiAgent(BaseAgent):
         if rag_context.get('chroma_results'):
             technical_data += "기술 사양 및 데이터:\n"
             for i, result in enumerate(rag_context['chroma_results'][:3], 1):
-                content = result.get('content', '')[:250]
+                # RAGResult 객체와 dictionary 둘 다 처리
+                if hasattr(result, 'content'):
+                    content = result.content[:250]
+                else:
+                    content = result.get('content', '')[:250]
                 if any(keyword in content.lower() for keyword in ['압력', '온도', '전류', '전압', '진동', '두께']):
                     technical_data += f"{i}. {content}...\n"
+
+        # 대화 기록 정리
+        conversation_context = ""
+        if conversation_history:
+            conversation_context = "\n이전 기술 상담 기록:\n"
+            for i, conv in enumerate(conversation_history[-3:], 1):  # 최근 3개만
+                if isinstance(conv, dict):
+                    user_msg = conv.get('user_message', '')
+                    timestamp = conv.get('timestamp', '')
+                    agents_used = conv.get('agents_used', [])
+                    if user_msg:
+                        conversation_context += f"{i}. [{timestamp[:16]}] 기술 문의: {user_msg}\n"
+                        if agents_used:
+                            conversation_context += f"   → 분석 전문가: {', '.join(agents_used)}\n"
 
         # 이슈 기술 정보
         technical_context = ""
@@ -114,12 +133,15 @@ class GeminiAgent(BaseAgent):
         return f"""
 사용자 기술 문의: {question}
 
+{conversation_context}
+
 {technical_context}
 
 기술 자료:
 {technical_data}
 
-위 정보를 바탕으로 기술 전문가 관점에서 다음을 중점적으로 분석해주세요:
+위 정보를 바탕으로 기술 전문가 관점에서 다음을 중점적으로 분석해주세요.
+이전 기술 상담이 있다면 그 연속성을 고려하여 답변하세요:
 
 1. 정확한 기술적 원인 분석
 2. 수치 및 데이터 기반 접근

@@ -36,9 +36,10 @@ class GPTAgent(BaseAgent):
         user_question = state.get('user_message', '')
         rag_context = state.get('rag_context', {})
         issue_classification = state.get('issue_classification', {})
+        conversation_history = state.get('conversation_history', [])
 
         # 프롬프트 구성
-        prompt = self.build_analysis_prompt(user_question, rag_context, issue_classification)
+        prompt = self.build_analysis_prompt(user_question, rag_context, issue_classification, conversation_history)
 
         try:
             logger.info(f"GPT Agent 분석 시작 - 모델: {self.model}")
@@ -104,7 +105,7 @@ class GPTAgent(BaseAgent):
 
 응답은 명확하고 실행 가능한 형태로 작성하세요."""
 
-    def build_analysis_prompt(self, question: str, rag_context: Dict, issue_info: Dict) -> str:
+    def build_analysis_prompt(self, question: str, rag_context: Dict, issue_info: Dict, conversation_history: List = None) -> str:
         """분석 프롬프트 구성"""
 
         # RAG 컨텍스트 정리
@@ -112,14 +113,36 @@ class GPTAgent(BaseAgent):
         if rag_context.get('chroma_results'):
             context_text += "관련 기술 문서:\n"
             for i, result in enumerate(rag_context['chroma_results'][:3], 1):
-                content = result.get('content', '')[:300]
+                # RAGResult 객체와 dictionary 둘 다 처리
+                if hasattr(result, 'content'):
+                    content = result.content[:300]
+                else:
+                    content = result.get('content', '')[:300]
                 context_text += f"{i}. {content}...\n"
 
         if rag_context.get('elasticsearch_results'):
             context_text += "\n관련 해결 사례:\n"
             for i, result in enumerate(rag_context['elasticsearch_results'][:3], 1):
-                content = result.get('content', '')[:300]
+                # RAGResult 객체와 dictionary 둘 다 처리
+                if hasattr(result, 'content'):
+                    content = result.content[:300]
+                else:
+                    content = result.get('content', '')[:300]
                 context_text += f"{i}. {content}...\n"
+
+        # 대화 기록 정리
+        conversation_context = ""
+        if conversation_history:
+            conversation_context = "\n이전 대화 기록:\n"
+            for i, conv in enumerate(conversation_history[-3:], 1):  # 최근 3개만
+                if isinstance(conv, dict):
+                    user_msg = conv.get('user_message', '')
+                    timestamp = conv.get('timestamp', '')
+                    agents_used = conv.get('agents_used', [])
+                    if user_msg:
+                        conversation_context += f"{i}. [{timestamp[:16]}] 사용자: {user_msg}\n"
+                        if agents_used:
+                            conversation_context += f"   → 참여 전문가: {', '.join(agents_used)}\n"
 
         # 이슈 컨텍스트 정리
         issue_context = ""
@@ -138,12 +161,15 @@ class GPTAgent(BaseAgent):
         return f"""
 사용자 질문: {question}
 
+{conversation_context}
+
 {issue_context}
 
 배경 정보:
 {context_text}
 
 위 정보를 종합하여 제조업 전문가 관점에서 분석하고 해결책을 제시해주세요.
+이전 대화가 있다면 그 맥락을 고려하여 연속성 있는 답변을 제공하세요.
 특히 다음 사항을 중점적으로 다뤄주세요:
 
 1. 문제의 근본 원인 분석

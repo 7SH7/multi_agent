@@ -380,6 +380,32 @@ def create_application() -> FastAPI:
         """시스템 메트릭 조회 (모니터링용)"""
         return monitor.get_all_metrics_summary()
     
+    @app.get("/test/simple")
+    async def simple_test():
+        """간단한 기능 테스트"""
+        try:
+            from agents.gpt_agent import GPTAgent
+            from agents.rag_classifier import RAGClassifier
+            from utils.rag_engines import HybridRAGEngine
+            
+            # RAG 엔진 테스트
+            rag_engine = HybridRAGEngine()
+            results = await rag_engine.search("모터 베어링", top_k=2)
+            await rag_engine.close()
+            
+            return {
+                "status": "success",
+                "message": "모든 기본 기능이 정상 작동합니다",
+                "rag_results_count": len(results),
+                "timestamp": datetime.now().isoformat()
+            }
+        except Exception as e:
+            return {
+                "status": "error", 
+                "message": f"오류 발생: {str(e)}",
+                "timestamp": datetime.now().isoformat()
+            }
+    
     @app.delete("/session/{session_id}")
     async def delete_session(
         session_id: str,

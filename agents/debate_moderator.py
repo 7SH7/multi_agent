@@ -34,12 +34,13 @@ class DebateModerator:
         agent_responses = state.get('agent_responses', {})
         user_question = state.get('user_message', '')
         issue_info = state.get('issue_classification', {})
+        conversation_history = state.get('conversation_history', [])
 
         logger.info(f"토론 진행 시작 - 참여 Agent 수: {len(agent_responses)}")
 
         if len(agent_responses) < 2:
             logger.info("Agent가 1개 이하이므로 토론 생략")
-            return self.handle_single_agent_response(state)
+            return await self.handle_single_agent_response(state)
 
         try:
             # 1단계: 응답 간 차이점 분석
@@ -52,7 +53,7 @@ class DebateModerator:
 
             # 3단계: 최종 통합 응답 생성
             final_recommendation = await self.synthesize_final_solution(
-                agent_responses, debate_results, user_question
+                agent_responses, debate_results, user_question, conversation_history
             )
 
             # 상태 업데이트
@@ -246,13 +247,27 @@ JSON 형식으로 응답:
             }
 
     async def synthesize_final_solution(self, agent_responses: Dict, debate_results: Dict,
-                                      user_question: str) -> Dict[str, Any]:
+                                      user_question: str, conversation_history: List = None) -> Dict[str, Any]:
         """최종 통합 해결책 생성"""
+
+        # 대화 기록 컨텍스트 추가
+        conversation_context = ""
+        if conversation_history:
+            conversation_context = "\n이전 대화 맥락:\n"
+            for i, conv in enumerate(conversation_history[-2:], 1):  # 최근 2개만
+                if isinstance(conv, dict):
+                    user_msg = conv.get('user_message', '')
+                    timestamp = conv.get('timestamp', '')
+                    if user_msg:
+                        conversation_context += f"{i}. [{timestamp[:16]}] 이전 문의: {user_msg}\n"
 
         synthesis_prompt = f"""
 사용자 질문: {user_question}
 
+{conversation_context}
+
 전문가 토론 결과를 바탕으로 최종 권장사항을 작성해주세요.
+이전 대화 맥락이 있다면 연속성을 고려하여 답변하세요.
 
 합의 사항: {', '.join(debate_results.get('consensus_points', []))}
 최종 합의: {debate_results.get('final_agreement', '')}
@@ -338,6 +353,7 @@ JSON 형식:
         """단일 Agent 응답 처리 - 더욱 체계적인 구조화"""
         agent_responses = state.get('agent_responses', {})
         user_question = state.get('user_message', '')
+        conversation_history = state.get('conversation_history', [])
 
         if len(agent_responses) == 1:
             agent_name, response_data = list(agent_responses.items())[0]
@@ -353,12 +369,25 @@ JSON 형식:
             
             # Claude를 사용해 단일 응답을 구조화
             try:
+                # 대화 기록 컨텍스트 추가
+                conversation_context = ""
+                if conversation_history:
+                    conversation_context = "\n이전 대화 맥락:\n"
+                    for i, conv in enumerate(conversation_history[-2:], 1):  # 최근 2개만
+                        if isinstance(conv, dict):
+                            user_msg = conv.get('user_message', '')
+                            timestamp = conv.get('timestamp', '')
+                            if user_msg:
+                                conversation_context += f"{i}. [{timestamp[:16]}] 이전 문의: {user_msg}\n"
+
                 structure_prompt = f"""
 다음 {agent_name} 전문가의 응답을 체계적으로 구조화해주세요:
 
 사용자 질문: {user_question}
+{conversation_context}
 전문가 응답: {agent_response}
 
+이전 대화 맥락이 있다면 연속성을 고려하여 구조화해주세요.
 다음 JSON 형식으로 구조화해주세요:
 {{
     "executive_summary": "핵심 해결책 요약 (2-3문장)",

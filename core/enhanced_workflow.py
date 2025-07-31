@@ -185,13 +185,13 @@ class EnhancedWorkflowManager:
                 steps_completed=workflow_state.completed_steps
             )
 
-# Global instances
+# Global instances - force recreation for fixes
 _workflow_manager = None
 
 def create_enhanced_workflow() -> EnhancedWorkflowManager:
     global _workflow_manager
-    if _workflow_manager is None:
-        _workflow_manager = EnhancedWorkflowManager()
+    # Always create new instance to ensure latest code is used
+    _workflow_manager = EnhancedWorkflowManager()
     return _workflow_manager
 
 # For backward compatibility - lazy initialization
@@ -200,6 +200,6 @@ enhanced_workflow = None
 def get_enhanced_workflow() -> EnhancedWorkflowManager:
     """지연 초기화로 workflow 반환"""
     global enhanced_workflow
-    if enhanced_workflow is None:
-        enhanced_workflow = create_enhanced_workflow()
+    # Always create new instance to ensure latest code is used
+    enhanced_workflow = create_enhanced_workflow()
     return enhanced_workflow
