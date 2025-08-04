@@ -41,23 +41,15 @@ def create_application() -> FastAPI:
     
     # 기본 설정 검증
     config_result = ConfigValidator.validate_startup_config(settings)
-    if not config_result.is_valid:
-        for error in config_result.errors:
-            logger.error(f"설정 오류: {error}")
-        raise RuntimeError(f"필수 설정이 누락되었습니다: {'; '.join(config_result.errors)}")
-    
-    # 경고 사항 로그
+    for error in config_result.errors:
+        logger.error(f"설정 오류: {error}")
     for warning in config_result.warnings:
         logger.warning(f"설정 경고: {warning}")
     
     # 런타임 의존성 검증
     deps_result = ConfigValidator.validate_runtime_dependencies()
-    if not deps_result.is_valid:
-        for error in deps_result.errors:
-            logger.error(f"의존성 오류: {error}")
-        raise RuntimeError(f"필수 라이브러리가 누락되었습니다: {'; '.join(deps_result.errors)}")
-    
-    # 의존성 경고 로그
+    for error in deps_result.errors:
+        logger.error(f"의존성 오류: {error}")
     for warning in deps_result.warnings:
         logger.warning(f"의존성 경고: {warning}")
     

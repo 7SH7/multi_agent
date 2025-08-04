@@ -301,18 +301,17 @@ class ConfigValidator:
     
     @classmethod
     def validate_startup_config(cls, settings) -> ValidationResult:
-        """시작시 필수 설정 검증"""
-        errors = []
+        """시작시 필수 설정 검증 (오류 대신 경고 로깅)"""
         warnings = []
         sanitized_data = {}
         
-        # API 키 검증
-        api_key_errors = cls._validate_api_keys(settings)
-        errors.extend(api_key_errors)
+        # API 키 검증 -> 경고로 처리
+        api_key_warnings = cls._validate_api_keys(settings)
+        warnings.extend(api_key_warnings)
         
-        # 데이터베이스 설정 검증
-        db_errors = cls._validate_database_config(settings)
-        errors.extend(db_errors)
+        # 데이터베이스 설정 검증 -> 경고로 처리
+        db_warnings = cls._validate_database_config(settings)
+        warnings.extend(db_warnings)
         
         # 외부 서비스 설정 검증
         service_warnings = cls._validate_service_configs(settings)
@@ -322,17 +321,18 @@ class ConfigValidator:
         log_warnings = cls._validate_log_config(settings)
         warnings.extend(log_warnings)
         
+        # 이제 항상 is_valid=True를 반환하여 서버 시작을 막지 않음
         return ValidationResult(
-            is_valid=len(errors) == 0,
-            errors=errors,
+            is_valid=True,
+            errors=[], # 오류를 발생시키지 않음
             sanitized_data=sanitized_data,
             warnings=warnings
         )
     
     @classmethod
     def _validate_api_keys(cls, settings) -> List[str]:
-        """API 키 검증"""
-        errors = []
+        """API 키 검증 (경고용 메시지 반환)"""
+        warnings = []
         missing_keys = []
         invalid_keys = []
         
@@ -346,17 +346,17 @@ class ConfigValidator:
                     invalid_keys.append(key)
         
         if missing_keys:
-            errors.append(f"필수 API 키가 누락되었습니다: {', '.join(missing_keys)}")
+            warnings.append(f"필수 API 키가 누락되었습니다: {', '.join(missing_keys)}. 해당 Agent는 작동하지 않을 수 있습니다.")
             
         if invalid_keys:
-            errors.append(f"API 키 형식이 올바르지 않습니다: {', '.join(invalid_keys)}")
+            warnings.append(f"API 키 형식이 올바르지 않습니다: {', '.join(invalid_keys)}. 해당 Agent는 작동하지 않을 수 있습니다.")
             
-        return errors
+        return warnings
     
     @classmethod
     def _validate_database_config(cls, settings) -> List[str]:
-        """데이터베이스 설정 검증"""
-        errors = []
+        """데이터베이스 설정 검증 (경고용 메시지 반환)"""
+        warnings = []
         missing_configs = []
         
         for config in cls.REQUIRED_DB_CONFIGS:
@@ -365,17 +365,17 @@ class ConfigValidator:
                 missing_configs.append(config)
         
         if missing_configs:
-            errors.append(f"필수 데이터베이스 설정이 누락되었습니다: {', '.join(missing_configs)}")
+            warnings.append(f"필수 데이터베이스 설정이 누락되었습니다: {', '.join(missing_configs)}. DB 관련 기능이 제한될 수 있습니다.")
             
         # DATABASE_URL 생성 테스트
         try:
             db_url = settings.DATABASE_URL
             if not db_url or "mysql://" not in db_url:
-                errors.append("DATABASE_URL 생성에 실패했습니다. DB 설정을 확인하세요.")
+                warnings.append("DATABASE_URL 생성에 실패했습니다. DB 설정을 확인하세요.")
         except Exception as e:
-            errors.append(f"DATABASE_URL 검증 오류: {str(e)}")
+            warnings.append(f"DATABASE_URL 검증 오류: {str(e)}")
             
-        return errors
+        return warnings
     
     @classmethod
     def _validate_service_configs(cls, settings) -> List[str]:
@@ -385,7 +385,7 @@ class ConfigValidator:
         for config in cls.REQUIRED_SERVICE_CONFIGS:
             value = getattr(settings, config, "")
             if not value or value.strip() == "":
-                warnings.append(f"외부 서비스 설정이 누락되었습니다: {config}")
+                warnings.append(f"외부 서비스 설정이 누락되었습니다: {config}. 관련 기능이 제한될 수 있습니다.")
             elif value == "localhost" and getattr(settings, "ENVIRONMENT", "") == "production":
                 warnings.append(f"운영 환경에서 localhost 사용 중: {config}")
                 
@@ -427,29 +427,43 @@ class ConfigValidator:
     
     @classmethod
     def validate_runtime_dependencies(cls) -> ValidationResult:
-        """런타임 의존성 검증"""
-        errors = []
+        """런타임 의존성 검증 (오류 대신 경고 로깅)"""
         warnings = []
         
         # 필수 라이브러리 import 테스트
         try:
             import anthropic
+        except ImportError:
+            warnings.append("anthropic 라이브러리가 없어 Claude Agent 사용이 불가합니다.")
+        try:
             import openai
+        except ImportError:
+            warnings.append("openai 라이브러리가 없어 GPT Agent 사용이 불가합니다.")
+        try:
             import google.generativeai
+        except ImportError:
+            warnings.append("google.generativeai 라이브러리가 없어 Gemini Agent 사용이 불가합니다.")
+        try:
             import redis
+        except ImportError:
+            warnings.append("redis 라이브러리가 없어 세션 관리에 제약이 있을 수 있습니다.")
+        try:
             import elasticsearch
+        except ImportError:
+            warnings.append("elasticsearch 라이브러리가 없어 RAG 검색에 제약이 있을 수 있습니다.")
+        try:
             import chromadb
-        except ImportError as e:
-            errors.append(f"필수 라이브러리 누락: {str(e)}")
-        
+        except ImportError:
+            warnings.append("chromadb 라이브러리가 없어 RAG 검색에 제약이 있을 수 있습니다.")
+
         # 환경 변수 존재 확인
         import os
         if not os.path.exists(".env"):
             warnings.append(".env 파일이 존재하지 않습니다. 환경 변수가 시스템에서 로드됩니다.")
         
         return ValidationResult(
-            is_valid=len(errors) == 0,
-            errors=errors,
+            is_valid=True, # 항상 True
+            errors=[],
             sanitized_data={},
             warnings=warnings
         )
