@@ -104,7 +104,7 @@ class SessionManager:
 
         except Exception as e:
             print(f"Error retrieving session {session_id}: {e}")
-            return None
+            raise SessionError(f"Failed to retrieve session {session_id}: {e}", session_id=session_id)
 
     async def update_session(self, session_data: SessionData) -> bool:
         session_data.updated_at = datetime.now()

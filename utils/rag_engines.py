@@ -241,7 +241,7 @@ class ElasticsearchEngine:
         except Exception as e:
             print(f"Elasticsearch 검색 오류: {e}")
             self.is_available = False  # 연결 상태 업데이트
-            return []
+            raise RAGError(f"Elasticsearch search failed: {e}", search_type="elasticsearch")
 
     async def close(self):
         """Elasticsearch 클라이언트 리소스 정리"""

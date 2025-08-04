@@ -161,7 +161,10 @@ class EnhancedWorkflowManager:
                 logger.info("Clova Agent 실행 성공")
             except Exception as e:
                 logger.error(f"Clova Agent 실행 실패: {str(e)}")
-                # 실패한 Agent 정보를 상태에 기록
+                # 에러가 발생해도 workflow는 계속 진행하되, 에러 정보를 상태에 기록
+                agent_responses = state.get('agent_responses', {})
+                agent_responses['Clova'] = {'error': str(e), 'agent_name': 'Clova'}
+                state['agent_responses'] = agent_responses
                 failed_agents = state.get('failed_agents', [])
                 failed_agents.append({
                     'agent_name': 'Clova',

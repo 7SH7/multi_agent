@@ -11,7 +11,7 @@ from config.equipment_thresholds import (
     EQUIPMENT_TRANSLATIONS,
     PROBLEM_TYPE_TRANSLATIONS
 )
-from config.issue_database import ISSUE_DATABASE
+from config import ISSUE_DATABASE
 
 class KnowledgeConnector:
     """지식베이스 데이터에 대한 통합 접근 인터페이스"""

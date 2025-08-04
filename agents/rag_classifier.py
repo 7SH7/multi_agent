@@ -5,7 +5,7 @@ import json
 from datetime import datetime
 from typing import Dict, Any, List
 from models.agent_state import AgentState
-from config.issue_database import ISSUE_DATABASE
+from config import ISSUE_DATABASE
 from utils.rag_engines import ChromaEngine, ElasticsearchEngine
 import logging
 

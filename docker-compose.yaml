@@ -48,37 +48,37 @@ services:
   # ===========================================
   # MySQL 데이터베이스 (로컬 MySQL 사용으로 주석처리)
   # ===========================================
-  # mysql:
-  #   image: mysql:8.0
-  #   container_name: multi-agent-mysql
-  #   ports:
-  #     - "3306:3306"
-  #   env_file:
-  #     - .env
-  #   environment:
-  #     - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-  #     - MYSQL_DATABASE=${MYSQL_DATABASE}
-  #     - MYSQL_USER=${MYSQL_USER}
-  #     - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-  #     - MYSQL_CHARACTER_SET_SERVER=utf8mb4
-  #     - MYSQL_COLLATION_SERVER=utf8mb4_unicode_ci
-  #   volumes:
-  #     - mysql_data:/var/lib/mysql
-  #     - ./scripts/init-mysql.sql:/docker-entrypoint-initdb.d/init.sql:ro
-  #   networks:
-  #     - chatbot-network
-  #   restart: unless-stopped
-  #   command: >
-  #     --default-authentication-plugin=mysql_native_password
-  #     --character-set-server=utf8mb4
-  #     --collation-server=utf8mb4_unicode_ci
-  #     --sql-mode=STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO
-  #   healthcheck:
-  #     test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER}", "-p${MYSQL_PASSWORD}"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 5
-  #     start_period: 60s
+    mysql:
+    image: mysql:8.0
+    container_name: multi-agent-mysql
+    ports:
+      - "3306:3306"
+    env_file:
+      - .env
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_CHARACTER_SET_SERVER=utf8mb4
+      - MYSQL_COLLATION_SERVER=utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./scripts/init-mysql.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - chatbot-network
+    restart: unless-stopped
+    command: >
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --sql-mode=STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER}", "-p${MYSQL_PASSWORD}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   # ===========================================
   # Redis (세션 관리 및 캐시)

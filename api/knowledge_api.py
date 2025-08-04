@@ -12,7 +12,7 @@ from config.equipment_thresholds import (
     EQUIPMENT_TRANSLATIONS,
     PROBLEM_TYPE_TRANSLATIONS
 )
-from config.issue_database import ISSUE_DATABASE
+from config import ISSUE_DATABASE
 
 router = APIRouter(prefix="/knowledge", tags=["Knowledge Base"])
 

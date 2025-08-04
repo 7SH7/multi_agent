@@ -36,10 +36,11 @@ async def integration_test():
         })
         
         workflow = EnhancedWorkflowManager()
-        first_result = await workflow.run(first_state)
+        first_result_obj = await workflow.execute(first_state)
+        first_result = first_result_obj.final_state
         
         print(f"📤 첫 질문: {first_state.get('user_message')}")
-        print(f"🤖 참여 Agent: {', '.join(first_result.get('agents_used', []))}")
+        print(f"🤖 참여 Agent: {', '.join(first_result.get('selected_agents', []))}")
         
         if first_result.get('final_recommendation'):
             summary = first_result['final_recommendation'].get('executive_summary', '응답 없음')
@@ -48,7 +49,7 @@ async def integration_test():
         # 대화 기록 저장
         await session_manager.add_conversation_detailed(session_id, {
             'user_message': first_state.get('user_message'),
-            'agents_used': first_result.get('agents_used', []),
+            'agents_used': first_result.get('selected_agents', []),
             'timestamp': datetime.now().isoformat(),
             'final_recommendation': first_result.get('final_recommendation', {})
         })
@@ -67,10 +68,11 @@ async def integration_test():
             'conversation_history': conversation_history  # 이전 대화 포함
         })
         
-        second_result = await workflow.run(second_state)
-        
+        second_result_obj = await workflow.execute(second_state)
+        second_result = second_result_obj.final_state
+
         print(f"📤 두번째 질문: {second_state.get('user_message')}")
-        print(f"🤖 참여 Agent: {', '.join(second_result.get('agents_used', []))}")
+        print(f"🤖 참여 Agent: {', '.join(second_result.get('selected_agents', []))}")
         
         if second_result.get('final_recommendation'):
             summary = second_result['final_recommendation'].get('executive_summary', '응답 없음')
@@ -97,7 +99,7 @@ async def integration_test():
         print("-" * 40)
         
         # Agent별 메모리 사용 확인
-        agent_responses = first_result.get('agent_responses', {})
+        agent_responses = second_result.get('agent_responses', {})
         
         for agent_name, response_data in agent_responses.items():
             if hasattr(response_data, 'response'):
@@ -121,7 +123,7 @@ async def integration_test():
             ('대화 기록 저장', len(conversation_history) > 0),
             ('두 번째 질문 처리', second_result.get('final_recommendation') is not None),
             ('RAG 데이터 활용', len(chroma_results) > 0 or len(es_results) > 0),
-            ('Agent 참여', len(first_result.get('agents_used', [])) > 0)
+            ('Agent 참여', len(first_result.get('selected_agents', [])) > 0)
         ]
         
         passed = sum(1 for _, success in success_indicators if success)
@@ -131,7 +133,7 @@ async def integration_test():
             icon = "✅" if success else "❌"
             print(f"{icon} {test_name}")
         
-        print(f"\n🏆 통합 테스트 성공률: {passed}/{total} ({passed/total*100:.1f}%)")
+        print(f"\n🏆 통합 테스트 성공률: {passed}/{total} ({passed/total*100:.1f}%) ")
         
         if passed == total:
             print("\n🎉🎉🎉 완전한 통합 시스템이 정상 작동합니다! 🎉🎉🎉")

@@ -92,20 +92,34 @@ class DebateModerator:
             responses_text += f"신뢰도: {confidence:.2f}\n"
             responses_text += f"의견: {response}\n"
 
-        analysis_prompt = f"""
+        analysis_prompt = f'''
 제조업 전문가 응답 비교 분석:
 {responses_text}
 
-다음 형식으로 간단히 답변해주세요 (JSON 없이):
-
-공통점:
-- 공통점1
-- 공통점2
-
-차이점:
-- 차이점1  
-- 차이점2
-"""
+다음 JSON 형식으로 응답해주세요:
+{{
+    "common_points": [
+        "공통점 1",
+        "공통점 2"
+    ],
+    "differences": [
+        "차이점 1",
+        "차이점 2"
+    ],
+    "conflicts": [
+        {{
+            "topic": "충돌 주제",
+            "details": "구체적인 충돌 내용"
+        }}
+    ],
+    "complementary_aspects": [
+        {{
+            "topic": "상호 보완적인 부분",
+            "details": "어떻게 상호 보완적인지에 대한 설명"
+        }}
+    ]
+}}
+'''
 
         try:
             response = self.claude_client.messages.create(
@@ -117,9 +131,14 @@ class DebateModerator:
 
             try:
                 response_text = response.content[0].text.strip()
-                # 텍스트 응답을 파싱해서 구조화
-                analysis_result = self._parse_analysis_text(response_text)
-            except Exception as e:
+                # JSON 문자열 정리
+                if response_text.startswith('```json'):
+                    response_text = response_text.split('```json')[1].split('```')[0].strip()
+                elif response_text.startswith('```'):
+                    response_text = response_text.split('```')[1].split('```')[0].strip()
+                
+                analysis_result = json.loads(response_text)
+            except json.JSONDecodeError as e:
                 logger.error(f"차이 분석 처리 오류: {str(e)}")
                 analysis_result = {
                     "differences": ["분석 처리 중 오류가 발생했습니다."],
