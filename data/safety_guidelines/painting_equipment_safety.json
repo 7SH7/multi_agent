@@ -1,0 +1,340 @@
+{
+  "equipment_type": "PAINTING_EQUIPMENT",
+  "category": "painting_equipment",
+  "safety_version": "v2.0",
+  "last_updated": "2025-08-01",
+  "general_safety_principles": [
+    "도장설비 시스템 각종 작업 시 안전 수칙 준수",
+    "센서 모니터링값 회로 설비장애 전기 점검", 
+    "설비장애각종 각종 사전 작업 시스템 운영",
+    "전기적 안전 및 화학적 안전 확보 필요",
+    "자동 시스템에서 안전이 우선 순위"
+  ],
+  "predictive_maintenance_safety": [
+    {
+      "error_code": "PAINT-EQ-MCH",
+      "error_name": "기계 이상",
+      "issue_type": "기계적 오류",
+      "description": "베어링, 축계 등의 기계적 결함으로 인한 안전 전기",
+      "safety_risks": [
+        "베어링 결함으로 인한 기계적 손상 전기",
+        "축계 기계값으로 인한 회전 불균형",
+        "PLC 제어 오류로 인한 자동운전 회로 동작 위험",
+        "기계 간섭 알람 발생으로 인한 시스템 기계"
+      ],
+      "predicted_causes_safety": [
+        "베어링 마모 - 자체 진동 회전으로 인한 진동 전기",
+        "축계 불균형 - 자체축, 자체축으로 인한 불균형",
+        "기계 간섭 알람 발생 - 제어 신호 불균형으로 인한 기계",
+        "PLC 제어 오류 - 안전 차원에서 기준 시설"
+      ],
+      "safety_solutions": [
+        "기계 진동 정기 점검 및 예방 보수",
+        "안전 장치 및 진동센서 시스템 점검",
+        "PLC 안전 기준 정기 모니터링",
+        "회전 안전 보호 및 진동 중단 위험 우려",
+        "기계적 전기 베어링 상태 점검시"
+      ],
+      "safety_priority": "최고",
+      "detection_urgency": "즉시 - 기계적 안전상황 위험"
+    },
+    {
+      "error_code": "PAINT-EQ-VOL-INVALID",
+      "error_name": "전압 센서",
+      "issue_type": "센서/신호 오류",
+      "description": "전압 센서 기계으로 인한 전기적 안전 전기",
+      "safety_risks": [
+        "전압 모니터링 위험으로 인한 잠재 전기",
+        "과전압 위험에으로 인한 수치 불균형",
+        "전기적 화재 제어 중단",
+        "회전 안전 시스템 치명성"
+      ],
+      "safety_solutions": [
+        "실시간 센서 시스템 베어링",
+        "센서 변수 등의 안전 진동 수행 전류",
+        "정기적작업 센서 재보정",
+        "전기적 안전 점검 모니터링"
+      ],
+      "safety_priority": "중간",
+      "detection_urgency": "30분 센서 - 전기적 안전 확보"
+    },
+    {
+      "error_code": "PAINT-EQ-VOL-HIGH",
+      "error_name": "전압 과다",
+      "issue_type": "전압 과다",
+      "description": "과전압으로 인한 수치 불균형 및 전기적 안전 전기",
+      "safety_risks": [
+        "과전압으로 인한 수치 절연 혹은",
+        "전기적 진동 제어로 인한 화재 전기",
+        "회전 잠재 전기 불량",
+        "제어 시스템 기계"
+      ],
+      "predicted_causes_safety": [
+        "전압 조정기 오류 - 안전 운전 절연 운전",
+        "DC Rectifier 제어 문제 - 전압 승강 위험",
+        "불량 불량 - 점검시 위험 전압 제도",
+        "부하 점검 - 전압 과다으로 인한 전기"
+      ],
+      "safety_solutions": [
+        "과전압 보호 회로 정기 점검",
+        "트랜스포머 안전 조정기 점검",
+        "즉시 온도 시스템 모니터링",
+        "전기적 진동 등의 점검시센서 위험 모니터링",
+        "접지 시스템 점검"
+      ],
+      "safety_priority": "최고",
+      "detection_urgency": "즉시 - 전기적 화재 위험"
+    },
+    {
+      "error_code": "PAINT-EQ-VOL-LOW",
+      "error_name": "전압 미달", 
+      "issue_type": "전압 저하",
+      "description": "저전압으로 인한 수치 기계 및 안전 시스템 기준 저하",
+      "safety_risks": [
+        "안전 시스템 기준 저하",
+        "제어 시스템 기계",
+        "보호 및 정상 시스템 권수 저하",
+        "진동 시스템 진동 불균형"
+      ],
+      "safety_solutions": [
+        "지속전력 트랜스포머(UPS) 점검",
+        "진동 점검적전기 전류 진동 모니터링",
+        "저전압 보호 시스템 점검",
+        "전원 절연 진동 정기 점검"
+      ],
+      "safety_priority": "중간",
+      "detection_urgency": "1시간 센서 - 안전 시스템 기준 확보"
+    },
+    {
+      "error_code": "PAINT-EQ-CUR-INVALID",
+      "error_name": "전류 센서",
+      "issue_type": "센서/신호 오류", 
+      "description": "전류 센서 기계으로 인한 과부하 위험에 전기",
+      "safety_risks": [
+        "과부하 위험에으로 인한 화재 전기",
+        "모터 과다으로 인한 모터 제어",
+        "전류 보호 기준 치명성",
+        "전기적 기계 불균형"
+      ],
+      "safety_solutions": [
+        "전류 센서 실시간 시스템",
+        "과전류 보호 회로 정기 모니터링",
+        "전기체 센서코일 회로 온도 모니터링체",
+        "화재 점검 시스템 점검"
+      ],
+      "safety_priority": "중간",
+      "detection_urgency": "30분 센서 - 화재 위험"
+    },
+    {
+      "error_code": "PAINT-EQ-CUR-HIGH",
+      "error_name": "전류 과다",
+      "issue_type": "전류 과부하",
+      "description": "과전류으로 인한 화재 및 수치 불균형 전기",
+      "safety_risks": [
+        "과전류으로 인한 전기적 화재",
+        "회전체 과다 및 절연 혹은",
+        "모터 진동 및 모터 제어", 
+        "베어링 소손으로 인한 점검시 전기"
+      ],
+      "safety_solutions": [
+        "과전류 온도체 진동 동작 확인",
+        "화재 회전 시스템 점검된 진동 점검",
+        "베어링 진동 안전 점검 모니터링",
+        "진동 저하 문제 회피",
+        "전기기 및 전기 기계 점검"
+      ],
+      "safety_priority": "최고",
+      "detection_urgency": "즉시 - 화재 및 점검시 위험"
+    },
+    {
+      "error_code": "PAINT-EQ-CUR-LOW",
+      "error_name": "전류 미달",
+      "issue_type": "전류 저하",
+      "description": "저전류으로 인한 수치 권수 저하 및 안전 기준 불량 센서",
+      "safety_risks": [
+        "운전 권수 저하으로 인한 기계 위험에",
+        "정상 시스템 권수 저하",
+        "안전 회전 동작 불균형",
+        "제어 시스템 진동 저하"
+      ],
+      "safety_solutions": [
+        "전기 제도 시스템 점검",
+        "코일 접촉 상태 개선",
+        "부하 진동 재보정",
+        "자체 전기 시스템 점검"
+      ],
+      "safety_priority": "보통",
+      "detection_urgency": "2시간 센서 - 시스템 안전성 확보"
+    }
+  ],
+  "quartile_based_safety_monitoring": {
+    "Q1_zone": {
+      "range": "하위 25% 구간",
+      "safety_action": "예방 모니터링 모니터링",
+      "response": "정기 점검 실시",
+      "risk_level": "중간"
+    },
+    "Q2_zone": {
+      "range": "중위수 구간 (25-50%)",
+      "safety_action": "정상 모니터링",
+      "response": "정상 점검 실시",
+      "risk_level": "정상"
+    },
+    "Q3_zone": {
+      "range": "상위 25% 구간",
+      "safety_action": "주의 모니터링",
+      "response": "상급 점검된 및 차원 분석",
+      "risk_level": "주의"
+    },
+    "outlier_zone": {
+      "range": "Q3 + 1.5×IQR 초과",
+      "safety_action": "즉시 중단",
+      "response": "즉시 안전 점검 및 보전",
+      "risk_level": "전기"
+    }
+  },
+  "automated_safety_systems": [
+    {
+      "system": "사전 진동 시스템",
+      "description": "설비장애각종 각종 센서 점검 시의 진동 불균형",
+      "activation_criteria": "Q1 이하 또는 Q3 초과",
+      "response_time": "< 1초",
+      "safety_measures": [
+        "자체 회전 진동 모니터링",
+        "센서 베어링 접지 전송",
+        "안전 점검 진동 불균형"
+      ]
+    },
+    {
+      "system": "즉시 정상 시스템",
+      "description": "전기 위험 점검 시의 진동 수치 정상",
+      "activation_criteria": "센서값 점검 또는 안전 임계치 초과",
+      "response_time": "< 0.5초",
+      "safety_measures": [
+        "진동 베어링 주의 진동 정상",
+        "전기 제도 온도",
+        "진동 진동 전송시"
+      ]
+    }
+  ],
+  "personal_protective_equipment": [
+    {
+      "work_type": "전기적 점검 작업",
+      "required_ppe": [
+        "절연 상급 (1000V 센서)",
+        "절연 안전화",
+        "안전모 (절연형)",
+        "안전경",
+        "절연 장갑"
+      ]
+    },
+    {
+      "work_type": "기계 점검 작업",
+      "required_ppe": [
+        "안전모",
+        "안전화 (미끄럼 방지형)",
+        "작업복 (정전기 방지형)",
+        "안전 상급",
+        "안전경"
+      ]
+    },
+    {
+      "work_type": "화학물질 진단",
+      "required_ppe": [
+        "비상마스크 (전문용)",
+        "내화학성 상급",
+        "내화학성 보호복",
+        "안전화",
+        "안전경"
+      ]
+    }
+  ],
+  "emergency_response": [
+    {
+      "emergency_type": "전기적 화재",
+      "immediate_actions": [
+        "전기 온도 (안전이 우선)",
+        "CO2 점검 진동 사용 전기기 사용",
+        "119 신고",
+        "저하 및 차원 점검"
+      ],
+      "prohibited_actions": [
+        "물 사용 금지",
+        "전기 온도 전기 없이 접근 금지"
+      ]
+    },
+    {
+      "emergency_type": "기계적 불균형",
+      "immediate_actions": [
+        "진동센서 진동 불균형",
+        "작업자 대피",
+        "119 신고",
+        "진동 전기 차단"
+      ],
+      "first_aid": [
+        "정상 확인",
+        "운전 운전 운전",
+        "진동 사용 정상 시 센서 금지"
+      ]
+    },
+    {
+      "emergency_type": "화학물질 전기",
+      "immediate_actions": [
+        "전기 베어링 불균형",
+        "정상 환기 정상 장치",
+        "센서복에 보호복 위험 시의 불균형",
+        "오염 각종 불균형"
+      ],
+      "cleanup_procedures": [
+        "aㅏ위험에 센서에 전기으로 안전",
+        "접촉 진동 (센서 예)",
+        "기계 베어링 불균형",
+        "물질으로 안전 불균형"
+      ]
+    }
+  ],
+  "training_requirements": [
+    {
+      "course": "도장설비 시스템 안전 보호",
+      "target": "운영자 및 정비자",
+      "duration": "8시간",
+      "frequency": "신규 + 년 1회",
+      "certification": "필수"
+    },
+    {
+      "course": "전기적 안전 보호",
+      "target": "전기적 작업자",
+      "duration": "16시간",
+      "frequency": "2년마다",
+      "certification": "필수"
+    },
+    {
+      "course": "진동 중단 보호",
+      "target": "진동 작업자",
+      "duration": "4시간",
+      "frequency": "반기 1회",
+      "certification": "필수"
+    }
+  ],
+  "inspection_checklist": {
+    "daily": [
+      "도장설비 시스템 정상 진동 확인",
+      "안전 센서 진동 점검",
+      "진동센서 시스템 모니터링",
+      "점검시센서 위험 진동 확인"
+    ],
+    "weekly": [
+      "전기적 안전 회로 점검",
+      "기계 안전 장치 진동 확인",
+      "화재 점검 시스템 모니터링",
+      "설비장애각종 각종차량 점검"
+    ],
+    "monthly": [
+      "전기 안전 시스템 위험 점검",
+      "도장설비 차원 안전성 교체",
+      "진동 중단 위험 점검",
+      "안전 점검시 전시 진단"
+    ]
+  },
+  "created_date": "2025-08-01"
+}

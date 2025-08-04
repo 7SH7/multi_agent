@@ -1,0 +1,248 @@
+{
+  "equipment_type": "WELDING_ROBOT_KAMP",
+  "category": "용접 로봇 KAMP 트러블슈팅",
+  "cases": [
+    {
+      "case_id": "WELD_KAMP_001",
+      "title": "용접 전류 이상 해결",
+      "issue_code": "WELD-CURRENT-ANOMALY",
+      "description": "용접 공정 중 전류 파형이 정상 범위를 이탈하는 현상",
+      "symptoms": [
+        "전류 파형 정상 범위 이탈",
+        "용접 품질 저하",
+        "전극과 소재 간 접촉 불량",
+        "전류값 불안정"
+      ],
+      "root_causes": [
+        {
+          "cause": "전극 팁의 심한 마모",
+          "probability": 0.85,
+          "evidence": ["전극 팁 육안 검사", "접촉 저항 증가"],
+          "fix_time": "1-2시간"
+        },
+        {
+          "cause": "전원 공급 장치 불안정",
+          "probability": 0.7,
+          "evidence": ["전압 변동", "전원 품질 분석"],
+          "fix_time": "3-4시간"
+        },
+        {
+          "cause": "전극과 소재 간 접촉 불량",
+          "probability": 0.6,
+          "evidence": ["접촉 저항 측정", "용접부 품질 검사"],
+          "fix_time": "2-3시간"
+        }
+      ],
+      "solution_steps": [
+        {
+          "step": 1,
+          "action": "전극 팁 마모 상태 확인",
+          "details": "전극 팁의 마모도 육안 검사 및 치수 측정",
+          "time_required": "30분",
+          "tools_required": ["버니어 캘리퍼스", "확대경"]
+        },
+        {
+          "step": 2,
+          "action": "전극 팁 교체",
+          "details": "마모된 전극 팁을 새것으로 교체",
+          "time_required": "1시간",
+          "parts_needed": ["전극 팁", "정렬 도구"],
+          "safety_critical": true
+        },
+        {
+          "step": 3,
+          "action": "전원 공급 시스템 점검",
+          "details": "전압 안정성, 전류 공급 능력, 필터 상태 확인",
+          "time_required": "2시간",
+          "tools_required": ["멀티미터", "오실로스코프"]
+        },
+        {
+          "step": 4,
+          "action": "접촉 이력 관리 시스템 개선",
+          "details": "접촉 횟수 및 압력 모니터링 시스템 조정",
+          "time_required": "1-2시간",
+          "specialist_required": false
+        }
+      ],
+      "prevention": [
+        "전극 팁 정기 교체 (500회 용접마다)",
+        "전류 파형 실시간 모니터링",
+        "전원 품질 정기 점검 (월 1회)",
+        "접촉 압력 및 정렬 상태 점검 (주 1회)"
+      ],
+      "cost_estimate": {
+        "parts": "150,000원",
+        "labor": "300,000원",
+        "total": "450,000원"
+      },
+      "success_rate": 0.92,
+      "last_updated": "2024-08-01"
+    },
+    {
+      "case_id": "WELD_KAMP_002",
+      "title": "용접 진동 이상 해결",
+      "issue_code": "WELD-VIBRATION-ANOMALY",
+      "description": "용접 암이나 전극 건 등 기계 부위에서 발생하는 진동 문제",
+      "symptoms": [
+        "용접 암 진동 증가",
+        "전극 건 떨림 현상",
+        "용접 품질 불균일",
+        "기계적 소음 증가"
+      ],
+      "root_causes": [
+        {
+          "cause": "기계적 정렬 불량",
+          "probability": 0.8,
+          "evidence": ["정렬 측정값 기준 초과", "진동 패턴 분석"],
+          "fix_time": "4-6시간"
+        },
+        {
+          "cause": "베어링 및 구동부 마모",
+          "probability": 0.75,
+          "evidence": ["베어링 온도 상승", "윤활 상태 불량"],
+          "fix_time": "6-8시간"
+        },
+        {
+          "cause": "구조물 노후화 및 공진",
+          "probability": 0.6,
+          "evidence": ["구조물 볼트 이완", "공진 주파수 측정"],
+          "fix_time": "8-12시간"
+        }
+      ],
+      "solution_steps": [
+        {
+          "step": 1,
+          "action": "베어링 및 구동부 점검",
+          "details": "베어링 상태, 윤활 상태, 구동부 마모도 종합 점검",
+          "time_required": "2-3시간",
+          "tools_required": ["진동계", "온도계", "윤활유 분석 키트"]
+        },
+        {
+          "step": 2,
+          "action": "기계적 정렬 재조정",
+          "details": "용접 암과 전극 건의 정렬 상태 재조정",
+          "time_required": "3-4시간",
+          "tools_required": ["레이저 정렬기", "정밀 측정 도구"],
+          "specialist_required": true
+        },
+        {
+          "step": 3,
+          "action": "구조물 체결부 토크 확인",
+          "details": "모든 볼트 및 체결부의 토크 재확인 및 조정",
+          "time_required": "2-3시간",
+          "tools_required": ["토크렌치", "체결부 점검 리스트"]
+        },
+        {
+          "step": 4,
+          "action": "진동 계측을 통한 용접속도 조정",
+          "details": "최적 용접 속도 및 압력 설정 조정",
+          "time_required": "1-2시간",
+          "tools_required": ["진동 분석기"]
+        }
+      ],
+      "prevention": [
+        "베어링 및 구동부 정기 점검 (월 1회)",
+        "기계적 정렬 상태 점검 (분기 1회)",
+        "구조물 체결부 토크 점검 (월 1회)",
+        "진동 수준 실시간 모니터링"
+      ],
+      "cost_estimate": {
+        "parts": "800,000원",
+        "labor": "1,000,000원",
+        "total": "1,800,000원"
+      },
+      "success_rate": 0.88,
+      "last_updated": "2024-08-01"
+    },
+    {
+      "case_id": "WELD_KAMP_003",
+      "title": "용접 전류+진동 복합 이상 해결",
+      "issue_code": "WELD-CURRENT_AND_VIBRATION-ANOMALY",
+      "description": "전류와 진동이 동시에 이상을 보이는 복합적 문제",
+      "symptoms": [
+        "전류 및 진동 동시 이상",
+        "전극 마모와 접촉 불량 동시 발생",
+        "진동으로 인한 불완전한 접합",
+        "용접 품질 심각 저하"
+      ],
+      "root_causes": [
+        {
+          "cause": "기계적/전기적 복합 원인",
+          "probability": 0.9,
+          "evidence": ["다중 파라미터 동시 이상", "시스템 상호작용"],
+          "fix_time": "12-16시간"
+        },
+        {
+          "cause": "전극 시스템 전체 정렬 불량",
+          "probability": 0.8,
+          "evidence": ["전극 시스템 정렬 측정", "접촉 불균일"],
+          "fix_time": "8-12시간"
+        },
+        {
+          "cause": "진동으로 인한 불완전한 접합",
+          "probability": 0.75,
+          "evidence": ["용접부 품질 검사", "진동 패턴 분석"],
+          "fix_time": "10-14시간"
+        }
+      ],
+      "solution_steps": [
+        {
+          "step": 1,
+          "action": "전기 및 기계 계통 통합 점검",
+          "details": "전체 시스템의 기계적, 전기적 상태 종합 진단",
+          "time_required": "4-6시간",
+          "specialist_required": true,
+          "tools_required": ["종합 진단 장비", "시스템 분석 소프트웨어"]
+        },
+        {
+          "step": 2,
+          "action": "전극 시스템 정렬 확인",
+          "details": "전극 시스템 전체의 정렬 상태 정밀 측정 및 조정",
+          "time_required": "4-6시간",
+          "tools_required": ["정밀 정렬 측정기", "조정 도구"]
+        },
+        {
+          "step": 3,
+          "action": "진동 계측 시스템 전체 점검",
+          "details": "진동 발생원 추적 및 계측 시스템 전반 점검",
+          "time_required": "3-4시간",
+          "tools_required": ["진동 분석기", "주파수 분석기"]
+        },
+        {
+          "step": 4,
+          "action": "예방 정비 주기 조정",
+          "details": "복합 이상 재발 방지를 위한 정비 주기 및 방법 개선",
+          "time_required": "2-3시간",
+          "specialist_required": true
+        }
+      ],
+      "prevention": [
+        "통합 시스템 종합 점검 (월 1회)",
+        "전극 시스템 정밀 정렬 점검 (분기 1회)",
+        "진동 및 전류 동시 모니터링 시스템 도입",
+        "예측 정비 시스템 구축",
+        "전문가 정기 진단 (분기 1회)"
+      ],
+      "cost_estimate": {
+        "parts": "2,500,000원",
+        "labor": "2,000,000원",
+        "total": "4,500,000원"
+      },
+      "success_rate": 0.82,
+      "last_updated": "2024-08-01"
+    }
+  ],
+  "summary_statistics": {
+    "total_cases": 3,
+    "average_success_rate": 0.84,
+    "average_fix_time": "6-10시간",
+    "common_issues": ["전류 이상", "진동 이상", "복합 이상"]
+  },
+  "quality_metrics": {
+    "prevention_effectiveness": "88%",
+    "cost_reduction": "25%",
+    "downtime_reduction": "35%"
+  },
+  "created_date": "2024-08-04",
+  "last_updated": "2024-08-04"
+}

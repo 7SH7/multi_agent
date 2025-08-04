@@ -1,0 +1,418 @@
+{
+  "equipment_type": "ASSEMBLY_PARTS",
+  "category": "assembly_parts",
+  "safety_version": "v1.0",
+  "last_updated": "2025-08-01",
+  "general_safety_principles": [
+    "조립 공정에서 부품별 안전 기준 준수",
+    "체결 토크 및 유격 기준 관리",
+    "작업자 안전 및 품질 확보",
+    "예방적 품질 관리 시스템 운영",
+    "조립 순서 및 표준 작업 절차 준수"
+  ],
+  "assembly_safety_guidelines": [
+    {
+      "error_code": "ASSY-DOOR-FIX",
+      "error_name": "도어 고정 불량",
+      "issue_type": "고정 불량",
+      "description": "도어 조립 시 힌지 체결 및 고정 불량으로 인한 안전성 저하",
+      "safety_risks": [
+        "힌지 체결 토크 부족으로 인한 도어 분리 위험",
+        "도어 프레임 변형으로 인한 충돌 안전성 저하",
+        "가스켓 압축 불량으로 인한 수밀성 문제",
+        "클립 위치 불일치로 인한 외관 품질 저하"
+      ],
+      "safety_solutions": [
+        "체결 토크 기준 설정 및 토크렌치 사용",
+        "도어 조립 지그 정밀도 관리",
+        "가스켓 압축력 표준화",
+        "클립 위치 가이드 시스템 적용"
+      ],
+      "safety_priority": "높음",
+      "detection_urgency": "즉시 - 운전자 안전 직결"
+    },
+    {
+      "error_code": "ASSY-GRILL-GAP",
+      "error_name": "라디에이터 그릴 유격",
+      "issue_type": "유격 불량",
+      "description": "그릴과 범퍼 간 유격 불량으로 인한 외관 품질 및 공기역학적 성능 저하",
+      "safety_risks": [
+        "그릴 브라켓 변형으로 인한 분리 위험",
+        "범퍼와의 간섭으로 인한 파손 위험",
+        "열팽창으로 인한 변형 및 균열 발생",
+        "체결점 위치 편차로 인한 강성 저하"
+      ],
+      "safety_solutions": [
+        "브라켓 변형 검사 및 교체 기준 설정",
+        "체결점 위치 정밀 측정 시스템",
+        "열팽창 보상 설계 적용",
+        "조립 순서 최적화"
+      ],
+      "safety_priority": "보통",
+      "detection_urgency": "1시간 이내 - 외관 품질 관리"
+    },
+    {
+      "error_code": "ASSY-ROOF-BOLT",
+      "error_name": "루프사이드 체결",
+      "issue_type": "체결 불량",
+      "description": "루프사이드 체결 불량으로 인한 구조적 강성 저하 및 안전성 문제",
+      "safety_risks": [
+        "체결용 볼트 규격 불일치로 인한 체결력 부족",
+        "너트 삽입 불량으로 인한 결합 강도 저하",
+        "체결 각도 편차로 인한 응력 집중",
+        "실링 재료 과다 적용으로 인한 체결 불량"
+      ],
+      "safety_solutions": [
+        "볼트 규격 표준화 및 자동 공급 시스템",
+        "너트 삽입 지그 개선 및 정밀도 향상",
+        "체결 각도 가이드 설치",
+        "실링 재료 자동 도포 시스템"
+      ],
+      "safety_priority": "높음",
+      "detection_urgency": "즉시 - 구조적 안전성 직결"
+    },
+    {
+      "error_code": "ASSY-WIRE-CONN",
+      "error_name": "배선 연계 불량",
+      "issue_type": "연계 불량",
+      "description": "배선 연결 불량으로 인한 전기적 안전성 및 기능 저하",
+      "safety_risks": [
+        "커넥터 삽입 불완전으로 인한 접촉 불량",
+        "배선 경로 간섭으로 인한 단선 위험",
+        "핀 변형 또는 손상으로 인한 합선 위험",
+        "방수 실링 불량으로 인한 침수 위험"
+      ],
+      "safety_solutions": [
+        "커넥터 삽입 확인 시스템 및 자동 검증",
+        "배선 경로 최적화 및 클램핑 표준화",
+        "핀 변형 검사 및 방지 시스템",
+        "방수 실링 품질 관리 강화"
+      ],
+      "safety_priority": "높음",
+      "detection_urgency": "즉시 - 전기적 안전성 직결"
+    },
+    {
+      "error_code": "ASSY-BUMP-FIX",
+      "error_name": "범퍼 고정 불량",
+      "issue_type": "고정 불량",
+      "description": "범퍼 고정 불량으로 인한 충돌 안전성 및 외관 품질 저하",
+      "safety_risks": [
+        "클립 체결력 부족으로 인한 범퍼 분리 위험",
+        "범퍼 브라켓 변형으로 인한 충격 흡수 성능 저하",
+        "체결점 위치 오차로 인한 응력 집중",
+        "범퍼 재질 변형으로 인한 크랙 발생"
+      ],
+      "safety_solutions": [
+        "클립 체결력 기준 재설정 및 자동 체결",
+        "브라켓 변형 검사 및 교체 기준",
+        "체결점 위치 표준화 및 정밀 측정",
+        "범퍼 형상 검사 강화"
+      ],
+      "safety_priority": "높음",
+      "detection_urgency": "즉시 - 충돌 안전성 직결"
+    },
+    {
+      "error_code": "ASSY-COWL-ENGAGE",
+      "error_name": "카울커버 맞물림",
+      "issue_type": "맞물림 불량",
+      "description": "카울커버 맞물림 불량으로 인한 수밀성 및 외관 품질 저하",
+      "safety_risks": [
+        "맞물림 부위 설계 공차 과대로 인한 유격 발생",
+        "카울커버 변형으로 인한 수밀성 저하",
+        "클립 위치 불일치로 인한 고정력 부족",
+        "이물질 개입으로 인한 맞물림 불량"
+      ],
+      "safety_solutions": [
+        "맞물림 설계 보강 및 공차 조정",
+        "카울커버 형상 검사 및 자동 위치 확인",
+        "클립 위치 조정 및 가이드 개선",
+        "조립 전 청결도 관리 표준화"
+      ],
+      "safety_priority": "보통",
+      "detection_urgency": "30분 이내 - 수밀성 확보"
+    },
+    {
+      "error_code": "ASSY-CONN-PRESS",
+      "error_name": "커넥터 체결 압력",
+      "issue_type": "체결 압력 불량",
+      "description": "커넥터 체결 압력 불량으로 인한 전기적 접촉 불량 및 신뢰성 저하",
+      "safety_risks": [
+        "커넥터 삽입력 부족으로 인한 접촉 저항 증가",
+        "핀 접촉 불량으로 인한 신호 손실",
+        "실링 압축 과다/부족으로 인한 방수 성능 저하",
+        "커넥터 하우징 변형으로 인한 체결 불량"
+      ],
+      "safety_solutions": [
+        "체결 압력 기준 설정 및 자동 삽입력 측정",
+        "핀 접촉 검사 시스템 및 저항 측정",
+        "실링 압축력 최적화 및 자동 검사",
+        "커넥터 하우징 품질 관리 강화"
+      ],
+      "safety_priority": "높음",
+      "detection_urgency": "즉시 - 전기적 신뢰성 직결"
+    },
+    {
+      "error_code": "ASSY-TAIL-STEP",
+      "error_name": "테일 램프 단차",
+      "issue_type": "단차 불량",
+      "description": "테일 램프 단차 불량으로 인한 외관 품질 및 조명 성능 저하",
+      "safety_risks": [
+        "램프 하우징 변형으로 인한 조명 성능 저하",
+        "차체 패널 단차로 인한 외관 품질 저하",
+        "체결점 높이 편차로 인한 응력 집중",
+        "가스켓 두께 불균일으로 인한 침수 위험"
+      ],
+      "safety_solutions": [
+        "3D 측정 시스템을 통한 정밀 검사",
+        "패널 단차 자동 검사 및 조정",
+        "체결점 높이 정밀 측정 및 표준화",
+        "가스켓 자동 선별 및 품질 관리"
+      ],
+      "safety_priority": "보통",
+      "detection_urgency": "1시간 이내 - 조명 안전성 확보"
+    },
+    {
+      "error_code": "ASSY-FRAME-SEAL",
+      "error_name": "프레임 실링 불량",
+      "issue_type": "실링 불량",
+      "description": "프레임 실링 불량으로 인한 수밀성 및 방음 성능 저하",
+      "safety_risks": [
+        "실링 재료 경화 불량으로 인한 밀봉 성능 저하",
+        "실링 건 노즐 막힘으로 인한 도포 불량",
+        "적용량 편차로 인한 품질 불균일",
+        "표면 오염으로 인한 접착력 저하"
+      ],
+      "safety_solutions": [
+        "실링 재료 품질 관리 및 보관 표준화",
+        "실링 건 정기 정비 및 노즐 교체",
+        "자동 도포 시스템 도입 및 적용량 제어",
+        "표면 전처리 및 청결도 관리"
+      ],
+      "safety_priority": "보통",
+      "detection_urgency": "2시간 이내 - 수밀성 확보"
+    },
+    {
+      "error_code": "ASSY-HEAD-DAMAGE",
+      "error_name": "헤드램프 외관 손상",
+      "issue_type": "외관 손상",
+      "description": "헤드램프 외관 손상으로 인한 조명 성능 및 안전성 저하",
+      "safety_risks": [
+        "조립 중 접촉 손상으로 인한 조명 성능 저하",
+        "보호 필름 미부착으로 인한 스크래치 발생",
+        "취급 부주의로 인한 크랙 및 파손",
+        "포장재 불량으로 인한 운송 중 손상"
+      ],
+      "safety_solutions": [
+        "조립 지그 보호 패드 설치 및 작업 표준화",
+        "보호 필름 자동 부착 시스템",
+        "취급 절차 표준화 및 교육 강화",
+        "포장재 품질 개선 및 보호 장비 의무 사용"
+      ],
+      "safety_priority": "높음",
+      "detection_urgency": "즉시 - 조명 안전성 직결"
+    },
+    {
+      "error_code": "ASSY-FEND-HEM",
+      "error_name": "펜더 헤밍 불량",
+      "issue_type": "헤밍 불량",
+      "description": "펜더 헤밍 불량으로 인한 구조적 강성 및 외관 품질 저하",
+      "safety_risks": [
+        "헤밍 다이 마모로 인한 접합 강도 저하",
+        "재료 두께 편차로 인한 헤밍 품질 불균일",
+        "헤밍 압력 부족으로 인한 접합 불량",
+        "재료 경도 변화로 인한 크랙 발생"
+      ],
+      "safety_solutions": [
+        "헤밍 다이 정기 교체 및 마모 예측 시스템",
+        "재료 두께 사전 검사 및 품질 관리",
+        "헤밍 압력 자동 제어 및 공정 자동화",
+        "재료 경도 관리 및 품질 검사"
+      ],
+      "safety_priority": "보통",
+      "detection_urgency": "1시간 이내 - 구조적 강성 확보"
+    },
+    {
+      "error_code": "ASSY-CLIP-HOLE",
+      "error_name": "클립 홀 변형",
+      "issue_type": "홀 변형",
+      "description": "클립 홀 변형으로 인한 체결력 저하 및 반복 작업성 저하",
+      "safety_risks": [
+        "클립 삽입력 과다로 인한 홀 확장 및 변형",
+        "홀 가공 정밀도 불량으로 인한 체결력 부족",
+        "클립 재질 경도 과다로 인한 홀 손상",
+        "반복 삽입/제거로 인한 피로 파괴"
+      ],
+      "safety_solutions": [
+        "클립 삽입력 최적화 및 삽입 가이드 설치",
+        "홀 가공 정밀도 향상 및 품질 관리",
+        "클립 설계 개선 및 재질 최적화",
+        "삽입/제거 횟수 관리 및 교체 기준 설정"
+      ],
+      "safety_priority": "보통",
+      "detection_urgency": "30분 이내 - 체결 신뢰성 확보"
+    }
+  ],
+  "quality_based_safety_monitoring": {
+    "critical_zone": {
+      "range": "안전성 직결 이슈",
+      "safety_action": "즉시 작업 중단",
+      "response": "즉시 검사 및 수정",
+      "risk_level": "높음"
+    },
+    "warning_zone": {
+      "range": "품질 저하 우려",
+      "safety_action": "주의 모니터링",
+      "response": "1시간 이내 검사",
+      "risk_level": "보통"
+    },
+    "normal_zone": {
+      "range": "정상 품질 구간",
+      "safety_action": "정상 모니터링",
+      "response": "정기 검사 실시",
+      "risk_level": "낮음"
+    }
+  },
+  "automated_safety_systems": [
+    {
+      "system": "체결 토크 모니터링 시스템",
+      "description": "실시간 체결 토크 측정 및 기준 초과 시 알람",
+      "activation_criteria": "토크 기준 ±10% 벗어날 시",
+      "response_time": "< 1초",
+      "safety_measures": [
+        "자동 토크렌치 정지",
+        "작업자 알람 전송",
+        "품질 데이터 자동 기록"
+      ]
+    },
+    {
+      "system": "3D 측정 시스템",
+      "description": "부품 조립 후 실시간 치수 및 위치 검사",
+      "activation_criteria": "치수 공차 벗어날 시",
+      "response_time": "< 5초",
+      "safety_measures": [
+        "불량품 자동 분리",
+        "재작업 지시 전송",
+        "트렌드 분석 데이터 축적"
+      ]
+    }
+  ],
+  "personal_protective_equipment": [
+    {
+      "work_type": "도어 조립 작업",
+      "required_ppe": [
+        "안전모",
+        "안전화 (미끄럼 방지형)",
+        "작업복 (정전기 방지형)",
+        "안전 장갑",
+        "안전경"
+      ]
+    },
+    {
+      "work_type": "전기 배선 작업",
+      "required_ppe": [
+        "절연 장갑 (1000V 이상)",
+        "절연 안전화",
+        "안전모 (절연형)",
+        "안전경",
+        "정전기 방지복"
+      ]
+    },
+    {
+      "work_type": "헤밍 작업",
+      "required_ppe": [
+        "안전모",
+        "안전화 (강철 토캡)",
+        "작업복 (내열성)",
+        "안전 장갑 (내열성)",
+        "안전경 (보안경)"
+      ]
+    }
+  ],
+  "emergency_response": [
+    {
+      "emergency_type": "체결 토크 과다",
+      "immediate_actions": [
+        "즉시 작업 중단",
+        "토크렌치 점검",
+        "부품 손상 여부 확인",
+        "재작업 또는 교체 결정"
+      ],
+      "prohibited_actions": [
+        "강제 체결 금지",
+        "기준 초과 토크 적용 금지"
+      ]
+    },
+    {
+      "emergency_type": "전기 배선 합선",
+      "immediate_actions": [
+        "즉시 전원 차단",
+        "화재 예방 조치",
+        "작업자 대피",
+        "전기 전문가 출동 요청"
+      ],
+      "first_aid": [
+        "감전 시 즉시 전원 차단",
+        "의식 확인 및 응급처치",
+        "119 신고"
+      ]
+    },
+    {
+      "emergency_type": "부품 낙하 사고",
+      "immediate_actions": [
+        "즉시 작업 중단",
+        "부상자 확인 및 응급처치",
+        "안전 구역 설정",
+        "사고 원인 조사"
+      ],
+      "prevention_measures": [
+        "크레인 사용 시 안전고리 체결",
+        "작업 구역 하부 출입 통제",
+        "부품 운반 시 보조 장비 사용"
+      ]
+    }
+  ],
+  "training_requirements": [
+    {
+      "course": "조립 공정 안전 교육",
+      "target": "조립 작업자",
+      "duration": "8시간",
+      "frequency": "신규 + 년 1회",
+      "certification": "필수"
+    },
+    {
+      "course": "전기 배선 안전 교육",
+      "target": "배선 작업자",
+      "duration": "16시간",
+      "frequency": "2년마다",
+      "certification": "필수"
+    },
+    {
+      "course": "품질 검사 교육",
+      "target": "품질 검사원",
+      "duration": "12시간",
+      "frequency": "년 1회",
+      "certification": "필수"
+    }
+  ],
+  "inspection_checklist": {
+    "daily": [
+      "체결 토크 값 확인",
+      "클립 위치 정확도 검사",
+      "배선 연결 상태 점검",
+      "외관 손상 여부 확인"
+    ],
+    "weekly": [
+      "조립 지그 정밀도 검사",
+      "3D 측정 시스템 교정",
+      "토크렌치 정확도 점검",
+      "안전 장비 상태 확인"
+    ],
+    "monthly": [
+      "헤밍 다이 마모 상태 점검",
+      "실링 건 정비 및 노즐 교체",
+      "품질 데이터 트렌드 분석",
+      "예방 정비 계획 수립"
+    ]
+  },
+  "created_date": "2025-08-01"
+}

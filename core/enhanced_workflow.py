@@ -94,10 +94,29 @@ class EnhancedWorkflowManager:
         selected_agents = state.get('selected_agents', [])
         # 대소문자 구분 없이 체크
         if any(agent.lower() == 'gpt' for agent in selected_agents):
-            response = await self.gpt_agent.analyze_and_respond(state)
-            agent_responses = state.get('agent_responses', {})
-            agent_responses['GPT'] = response  # 대문자로 저장
-            state['agent_responses'] = agent_responses
+            try:
+                logger.info("GPT Agent 실행 시작")
+                response = await self.gpt_agent.analyze_and_respond(state)
+                agent_responses = state.get('agent_responses', {})
+                agent_responses['GPT'] = response  # 대문자로 저장
+                state['agent_responses'] = agent_responses
+                logger.info("GPT Agent 실행 성공")
+            except Exception as e:
+                logger.error(f"GPT Agent 실행 실패: {str(e)}")
+                # 실패한 Agent 정보를 상태에 기록
+                failed_agents = state.get('failed_agents', [])
+                failed_agents.append({
+                    'agent_name': 'GPT',
+                    'error_message': str(e),
+                    'timestamp': datetime.now().isoformat(),
+                    'specialty': '종합분석 및 안전성'
+                })
+                state['failed_agents'] = failed_agents
+                
+                # 처리 단계에 실패 기록 추가
+                processing_steps = state.get('processing_steps', [])
+                processing_steps.append('gpt_agent_failed')
+                state['processing_steps'] = processing_steps
         return state
 
     async def _execute_gemini_agent(self, state: AgentState) -> AgentState:
@@ -113,7 +132,20 @@ class EnhancedWorkflowManager:
                 logger.info("Gemini Agent 실행 성공")
             except Exception as e:
                 logger.error(f"Gemini Agent 실행 실패: {str(e)}")
-                # 에러가 발생해도 workflow는 계속 진행
+                # 실패한 Agent 정보를 상태에 기록
+                failed_agents = state.get('failed_agents', [])
+                failed_agents.append({
+                    'agent_name': 'Gemini',
+                    'error_message': str(e),
+                    'timestamp': datetime.now().isoformat(),
+                    'specialty': '기술적 정확성 및 수치 분석'
+                })
+                state['failed_agents'] = failed_agents
+                
+                # 처리 단계에 실패 기록 추가
+                processing_steps = state.get('processing_steps', [])
+                processing_steps.append('gemini_agent_failed')
+                state['processing_steps'] = processing_steps
         return state
 
     async def _execute_clova_agent(self, state: AgentState) -> AgentState:
@@ -129,7 +161,20 @@ class EnhancedWorkflowManager:
                 logger.info("Clova Agent 실행 성공")
             except Exception as e:
                 logger.error(f"Clova Agent 실행 실패: {str(e)}")
-                # 에러가 발생해도 workflow는 계속 진행
+                # 실패한 Agent 정보를 상태에 기록
+                failed_agents = state.get('failed_agents', [])
+                failed_agents.append({
+                    'agent_name': 'Clova',
+                    'error_message': str(e),
+                    'timestamp': datetime.now().isoformat(),
+                    'specialty': '실무 경험 및 비용 효율성'
+                })
+                state['failed_agents'] = failed_agents
+                
+                # 처리 단계에 실패 기록 추가
+                processing_steps = state.get('processing_steps', [])
+                processing_steps.append('clova_agent_failed')
+                state['processing_steps'] = processing_steps
         return state
 
     async def _execute_debate_moderator(self, state: AgentState) -> AgentState:

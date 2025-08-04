@@ -101,7 +101,7 @@ REDIS_CONFIG = {
 TOKEN_LIMITS = {
     "base": 100,           # 기본 응답 (간단한 질문/답변)
     "detailed": 300,       # 상세 분석 (기술적 설명, 단계별 가이드) 
-    "debate": 500,         # 토론/종합 (여러 Agent 의견 통합)
+    "debate": 250,         # 토론/종합 (여러 Agent 의견 통합) - JSON 파싱 안정성을 위해 감소
     "emergency": 50,       # 긴급/간단 (에러 메시지, 간단 확인)
     "technical": 400       # 기술 특화 (Gemini 등 기술 분석용)
 }

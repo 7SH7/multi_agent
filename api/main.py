@@ -10,7 +10,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 from models.agent_state import AgentState
-from models.response_models import ChatResponse, SessionInfoResponse, HealthResponse
+from models.response_models import ChatResponse, SessionInfoResponse, HealthResponse, FailedAgent
 from core.enhanced_workflow import get_enhanced_workflow
 from core.session_manager import SessionManager
 from core.monitoring import get_system_monitor
@@ -33,6 +33,36 @@ class SessionEndRequest(BaseModel):
     reason: Optional[str] = None
 
 def create_application() -> FastAPI:
+    # 시작시 설정 검증
+    from config.settings import settings
+    from utils.validators import ConfigValidator
+    
+    logger.info("애플리케이션 설정 검증 시작...")
+    
+    # 기본 설정 검증
+    config_result = ConfigValidator.validate_startup_config(settings)
+    if not config_result.is_valid:
+        for error in config_result.errors:
+            logger.error(f"설정 오류: {error}")
+        raise RuntimeError(f"필수 설정이 누락되었습니다: {'; '.join(config_result.errors)}")
+    
+    # 경고 사항 로그
+    for warning in config_result.warnings:
+        logger.warning(f"설정 경고: {warning}")
+    
+    # 런타임 의존성 검증
+    deps_result = ConfigValidator.validate_runtime_dependencies()
+    if not deps_result.is_valid:
+        for error in deps_result.errors:
+            logger.error(f"의존성 오류: {error}")
+        raise RuntimeError(f"필수 라이브러리가 누락되었습니다: {'; '.join(deps_result.errors)}")
+    
+    # 의존성 경고 로그
+    for warning in deps_result.warnings:
+        logger.warning(f"의존성 경고: {warning}")
+    
+    logger.info("애플리케이션 설정 검증 완료 ✅")
+    
     app = FastAPI(
         title="Multi-Agent 제조업 챗봇 API",
         description="Multi-Agent 협력형 제조업 장비 문제 해결 챗봇 시스템",
@@ -195,11 +225,28 @@ def create_application() -> FastAPI:
             # Build response
             final_recommendation = result_state.get('final_recommendation', {})
             
+            # 실패한 Agent 정보 처리
+            failed_agents_data = result_state.get('failed_agents', [])
+            failed_agents = [
+                FailedAgent(
+                    agent_name=failed['agent_name'],
+                    error_message=failed['error_message'],
+                    timestamp=failed['timestamp'],
+                    specialty=failed['specialty']
+                ) for failed in failed_agents_data
+            ] if failed_agents_data else None
+            
+            # executive_summary에 실패한 Agent 정보 추가
+            executive_summary = final_recommendation.get('executive_summary', '응답을 생성할 수 없습니다.')
+            if failed_agents:
+                failed_names = [f.agent_name for f in failed_agents]
+                executive_summary += f"\n\n⚠️ 주의: {', '.join(failed_names)} 전문가 분석에 오류가 발생했습니다. 다른 전문가의 의견을 바탕으로 답변을 제공합니다."
+            
             return ChatResponse(
                 session_id=session_id,
                 conversation_count=session_data.conversation_count,
                 response_type=response_type,
-                executive_summary=final_recommendation.get('executive_summary', '응답을 생성할 수 없습니다.'),
+                executive_summary=executive_summary,
                 detailed_solution=final_recommendation.get('detailed_solution', []),
                 immediate_actions=final_recommendation.get('immediate_actions', []),
                 safety_precautions=final_recommendation.get('safety_precautions', []),
@@ -213,7 +260,8 @@ def create_application() -> FastAPI:
                 debate_rounds=len(result_state.get('debate_rounds', [])),
                 processing_time=processing_time,
                 processing_steps=result_state.get('processing_steps', []),
-                timestamp=datetime.now().isoformat()
+                timestamp=datetime.now().isoformat(),
+                failed_agents=failed_agents
             )
             
         except HTTPException:
@@ -321,11 +369,28 @@ def create_application() -> FastAPI:
             # Build final recommendation from result
             final_recommendation = result.final_state.get('final_recommendation', {})
             
+            # 실패한 Agent 정보 처리 (테스트 엔드포인트용)
+            failed_agents_data = result.final_state.get('failed_agents', [])
+            failed_agents = [
+                FailedAgent(
+                    agent_name=failed['agent_name'],
+                    error_message=failed['error_message'],
+                    timestamp=failed['timestamp'],
+                    specialty=failed['specialty']
+                ) for failed in failed_agents_data
+            ] if failed_agents_data else None
+            
+            # executive_summary에 실패한 Agent 정보 추가
+            executive_summary = final_recommendation.get('executive_summary', result.final_state.get('final_response', '답변 생성 실패'))
+            if failed_agents:
+                failed_names = [f.agent_name for f in failed_agents]
+                executive_summary += f"\n\n⚠️ 주의: {', '.join(failed_names)} 전문가 분석에 오류가 발생했습니다. 다른 전문가의 의견을 바탕으로 답변을 제공합니다."
+            
             return ChatResponse(
                 session_id=session_id,
                 conversation_count=session_data.conversation_count + 1,
                 response_type='test',
-                executive_summary=final_recommendation.get('executive_summary', result.final_state.get('final_response', '답변 생성 실패')),
+                executive_summary=executive_summary,
                 detailed_solution=final_recommendation.get('detailed_solution', []),
                 immediate_actions=final_recommendation.get('immediate_actions', []),
                 safety_precautions=final_recommendation.get('safety_precautions', []),
@@ -339,7 +404,8 @@ def create_application() -> FastAPI:
                 debate_rounds=len(result.final_state.get('debate_rounds', [])),
                 processing_time=result.execution_time,
                 processing_steps=result.steps_completed,
-                timestamp=datetime.now().isoformat()
+                timestamp=datetime.now().isoformat(),
+                failed_agents=failed_agents
             )
             
         except HTTPException:
@@ -354,12 +420,25 @@ def create_application() -> FastAPI:
         """시스템 헬스 체크"""
         health_data = monitor.get_system_health()
         
+        # 설정 상태 체크 추가
+        from utils.validators import ConfigValidator
+        config_status = ConfigValidator.get_health_check_status(settings)
+        
         # Determine overall status
         active_alerts = health_data.get('active_alerts_count', 0)
-        if active_alerts > 0:
-            status = "warning" if active_alerts < 3 else "error"
+        config_alerts = len(config_status.get('missing_keys', []))
+        
+        if not config_status.get('config_valid', True):
+            status = "error"
+        elif active_alerts > 0 or config_alerts > 0:
+            status = "warning" if (active_alerts + config_alerts) < 3 else "error"
         else:
             status = "healthy"
+        
+        # 설정 관련 알림 추가
+        alerts = health_data.get('active_alerts', [])
+        if config_alerts > 0:
+            alerts.append(f"설정 문제: API 키 {config_alerts}개 누락")
         
         return HealthResponse(
             status=status,
@@ -368,10 +447,11 @@ def create_application() -> FastAPI:
             active_sessions=health_data.get('active_sessions', 0),
             total_requests=health_data.get('total_requests', 0),
             agent_health=health_data.get('agent_health', {}),
-            active_alerts=health_data.get('active_alerts', []),
+            active_alerts=alerts,
             system_metrics={
                 'memory_usage_mb': health_data.get('memory_usage_mb', 0),
-                'cpu_usage_percent': health_data.get('cpu_usage_percent', 0)
+                'cpu_usage_percent': health_data.get('cpu_usage_percent', 0),
+                'config_status': config_status  # 설정 상태 추가
             }
         )
     
@@ -421,6 +501,10 @@ def create_application() -> FastAPI:
     # Individual Agent 라우터 추가
     from api.agent_endpoints import agent_router
     app.include_router(agent_router)
+    
+    # Knowledge Base API 라우터 추가
+    from api.knowledge_api import router as knowledge_router
+    app.include_router(knowledge_router)
     
     return app
 

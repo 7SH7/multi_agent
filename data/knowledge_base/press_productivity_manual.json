@@ -1,0 +1,428 @@
+{
+  "equipment_type": "PRESS_PRODUCTIVITY",
+  "model": "프레스 생산성 최적화 시스템 PPS-2024",
+  "sections": [
+    {
+      "title": "프레스 제품 결함 진단 및 관리",
+      "content": "프레스 성형 공정에서 발생하는 주요 제품 결함은 주름(Wrinkle), 터짐(Crack), 버(Burr) 세 가지로 분류되며, 각각 다른 성형 메커니즘과 대응 방안을 요구합니다.",
+      "keywords": ["제품결함", "주름", "터짐", "버", "성형메커니즘", "품질관리"],
+      "subsections": [
+        {
+          "title": "주름 발생 (PRESS-WRINKLE-ERR)",
+          "technical_details": {
+            "formation_mechanism": "플렌지 부위에 과도한 압축 응력 집중으로 얇은 금속의 좌굴 불안정성 발생",
+            "critical_locations": ["플렌지 모서리", "곡률 변화부", "재료 두께 변화부"],
+            "material_factors": [
+              "항복강도 대비 압축강도 비",
+              "탄성계수 및 포아송비",
+              "재료 두께 및 이방성"
+            ]
+          },
+          "stress_analysis": {
+            "compression_stress_limit": "σc < 0.8 × σy (항복강도의 80%)",
+            "critical_buckling_stress": "σcr = kπ²E(t/b)² (오일러 좌굴 공식)",
+            "safety_factor": "2.0 이상 권장"
+          },
+          "process_optimization": [
+            {
+              "parameter": "블랭크 홀더 압력",
+              "optimization_range": "30-80% of forming pressure",
+              "adjustment_method": "점진적 압력 증가",
+              "monitoring": "압력 센서 + 변형 측정"
+            },
+            {
+              "parameter": "다이 설계",
+              "critical_factors": [
+                "평탄 반경: t × 4 이상 (t: 재료 두께)",
+                "드로우 비드 설계",
+                "재료 유입 제어"
+              ]
+            },
+            {
+              "parameter": "성형 속도",
+              "recommendation": "저속 성형 (10-50 mm/s)",
+              "reason": "재료 유동 안정성 확보"
+            }
+          ]
+        },
+        {
+          "title": "터짐 발생 (PRESS-CRACK-ERR)",
+          "technical_details": {
+            "failure_mechanism": "과도한 인장 응력으로 인한 재료 극한 강도 초과 및 파단",
+            "crack_initiation": "응력 집중부 (노치, 모서리, 표면 결함)",
+            "propagation_pattern": "Mode I (인장 모드) 균열 전파가 지배적"
+          },
+          "stress_strain_analysis": {
+            "tensile_stress_limit": "σt < 0.9 × UTS (극한인장강도의 90%)",
+            "strain_limit": "εt < 0.8 × εu (극한연신율의 80%)",
+            "forming_limit_diagram": "FLD 곡선 기반 성형 한계 평가"
+          },
+          "prevention_strategies": [
+            {
+              "strategy": "다이 설계 최적화",
+              "methods": [
+                "모서리 반경 증대 (R ≥ 6t)",
+                "응력 집중 계수 최소화",
+                "점진적 형상 변화"
+              ]
+            },
+            {
+              "strategy": "성형 조건 제어",
+              "parameters": [
+                "성형 압력: 점진적 증가",
+                "성형 속도: 중간 속도 (50-100 mm/s)",
+                "온도 제어: 재료별 최적 온도"
+              ]
+            },
+            {
+              "strategy": "재료 선정 기준",
+              "criteria": [
+                "높은 연신율 (>25%)",
+                "적절한 n값 (가공경화지수 > 0.2)",
+                "균일한 재료 특성"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "버 발생 (PRESS-BURR-ERR)",
+          "technical_details": {
+            "formation_process": "전단 과정에서 재료의 소성 유동으로 인한 돌출부 형성",
+            "burr_types": [
+              "롤오버 버 (Roll-over burr)",
+              "포아송 버 (Poisson burr)",
+              "티어 버 (Tear burr)",
+              "컷팅 버 (Cutting burr)"
+            ]
+          },
+          "shearing_mechanics": {
+            "clearance_calculation": "C = t × k (k: 0.05-0.08, t: 재료 두께)",
+            "shear_angle": "φ = 45° + (α/2) - (β/2)",
+            "cutting_force": "F = τs × t × L × Ks"
+          },
+          "optimization_parameters": [
+            {
+              "parameter": "다이 클리어런스",
+              "soft_materials": "5-8% of thickness",
+              "hard_materials": "3-5% of thickness",
+              "adjustment_method": "심 삽입/제거"
+            },
+            {
+              "parameter": "전단 속도",
+              "optimal_range": "100-500 mm/min",
+              "material_dependency": "경도별 차등 적용"
+            },
+            {
+              "parameter": "날끝 상태",
+              "sharpness_criteria": "R < 0.01 mm",
+              "maintenance_cycle": "100,000 회 전단 후 점검"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "통계 기반 공정 모니터링",
+      "content": "64,359개 정상 공정 데이터 분석을 통한 통계적 공정 관리 및 이상 감지 시스템",
+      "keywords": ["통계분석", "GMM클러스터링", "공정모니터링", "예지보전"],
+      "statistical_framework": {
+        "data_collection": {
+          "sample_size": 64359,
+          "collection_period": "7개월 (2024.01-07)",
+          "sampling_frequency": "매 성형 사이클",
+          "data_quality": "결측값 < 0.1%, 이상값 제거"
+        },
+        "key_parameters": [
+          {
+            "parameter": "Press Time",
+            "statistical_properties": {
+              "mean": "550.13 ms",
+              "std_dev": "18.5 ms",
+              "cv": "3.36%",
+              "distribution": "정규분포"
+            },
+            "control_limits": {
+              "ucl": "587.6 ms (μ + 3σ)",
+              "lcl": "512.7 ms (μ - 3σ)",
+              "target": "550.0 ms"
+            }
+          },
+          {
+            "parameter": "Pressure 1 (Main Forming)",
+            "statistical_properties": {
+              "mean": "275.07 bar",
+              "std_dev": "12.3 bar",
+              "cv": "4.47%",
+              "distribution": "정규분포"
+            },
+            "process_capability": {
+              "cp": "1.35",
+              "cpk": "1.28",
+              "status": "양호"
+            }
+          },
+          {
+            "parameter": "Pressure 2 (Auxiliary)",
+            "statistical_properties": {
+              "mean": "269.79 bar",
+              "std_dev": "11.8 bar",
+              "cv": "4.37%"
+            }
+          },
+          {
+            "parameter": "Pressure 5 (Blank Holder)",
+            "statistical_properties": {
+              "mean": "544.85 bar",
+              "std_dev": "25.2 bar",
+              "cv": "4.63%"
+            },
+            "correlation_analysis": "Pressure 1과 높은 상관관계 (r=0.78)"
+          }
+        ]
+      },
+      "gmm_clustering_analysis": {
+        "methodology": "Gaussian Mixture Model (GMM) with 4 components",
+        "cluster_characteristics": [
+          {
+            "cluster_id": 0,
+            "name": "표준 성형 그룹",
+            "population": "28.5%",
+            "characteristics": {
+              "press_time": "540-560 ms",
+              "pressure_profile": "중간 압력",
+              "typical_products": "일반 패널류",
+              "quality_level": "우수"
+            }
+          },
+          {
+            "cluster_id": 1,
+            "name": "고압 성형 그룹",
+            "population": "31.2%",
+            "characteristics": {
+              "press_time": "560-580 ms",
+              "pressure_profile": "고압력",
+              "typical_products": "구조 부품",
+              "quality_level": "양호"
+            }
+          },
+          {
+            "cluster_id": 2,
+            "name": "정밀 성형 그룹",
+            "population": "22.8%",
+            "characteristics": {
+              "press_time": "530-550 ms",
+              "pressure_profile": "정밀 제어",
+              "typical_products": "외관 부품",
+              "quality_level": "우수"
+            }
+          },
+          {
+            "cluster_id": 3,
+            "name": "특수 성형 그룹",
+            "population": "17.5%",
+            "characteristics": {
+              "press_time": "변동성 큼",
+              "pressure_profile": "특수 조건",
+              "typical_products": "복잡 형상 부품",
+              "quality_level": "주의 필요"
+            }
+          }
+        ],
+        "cluster_validation": {
+          "silhouette_score": 0.73,
+          "calinski_harabasz_index": 156.8,
+          "davies_bouldin_index": 0.65
+        }
+      }
+    },
+    {
+      "title": "예지보전 및 품질 예측 시스템",
+      "content": "머신러닝과 통계 분석을 결합한 종합적 예지보전 시스템",
+      "keywords": ["예지보전", "머신러닝", "품질예측", "이상감지"],
+      "predictive_models": [
+        {
+          "model_type": "이상 감지 (Anomaly Detection)",
+          "algorithm": "Isolation Forest + Local Outlier Factor",
+          "input_features": ["Press Time", "Pressure 1-5", "Temperature", "Vibration"],
+          "performance": {
+            "precision": "94.2%",
+            "recall": "89.7%",
+            "f1_score": "91.9%"
+          },
+          "threshold_setting": "상위 5% 이상값을 이상으로 판정"
+        },
+        {
+          "model_type": "결함 예측 (Defect Prediction)",
+          "algorithm": "Random Forest + XGBoost Ensemble",
+          "target_variables": ["Wrinkle Risk", "Crack Risk", "Burr Risk"],
+          "model_accuracy": {
+            "wrinkle_prediction": "87.3%",
+            "crack_prediction": "91.8%",
+            "burr_prediction": "89.5%"
+          }
+        },
+        {
+          "model_type": "잔여 수명 예측 (RUL Prediction)",
+          "algorithm": "LSTM + CNN Hybrid Model",
+          "prediction_horizon": "다음 1000 사이클",
+          "accuracy": "±5% within 500 cycles"
+        }
+      ],
+      "early_warning_system": {
+        "warning_levels": [
+          {
+            "level": "주의 (Caution)",
+            "criteria": "통계적 관리 한계 근접 (2σ)",
+            "action": "모니터링 강화"
+          },
+          {
+            "level": "경고 (Warning)",
+            "criteria": "관리 한계 초과 (3σ) 또는 연속 7점 트렌드",
+            "action": "즉시 점검"
+          },
+          {
+            "level": "위험 (Critical)",
+            "criteria": "결함 발생 확률 > 10%",
+            "action": "생산 중단 및 긴급 조치"
+          }
+        ],
+        "response_procedures": [
+          "자동 알림 발송 (SMS, 이메일)",
+          "생산 조건 자동 조정",
+          "품질 검사 빈도 증가",
+          "예방 정비 스케줄 조정"
+        ]
+      }
+    },
+    {
+      "title": "공정 최적화 전략",
+      "content": "데이터 기반 공정 최적화 및 품질 향상 전략",
+      "keywords": ["공정최적화", "품질향상", "생산성", "비용절감"],
+      "optimization_approaches": [
+        {
+          "approach": "실시간 공정 제어",
+          "implementation": [
+            "센서 데이터 기반 피드백 제어",
+            "적응형 제어 알고리즘 적용",
+            "공정 변수 자동 조정"
+          ],
+          "expected_benefits": [
+            "품질 편차 40% 감소",
+            "불량률 30% 감소",
+            "생산성 15% 향상"
+          ]
+        },
+        {
+          "approach": "예측 기반 품질 관리",
+          "implementation": [
+            "결함 발생 사전 예측",
+            "예방적 조치 자동 실행",
+            "품질 보증 시스템 강화"
+          ],
+          "expected_benefits": [
+            "예방 효과 85%",
+            "품질 비용 25% 절감",
+            "고객 만족도 향상"
+          ]
+        },
+        {
+          "approach": "지능형 정비 시스템",
+          "implementation": [
+            "부품 수명 예측",
+            "최적 교체 시기 결정",
+            "정비 자원 최적 배분"
+          ],
+          "expected_benefits": [
+            "계획 외 정지 50% 감소",
+            "정비 비용 20% 절감",
+            "설비 가동률 95% 이상"
+          ]
+        }
+      ],
+      "performance_indicators": [
+        {
+          "kpi": "Overall Equipment Effectiveness (OEE)",
+          "current": "78.5%",
+          "target": "85.0%",
+          "improvement_plan": "가동률, 성능률, 품질률 각각 2-3% 향상"
+        },
+        {
+          "kpi": "First Pass Yield (FPY)",
+          "current": "92.3%",
+          "target": "96.0%",
+          "improvement_plan": "결함 예측 정확도 향상"
+        },
+        {
+          "kpi": "Mean Time Between Failures (MTBF)",
+          "current": "168 시간",
+          "target": "200 시간",
+          "improvement_plan": "예지보전 시스템 고도화"
+        }
+      ]
+    }
+  ],
+  "maintenance_schedule": {
+    "daily": [
+      "공정 파라미터 모니터링",
+      "통계적 관리 차트 확인",
+      "이상 감지 알람 점검",
+      "품질 데이터 수집"
+    ],
+    "weekly": [
+      "다이 및 펀치 상태 점검",
+      "클러스터 분포 변화 분석",
+      "예측 모델 성능 평가",
+      "정비 계획 검토"
+    ],
+    "monthly": [
+      "GMM 모델 재학습",
+      "공정 능력 지수 계산",
+      "최적화 효과 분석",
+      "시스템 성능 리포트 작성"
+    ],
+    "quarterly": [
+      "예측 모델 전면 업데이트",
+      "공정 최적화 전략 검토",
+      "ROI 분석 및 개선 계획",
+      "시스템 확장 계획 수립"
+    ]
+  },
+  "technical_specifications": {
+    "press_time_range": "530-570ms",
+    "pressure_accuracy": "±5%",
+    "temperature_control": "±2°C",
+    "cycle_time": "< 10초"
+  },
+  "safety_guidelines": [
+    "프레스 작업 시 양손 조작 버튼 사용",
+    "안전 차폐물 정상 작동 확인",
+    "비상정지 버튼 접근성 확보", 
+    "작업 전 기계적 점검 실시",
+    "개인보호구 필수 착용"
+  ],
+  "emergency_procedures": [
+    "비상정지 버튼 즉시 작동",
+    "작업자 안전 확보 후 상황 파악",
+    "유압 시스템 완전 정지",
+    "전문가 점검 후 재가동"
+  ],
+  "quality_standards": {
+    "defect_acceptance_criteria": {
+      "wrinkle": "높이 < 0.5mm, 길이 < 10mm",
+      "crack": "완전 금지 (zero tolerance)",
+      "burr": "높이 < 0.1mm, 날카로움 없음"
+    },
+    "measurement_methods": {
+      "wrinkle_measurement": "3D 스캐너 + 표면 조도계",
+      "crack_detection": "자분탐상검사 + 초음파검사",
+      "burr_measurement": "현미경 + 촉침식 측정기"
+    },
+    "sampling_plan": {
+      "inspection_level": "Level II (AQL 0.65)",
+      "sample_size": "√N (N: 로트 크기)",
+      "inspection_frequency": "매 시간마다"
+    }
+  },
+  "created_date": "2024-08-04",
+  "last_updated": "2024-08-04"
+}

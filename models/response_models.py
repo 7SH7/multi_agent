@@ -61,6 +61,13 @@ class FinalRecommendation(BaseModel):
     confidence_level: float
     recommended_followup: str
 
+class FailedAgent(BaseModel):
+    """실패한 Agent 정보"""
+    agent_name: str
+    error_message: str
+    timestamp: str
+    specialty: str
+
 class ChatResponse(BaseModel):
     """채팅 응답 모델"""
     session_id: str
@@ -77,6 +84,7 @@ class ChatResponse(BaseModel):
     processing_time: float
     processing_steps: List[str]
     timestamp: str
+    failed_agents: Optional[List[FailedAgent]] = Field(default=None, description="실패한 Agent 목록")
 
 class SessionInfo(BaseModel):
     """세션 정보"""

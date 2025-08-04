@@ -35,7 +35,7 @@ class DataError(Exception):
 
 
 # 지식베이스 데이터 로딩
-def load_knowledge_data(filename: str) -> List[Dict[str, Any]]:
+def load_knowledge_data(filename: str) -> Dict[str, Any]:
     """지식베이스 JSON 파일을 로드합니다."""
     file_path = KNOWLEDGE_BASE_PATH / filename
 
@@ -46,8 +46,8 @@ def load_knowledge_data(filename: str) -> List[Dict[str, Any]]:
         with open(file_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
 
-        if not isinstance(data, list):
-            raise DataError(f"Invalid data format in {filename}: expected list")
+        if not isinstance(data, dict):
+            raise DataError(f"Invalid data format in {filename}: expected dict")
 
         return data
 
@@ -90,7 +90,9 @@ def validate_data_structure() -> Dict[str, Any]:
             for dataset in datasets:
                 try:
                     data = load_knowledge_data(dataset)
-                    validation_results["total_documents"] += len(data)
+                    # Dict 형태이므로 sections의 개수를 세어봄
+                    doc_count = len(data.get('sections', []))
+                    validation_results["total_documents"] += doc_count
                 except DataError as e:
                     validation_results["validation_errors"].append(str(e))
 
@@ -131,7 +133,8 @@ def get_data_statistics() -> Dict[str, Any]:
         for dataset in datasets:
             try:
                 data = load_knowledge_data(dataset)
-                doc_count = len(data)
+                # Dict 형태이므로 sections의 개수를 세어봄
+                doc_count = len(data.get('sections', []))
                 stats["total_documents"] += doc_count
 
                 file_path = KNOWLEDGE_BASE_PATH / dataset

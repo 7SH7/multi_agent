@@ -1,9 +1,12 @@
 import re
 import html
 import bleach
+import logging
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 
 class ValidationError(Exception):
@@ -270,3 +273,220 @@ class DataValidator:
             sanitized_data=sanitized_data,
             warnings=warnings
         )
+
+
+class ConfigValidator:
+    """환경 설정 및 API 키 검증 클래스"""
+    
+    REQUIRED_API_KEYS = [
+        "OPENAI_API_KEY",
+        "GOOGLE_AI_API_KEY", 
+        "ANTHROPIC_API_KEY",
+        "NAVER_API_KEY",
+        "NAVER_API_KEY_ID"
+    ]
+    
+    REQUIRED_DB_CONFIGS = [
+        "DB_HOST",
+        "DB_NAME", 
+        "DB_USERNAME",
+        "DB_PASSWORD"
+    ]
+    
+    REQUIRED_SERVICE_CONFIGS = [
+        "REDIS_HOST",
+        "CHROMA_HOST",
+        "ELASTICSEARCH_HOST"
+    ]
+    
+    @classmethod
+    def validate_startup_config(cls, settings) -> ValidationResult:
+        """시작시 필수 설정 검증"""
+        errors = []
+        warnings = []
+        sanitized_data = {}
+        
+        # API 키 검증
+        api_key_errors = cls._validate_api_keys(settings)
+        errors.extend(api_key_errors)
+        
+        # 데이터베이스 설정 검증
+        db_errors = cls._validate_database_config(settings)
+        errors.extend(db_errors)
+        
+        # 외부 서비스 설정 검증
+        service_warnings = cls._validate_service_configs(settings)
+        warnings.extend(service_warnings)
+        
+        # 로그 레벨 검증
+        log_warnings = cls._validate_log_config(settings)
+        warnings.extend(log_warnings)
+        
+        return ValidationResult(
+            is_valid=len(errors) == 0,
+            errors=errors,
+            sanitized_data=sanitized_data,
+            warnings=warnings
+        )
+    
+    @classmethod
+    def _validate_api_keys(cls, settings) -> List[str]:
+        """API 키 검증"""
+        errors = []
+        missing_keys = []
+        invalid_keys = []
+        
+        for key in cls.REQUIRED_API_KEYS:
+            value = getattr(settings, key, "")
+            if not value or value.strip() == "":
+                missing_keys.append(key)
+            else:
+                # API 키 형식 검증
+                if not cls._is_valid_api_key_format(key, value):
+                    invalid_keys.append(key)
+        
+        if missing_keys:
+            errors.append(f"필수 API 키가 누락되었습니다: {', '.join(missing_keys)}")
+            
+        if invalid_keys:
+            errors.append(f"API 키 형식이 올바르지 않습니다: {', '.join(invalid_keys)}")
+            
+        return errors
+    
+    @classmethod
+    def _validate_database_config(cls, settings) -> List[str]:
+        """데이터베이스 설정 검증"""
+        errors = []
+        missing_configs = []
+        
+        for config in cls.REQUIRED_DB_CONFIGS:
+            value = getattr(settings, config, "")
+            if not value or value.strip() == "":
+                missing_configs.append(config)
+        
+        if missing_configs:
+            errors.append(f"필수 데이터베이스 설정이 누락되었습니다: {', '.join(missing_configs)}")
+            
+        # DATABASE_URL 생성 테스트
+        try:
+            db_url = settings.DATABASE_URL
+            if not db_url or "mysql://" not in db_url:
+                errors.append("DATABASE_URL 생성에 실패했습니다. DB 설정을 확인하세요.")
+        except Exception as e:
+            errors.append(f"DATABASE_URL 검증 오류: {str(e)}")
+            
+        return errors
+    
+    @classmethod
+    def _validate_service_configs(cls, settings) -> List[str]:
+        """외부 서비스 설정 검증"""
+        warnings = []
+        
+        for config in cls.REQUIRED_SERVICE_CONFIGS:
+            value = getattr(settings, config, "")
+            if not value or value.strip() == "":
+                warnings.append(f"외부 서비스 설정이 누락되었습니다: {config}")
+            elif value == "localhost" and getattr(settings, "ENVIRONMENT", "") == "production":
+                warnings.append(f"운영 환경에서 localhost 사용 중: {config}")
+                
+        return warnings
+    
+    @classmethod
+    def _validate_log_config(cls, settings) -> List[str]:
+        """로그 설정 검증"""
+        warnings = []
+        
+        valid_log_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+        log_level = getattr(settings, "LOG_LEVEL", "INFO").upper()
+        
+        if log_level not in valid_log_levels:
+            warnings.append(f"올바르지 않은 로그 레벨: {log_level}. 기본값 INFO 사용")
+            
+        return warnings
+    
+    @classmethod
+    def _is_valid_api_key_format(cls, key_name: str, key_value: str) -> bool:
+        """API 키 형식 검증"""
+        key_value = key_value.strip()
+        
+        # 최소 길이 검증
+        if len(key_value) < 10:
+            return False
+            
+        # 특정 API 키별 형식 검증
+        if key_name == "OPENAI_API_KEY":
+            return key_value.startswith("sk-") and len(key_value) > 20
+        elif key_name == "GOOGLE_AI_API_KEY":
+            return len(key_value) > 30  # Google API 키는 일반적으로 길다
+        elif key_name == "ANTHROPIC_API_KEY":
+            return key_value.startswith("sk-ant-") and len(key_value) > 30
+        elif key_name in ["NAVER_API_KEY", "NAVER_API_KEY_ID"]:
+            return len(key_value) > 10  # Naver API 키는 다양한 형식
+            
+        return True  # 기본적으로 유효하다고 간주
+    
+    @classmethod
+    def validate_runtime_dependencies(cls) -> ValidationResult:
+        """런타임 의존성 검증"""
+        errors = []
+        warnings = []
+        
+        # 필수 라이브러리 import 테스트
+        try:
+            import anthropic
+            import openai
+            import google.generativeai
+            import redis
+            import elasticsearch
+            import chromadb
+        except ImportError as e:
+            errors.append(f"필수 라이브러리 누락: {str(e)}")
+        
+        # 환경 변수 존재 확인
+        import os
+        if not os.path.exists(".env"):
+            warnings.append(".env 파일이 존재하지 않습니다. 환경 변수가 시스템에서 로드됩니다.")
+        
+        return ValidationResult(
+            is_valid=len(errors) == 0,
+            errors=errors,
+            sanitized_data={},
+            warnings=warnings
+        )
+    
+    @classmethod
+    def get_health_check_status(cls, settings) -> Dict[str, Any]:
+        """설정 상태 건강 체크"""
+        status = {
+            "config_valid": True,
+            "api_keys_present": 0,
+            "missing_keys": [],
+            "service_configs": {},
+            "warnings": []
+        }
+        
+        # API 키 상태 체크
+        total_keys = len(cls.REQUIRED_API_KEYS)
+        present_keys = 0
+        
+        for key in cls.REQUIRED_API_KEYS:
+            value = getattr(settings, key, "")
+            if value and value.strip():
+                present_keys += 1
+            else:
+                status["missing_keys"].append(key)
+        
+        status["api_keys_present"] = present_keys
+        status["api_keys_total"] = total_keys
+        
+        # 서비스 설정 상태
+        for config in cls.REQUIRED_SERVICE_CONFIGS:
+            value = getattr(settings, config, "")
+            status["service_configs"][config] = bool(value and value.strip())
+        
+        # 전체 유효성
+        if present_keys < total_keys:
+            status["config_valid"] = False
+            status["warnings"].append(f"API 키 {total_keys - present_keys}개 누락")
+        
+        return status

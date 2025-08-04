@@ -1,0 +1,277 @@
+{
+  "equipment_type": "PRESS_HYDRAULIC",
+  "model": "유압 프레스 시스템 HP-8000",
+  "sections": [
+    {
+      "title": "진동 이상 진단 및 관리",
+      "content": "프레스 유압 시스템의 진동 이상은 크게 상부진동(VIB1)과 하부진동(VIB2)으로 분류됩니다. AI0_Vibration 센서의 Q1 기준값은 0.020397이며, 이를 초과할 경우 정밀 진단이 필요합니다.",
+      "keywords": ["진동", "AI0_Vibration", "상부진동", "하부진동", "Q1"],
+      "subsections": [
+        {
+          "title": "상부진동 이상 (PRESS-VIB1)",
+          "technical_details": {
+            "sensor_location": "프레스 상부 베어링 하우징",
+            "measurement_parameters": ["진동 가속도", "진동 속도", "진동 변위"],
+            "threshold_values": {
+              "Q1": 0.020397,
+              "normal_range": "0.010 - 0.030",
+              "warning_level": "0.030 - 0.050",
+              "critical_level": "> 0.050"
+            }
+          },
+          "root_causes_analysis": [
+            {
+              "category": "기계적 원인",
+              "causes": [
+                "축 정렬 불량: 커플링 정렬도 0.1mm 이하 유지 필요",
+                "축 및 휠 편심: 회전체 불균형으로 인한 원심력 발생",
+                "베어링 마모: 내/외륜 손상, 볼/롤러 마모, 케이지 파손",
+                "풀리 마모 및 손상: V벨트 풀리 홈 마모, 축 키 손상"
+              ],
+              "inspection_methods": [
+                "다이얼 게이지를 이용한 축 진동 측정",
+                "레이저 정렬기를 통한 축 정렬도 확인",
+                "베어링 온도 및 윤활 상태 점검",
+                "풀리 런아웃 측정"
+              ]
+            },
+            {
+              "category": "구조적 원인",
+              "causes": [
+                "기초 불량: 콘크리트 균열, 볼트 이완",
+                "공진 현상: 시스템 고유진동수와 운전진동수 일치",
+                "배관 연결부 진동 전달"
+              ],
+              "inspection_methods": [
+                "기초 볼트 토크 확인 (권장: 150±10 N·m)",
+                "콘크리트 균열 육안 점검",
+                "진동 주파수 분석을 통한 공진점 확인"
+              ]
+            }
+          ],
+          "maintenance_procedures": [
+            {
+              "procedure": "베어링 교체",
+              "frequency": "연 1회 또는 진동값 임계치 도달시",
+              "required_tools": ["베어링 풀러", "가열 장치", "정밀 측정기"],
+              "safety_precautions": ["작업 전 완전 정지", "LOTO 절차 준수", "개인보호구 착용"]
+            },
+            {
+              "procedure": "축 정렬 조정",
+              "frequency": "반기 1회",
+              "required_tools": ["레이저 정렬기", "심 세트", "토크렌치"],
+              "alignment_tolerance": "수평/수직 각각 0.05mm 이내"
+            }
+          ]
+        },
+        {
+          "title": "하부진동 이상 (PRESS-VIB2)",
+          "technical_details": {
+            "sensor_location": "프레스 하부 기초부",
+            "additional_factors": [
+              "지반 진동 전달",
+              "기초 구조물 공진",
+              "배관 및 지지대 진동 전달"
+            ]
+          },
+          "structural_analysis": [
+            {
+              "issue": "기초 불량",
+              "symptoms": ["기초 볼트 이완", "콘크리트 균열", "침하 현상"],
+              "solutions": [
+                "기초 볼트 재체결 (토크: 200±15 N·m)",
+                "콘크리트 보수 및 에폭시 주입",
+                "기초 하부 그라우팅"
+              ]
+            },
+            {
+              "issue": "진동 전달",
+              "symptoms": ["바닥 진동", "인접 설비 영향", "건물 구조 진동"],
+              "solutions": [
+                "방진패드 설치 (두께: 25-50mm)",
+                "진동 차단 트렌치 설치",
+                "배관 플렉시블 조인트 적용"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "전류 이상 진단 및 관리",
+      "content": "프레스 유압 시스템의 전류 이상(PRESS-CUR)은 과부하, 토크 저하, 전기적 결함이 주요 원인입니다.",
+      "keywords": ["전류", "과부하", "토크", "모터", "제어"],
+      "electrical_analysis": [
+        {
+          "parameter": "정격 전류",
+          "normal_range": "85-95A",
+          "warning_level": "95-110A",
+          "critical_level": "> 110A"
+        },
+        {
+          "parameter": "역률",
+          "normal_range": "0.85-0.95",
+          "low_pf_causes": ["모터 과여자", "무효전력 증가"]
+        }
+      ],
+      "troubleshooting_matrix": [
+        {
+          "symptom": "전류 급상승",
+          "possible_causes": [
+            "기계적 구속",
+            "유압 시스템 과부하",
+            "모터 베어링 손상"
+          ],
+          "diagnostic_steps": [
+            "부하 토크 측정",
+            "유압 압력 확인",
+            "모터 절연저항 측정"
+          ]
+        },
+        {
+          "symptom": "전류 불안정",
+          "possible_causes": [
+            "전원 품질 불량",
+            "제어 시스템 오류",
+            "접촉기 접촉 불량"
+          ],
+          "diagnostic_steps": [
+            "전원 품질 분석",
+            "제어 신호 확인",
+            "접촉부 점검"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "복합 이상 진단 (PRESS-COMPLEX)",
+      "content": "진동과 전류 이상이 동시에 발생하는 복합적 문제로, 시스템 전반의 종합적 진단이 필요합니다.",
+      "keywords": ["복합이상", "시스템진단", "전문가협업", "정밀진단"],
+      "complex_diagnosis_approach": [
+        {
+          "phase": "1단계 - 초기 평가",
+          "activities": [
+            "모든 센서 데이터 수집 및 분석",
+            "이상 발생 패턴 및 시간대 분석",
+            "운전 조건 및 환경 요인 확인"
+          ],
+          "duration": "4-6시간"
+        },
+        {
+          "phase": "2단계 - 상세 진단",
+          "activities": [
+            "진동 주파수 분석 (FFT 분석)",
+            "전류 고조파 분석",
+            "열화상 촬영을 통한 온도 분포 확인",
+            "오일 분석을 통한 마모 입자 검출"
+          ],
+          "required_equipment": [
+            "진동 분석기",
+            "전력품질분석기",
+            "열화상카메라",
+            "오일분석키트"
+          ],
+          "duration": "8-12시간"
+        },
+        {
+          "phase": "3단계 - 전문가 협업",
+          "activities": [
+            "기계 전문가, 전기 전문가, 구조 전문가 합동 진단",
+            "종합적 원인 분석 및 해결방안 수립",
+            "우선순위별 조치 계획 수립"
+          ],
+          "duration": "4-8시간"
+        }
+      ],
+      "system_integration_analysis": [
+        {
+          "subsystem": "기계 시스템",
+          "interaction_factors": [
+            "회전체 불균형이 전기 부하에 미치는 영향",
+            "베어링 마모로 인한 축 편심과 전류 증가",
+            "정렬 불량으로 인한 추가 토크 부하"
+          ]
+        },
+        {
+          "subsystem": "전기 시스템",
+          "interaction_factors": [
+            "전류 불안정이 진동에 미치는 영향",
+            "모터 토크 리플이 기계적 진동 유발",
+            "전원 품질이 제어 시스템에 미치는 영향"
+          ]
+        },
+        {
+          "subsystem": "제어 시스템",
+          "interaction_factors": [
+            "피드백 루프의 불안정성",
+            "센서 신호 간섭 및 노이즈",
+            "제어 알고리즘의 한계"
+          ]
+        }
+      ]
+    }
+  ],
+  "technical_specifications": {
+    "hydraulic_pressure_range": "150-200 bar",
+    "oil_temperature_range": "40-60°C", 
+    "flow_rate_range": "80-120 L/min",
+    "vibration_threshold": "0.030 g max"
+  },
+  "maintenance_schedule": {
+    "daily": [
+      "진동 센서값 모니터링",
+      "전류값 트렌드 확인",
+      "이상 알람 발생 여부 확인"
+    ],
+    "weekly": [
+      "베어링 온도 측정",
+      "윤활유 레벨 및 상태 확인",
+      "기초 볼트 육안 점검"
+    ],
+    "monthly": [
+      "정밀 진동 측정 및 분석",
+      "전기적 파라미터 종합 점검",
+      "예방정비 항목 실시"
+    ],
+    "quarterly": [
+      "전문가 정밀 진단",
+      "시스템 종합 성능 평가",
+      "정비 계획 수립 및 검토"
+    ]
+  },
+  "safety_guidelines": [
+    "모든 작업 전 LOTO(Lock Out Tag Out) 절차 준수",
+    "진동 측정 시 회전체 접근 금지",
+    "전기 작업 시 절연용 보호구 착용",
+    "유압 시스템 작업 시 잔압 완전 배출",
+    "중량물 취급 시 크레인 등 보조 장비 사용"
+  ],
+  "emergency_procedures": [
+    {
+      "condition": "진동값 임계치 초과 (> 0.050)",
+      "immediate_action": [
+        "즉시 장비 정지",
+        "안전 구역 설정",
+        "전문가 긴급 출동 요청"
+      ]
+    },
+    {
+      "condition": "전류값 위험 수준 (> 110A)",
+      "immediate_action": [
+        "전원 차단",
+        "화재 예방 조치",
+        "전기 전문가 출동 요청"
+      ]
+    },
+    {
+      "condition": "복합 이상 발생",
+      "immediate_action": [
+        "전체 시스템 긴급 정지",
+        "주변 설비 영향 확인",
+        "비상 대응팀 가동"
+      ]
+    }
+  ],
+  "created_date": "2024-08-04",
+  "last_updated": "2024-08-04"
+}

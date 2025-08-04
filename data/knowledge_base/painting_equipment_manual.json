@@ -1,0 +1,304 @@
+{
+  "equipment_type": "PAINTING_EQUIPMENT",
+  "model": "예측형 도장설비 시스템 PaintPredict Pro",
+  "sections": [
+    {
+      "title": "예측형 도장설비 및 센서 점검",
+      "content": "센서 기반의 제어 신호와 각종 전압, 전류, 온도 등 핵심 지표를 활용한 센서 이상징후를 예측하여, 설비장애 발생을 사전에 방지 시스템을 구축 예방적 보전이 가능합니다.",
+      "keywords": ["도장설비", "기반센서모니터링", "전압", "전류", "온도", "설비장애", "센서점검"],
+      "sensor_monitoring_system": {
+        "monitored_parameters": [
+          {
+            "parameter": "전압 (Voltage)",
+            "sensor_type": "전압 센서",
+            "normal_range": "200-250V",
+            "monitoring_frequency": "1초당 10회"
+          },
+          {
+            "parameter": "전류 (Current)",
+            "sensor_type": "전류 센서", 
+            "normal_range": "10-50A",
+            "monitoring_frequency": "1초당 10회"
+          },
+          {
+            "parameter": "온도 (Temperature)",
+            "sensor_type": "온도 센서",
+            "normal_range": "20-80°C",
+            "monitoring_frequency": "1초당 5회"
+          },
+          {
+            "parameter": "압력 (Pressure)",
+            "sensor_type": "압력 센서",
+            "normal_range": "2.0-4.0 bar",
+            "monitoring_frequency": "1초당 5회"
+          }
+        ],
+        "control_signals": [
+          "PLC 제어 신호",
+          "베어링 경보1",
+          "축계 회전 신호",
+          "기계 간섭 알람 신호"
+        ]
+      },
+      "quartile_based_detection": {
+        "Q1_threshold": "분위 1분위 - 예방 모니터링 구간",
+        "Q2_median": "분위 중위수 - 정상 운전 구간",
+        "Q3_threshold": "분위 3분위 - 주의 모니터링 구간",
+        "outlier_detection": "Q3 + 1.5×IQR 초과 시 센서 점검",
+        "early_warning": "Q1 이하 또는 Q3 초과 시 사전 알림"
+      },
+      "subsections": [
+        {
+          "title": "기계 이상 (PAINT-EQ-MCH)",
+          "issue_code": "PAINT-EQ-MCH",
+          "issue_type": "기계적 오류",
+          "predicted_causes": [
+            "베어링 마모 - 모터, 회전축, 기계 등의 베어링 교체 시기",
+            "축계 불균형 - 축계, 축 마모 시스템 불안정",
+            "기계 간섭 알람 발생 - 기계값, 기계 알람 장치",
+            "PLC 제어 오류 - 제어 로직 문제, 연계시스템 오류"
+          ],
+          "solutions": [
+            "자체 진동 센서 값 확인 및 점검",
+            "PLC 진단 점검 및 제어 로직 수정",
+            "베어링 윤활 상태 점검 및 보수",
+            "축계 시스템 밸런싱 및 정렬",
+            "기계 기계값 등의 요소 점검"
+          ],
+          "technical_details": {
+            "detection_method": "진동 분석 + 전류 온도 분석",
+            "typical_symptoms": [
+              "진동센서값 진동 온도",
+              "전류 수치값 증가",
+              "진동 이상음",
+              "진동 주파수값 제어"
+            ],
+            "preventive_measures": [
+              "정기적작업 베어링 교체",
+              "진동 모니터링 시스템 운영",
+              "PLC 소프트웨어 권수 및 점검"
+            ]
+          }
+        },
+        {
+          "title": "전압 센서 (PAINT-EQ-VOL-INVALID)",
+          "issue_code": "PAINT-EQ-VOL-INVALID",
+          "issue_type": "센서/신호 오류",
+          "predicted_causes": [
+            "전압 센서 오류 - 센서 자체 회로 이상",
+            "신호 케이블 단선 - 케이블 단선으로 인한 신호 로스",
+            "A/D 변환기 문제 - 디지털-아날로그 변환 체계 장치",
+            "접지 불량 - 전기적 접지시설 오류"
+          ],
+          "solutions": [
+            "센서 교체 및 보정",
+            "신호 케이블 점검 및 교체",
+            "A/D 변환기 재보정",
+            "접지 시스템 점검 및 개선"
+          ],
+          "technical_details": {
+            "detection_criteria": "센서 수치 경보상황 로스, 점검된 알림",
+            "diagnostic_tools": ["멀티미터", "오실로스코프", "절연 저항 측정기"],
+            "replacement_schedule": "센서 3년, 케이블 5년"
+          }
+        },
+        {
+          "title": "전압 과다 (PAINT-EQ-VOL-HIGH)",
+          "issue_code": "PAINT-EQ-VOL-HIGH",
+          "issue_type": "전압 과다",
+          "predicted_causes": [
+            "전압 조정기 오류 - 제어 회로상의 조정 문제",
+            "제도체 제어 문제 - DC Rectifier 제어 회로 장치",
+            "트랜스포머 권수비 오류 - 전압 승강 기준 센서",
+            "부하 임피던스 변화 - 부하 임피던스"
+          ],
+          "solutions": [
+            "트랜스포머(DC Rectifier) 점검 및 보정",
+            "제어회로 재보정",
+            "전압 조정기 수정 및 보정",
+            "부하 상태 시스템 점검",
+            "전압 모니터링 시스템 점검"
+          ],
+          "technical_details": {
+            "threshold_levels": {
+              "warning": "> Q3 + 0.5×IQR",
+              "critical": "> Q3 + 1.5×IQR"
+            },
+            "safety_measures": [
+              "과전압 보호 회로 동작 확인",
+              "즉시 온도 시스템 모니터링"
+            ]
+          }
+        },
+        {
+          "title": "전압 미달 (PAINT-EQ-VOL-LOW)",
+          "issue_code": "PAINT-EQ-VOL-LOW",
+          "issue_type": "전압 저하",
+          "predicted_causes": [
+            "트랜스포머 열화 - 기계 회로 권수 저하",
+            "센서 오류 - 제조업 문제 제어",
+            "전원 과부하 - 절연 혹은으로 인한 전압 미달",
+            "부하 저항 - 저항으로 인한 전압 저감",
+            "접촉 저항 불량 - 접촉 절연, 접지"
+          ],
+          "solutions": [
+            "트랜스포머 권수 점검 및 보수",
+            "전원 및 회선체 점검",
+            "전원 과부하 상태 점검",
+            "접촉 시스템 점검",
+            "부하 상태 재보정"
+          ],
+          "technical_details": {
+            "diagnostic_procedure": [
+              "1단계: 트랜스포머 출력 전압 측정",
+              "2단계: 전원 절연 저항 측정",
+              "3단계: 접촉 저항 측정",
+              "4단계: 부하 전류 온도 분석"
+            ]
+          }
+        },
+        {
+          "title": "전류 센서 (PAINT-EQ-CUR-INVALID)",
+          "issue_code": "PAINT-EQ-CUR-INVALID", 
+          "issue_type": "센서/신호 오류",
+          "predicted_causes": [
+            "전류 센서 오류 - 홀 센서, 변류 기기",
+            "신호 처리 회로 오류 - 증폭기, 필터 회로 장치",
+            "케이블 온도 과열 - 전류선 온도-전류 오류",
+            "보정값 초기화 문제"
+          ],
+          "solutions": [
+            "센서 교체 및 재보정",
+            "신호 처리 회로 점검",
+            "케이블 온도 과열 확인",
+            "트랜스듀서 온도 보정"
+          ],
+          "technical_details": {
+            "sensor_types": ["홀 전류 센서", "로고브스키 코일", "전류 변류기"],
+            "calibration_frequency": "년 1회"
+          }
+        },
+        {
+          "title": "전류 과다 (PAINT-EQ-CUR-HIGH)",
+          "issue_code": "PAINT-EQ-CUR-HIGH",
+          "issue_type": "전류 과부하",
+          "predicted_causes": [
+            "전류 과부하 - 기계 설비 절연 운전",
+            "베어링 소손(마모) - 전기 간섭 절연 혹은",
+            "모터 과부하 - 기계체 불균형 불량",
+            "기계 저항 오류 - 축계 연계 불량",
+            "회전자 불균형 - 운전 저항 불량"
+          ],
+          "solutions": [
+            "즉시 제도체를 및 모터 점검",
+            "베어링 상태 점검 및 교체",
+            "전기적 절연 상태 확인",
+            "기계 저항 점검",
+            "회전자 밸런싱"
+          ],
+          "technical_details": {
+            "overload_protection": "전류 차단기 동작 조정",
+            "monitoring_points": ["모터 전류", "축계 전류", "전기 전류"]
+          }
+        },
+        {
+          "title": "전류 미달 (PAINT-EQ-CUR-LOW)",
+          "issue_code": "PAINT-EQ-CUR-LOW",
+          "issue_type": "전류 저하",
+          "predicted_causes": [
+            "전기적 접촉 - 전기 제도 장치",
+            "리드/전선 코일 권선 불량 - 접촉 저항 불량",
+            "모터 권선 불량 - 윤활 저항 불량",
+            "부하 저항 증가 - 기계적 부하증가",
+            "제어 신호 오류 - 전류 신호체 문제"
+          ],
+          "solutions": [
+            "전기적 연결 상태 점검",
+            "코일 접지 상태 개선",
+            "모터 절연 저항 측정",
+            "기계적 부하 상태 점검",
+            "제어 시스템 점검"
+          ],
+          "technical_details": {
+            "connection_check": [
+              "접지 연결 단자 확인",
+              "접촉 저항 측정",
+              "축 절연 상태 점검"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "도장설비 자동 시스템",
+      "content": "설비장애 구간 각종 센서 점검 및 센서운영 차원에서 자동화된 초기 자동화된 제어를 및 보전 자동화 처리를 및 보전 시스템.",
+      "automated_systems": {
+        "early_detection": {
+          "method": "센서 기반변수회로 실시간 구간 로직",
+          "detection_criteria": [
+            "Q1 이하: 사전 알림 전송",
+            "Q3 초과: 주의 모니터링 경고",
+            "센서값 점검: 즉시 중단 진도"
+          ],
+          "response_time": "< 1초"
+        },
+        "automated_routines": [
+          {
+            "trigger": "전압 센서 점검",
+            "action": "트랜스포머 상태 점검 수행 진행",
+            "duration": "5분"
+          },
+          {
+            "trigger": "전류 과부하",
+            "action": "부하 상태 자동 보정",
+            "duration": "2분"
+          },
+          {
+            "trigger": "온도 과다",
+            "action": "냉각 시스템 자동 모니터링",
+            "duration": "지속"
+          }
+        ]
+      }
+    }
+  ],
+  "technical_specifications": {
+    "sensor_accuracy": "±1% F.S.",
+    "response_time": "< 100ms",
+    "data_sampling_rate": "10 Hz",
+    "communication_protocol": "Modbus RTU, Ethernet/IP",
+    "operating_temperature": "-10°C ~ +60°C"
+  },
+  "maintenance_schedule": {
+    "daily": [
+      "센서 변수상태 체크 분석",
+      "센서 점검 로그 확인",
+      "이상 점검 알람 등의 알림 확인"
+    ],
+    "weekly": [
+      "센서 재보정 점검",
+      "접지 상태 확인",
+      "도장설비 차원 권수 교체"
+    ],
+    "monthly": [
+      "전기 시스템 모니터링 점검",
+      "설비장애 각종차량 재점검",
+      "예방 보전 보수"
+    ]
+  },
+  "safety_guidelines": [
+    "도장 설비 점검 시 전원 차단 필수",
+    "화학 물질 취급 시 방진마스크 및 보호구 착용",
+    "고전압 전기 작업 시 절연장갑 착용",
+    "스프레이 부스 내 작업 시 환기 시스템 작동 확인",
+    "예지보전 작업 시 안전 결속 절차 준수"
+  ],
+  "emergency_procedures": [
+    "전기 화재 시 전용 소화기 사용",
+    "유독 가스 누출 시 즉시 대피 및 환기",
+    "감전 사고 시 전원 차단 및 응급처치",
+    "설비 오작동 시 비상정지 및 전문가 연락"
+  ],
+  "created_date": "2024-08-04",
+  "last_updated": "2024-08-04"
+}
