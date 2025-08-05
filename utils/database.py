@@ -2,7 +2,10 @@ import aiomysql
 from typing import Dict, Any, List, Optional
 from contextlib import asynccontextmanager
 
-from config.settings import DATABASE_URL
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
+
+from config.settings import DATABASE_URL, settings
 
 
 class DatabaseManager:
@@ -101,3 +104,33 @@ async def save_chat_session(session_data: Dict[str, Any]) -> bool:
     except Exception as e:
         print(f"Error saving chat session: {e}")
         return False
+
+
+# SQLAlchemy Async 데이터베이스 설정
+def get_async_database_url():
+    """비동기 데이터베이스 URL 생성"""
+    return f"mysql+aiomysql://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
+
+
+# Async 엔진 및 세션 설정
+async_engine = create_async_engine(
+    get_async_database_url(),
+    echo=False,
+    pool_size=10,
+    max_overflow=20
+)
+
+AsyncSessionLocal = sessionmaker(
+    async_engine,
+    class_=AsyncSession,
+    expire_on_commit=False
+)
+
+
+async def get_async_db() -> AsyncSession:
+    """FastAPI Dependency for async database session"""
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+        finally:
+            await session.close()

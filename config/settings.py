@@ -58,6 +58,12 @@ class Settings(BaseSettings):
     MAX_CONVERSATION_COUNT: int = 50
     MAX_REQUEST_SIZE: int = 10 * 1024 * 1024
 
+    # Kafka Configuration
+    KAFKA_ENABLED: bool = True
+    KAFKA_BOOTSTRAP_SERVERS: str = "localhost:9092"
+    KAFKA_CONSUMER_GROUP: str = "chatbot-issue-consumer-group"
+    KAFKA_TOPIC_CHATBOT_ISSUES: str = "chatbot-issue-events"
+
     # Agent Configuration
     CONFIDENCE_THRESHOLD: float = 0.75
     MAX_AGENTS_PER_SESSION: int = 3

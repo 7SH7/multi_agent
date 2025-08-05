@@ -24,6 +24,9 @@ from config.settings import settings
 from utils.validators import ConfigValidator
 from api.agent_endpoints import agent_router
 from api.knowledge_api import router as knowledge_router
+from api.kafka_endpoints import kafka_router
+from api.chatbot_workflow import chatbot_workflow_router
+from services.kafka_manager import kafka_manager
 
 logger = logging.getLogger(__name__)
 
@@ -682,6 +685,39 @@ def create_application() -> FastAPI:
     
     # Knowledge Base API 라우터 추가
     app.include_router(knowledge_router)
+    
+    # Kafka Management API 라우터 추가
+    app.include_router(kafka_router)
+    
+    # Chatbot Workflow API 라우터 추가
+    app.include_router(chatbot_workflow_router)
+    
+    # Startup/Shutdown 이벤트 추가
+    @app.on_event("startup")
+    async def startup_event():
+        """애플리케이션 시작시 실행"""
+        try:
+            logger.info("애플리케이션 시작 - Kafka Consumer 초기화 중...")
+            # Kafka Consumer는 선택적으로 시작 (환경변수로 제어 가능)
+            kafka_enabled = getattr(settings, 'KAFKA_ENABLED', True)
+            if kafka_enabled:
+                await kafka_manager.start()
+                logger.info("Kafka Consumer 시작 완료")
+            else:
+                logger.info("Kafka Consumer 비활성화됨 (KAFKA_ENABLED=False)")
+        except Exception as e:
+            logger.error(f"Kafka Consumer 시작 실패: {str(e)}")
+            # Kafka 실패해도 애플리케이션은 계속 실행
+    
+    @app.on_event("shutdown")
+    async def shutdown_event():
+        """애플리케이션 종료시 실행"""
+        try:
+            logger.info("애플리케이션 종료 - Kafka Consumer 정리 중...")
+            await kafka_manager.stop()
+            logger.info("Kafka Consumer 정리 완료")
+        except Exception as e:
+            logger.error(f"Kafka Consumer 정리 실패: {str(e)}")
     
     return app
 
