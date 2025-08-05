@@ -14,11 +14,12 @@ class ChatbotSession(Base):
 
     chatbotSessionId = Column(String(50), primary_key=True)
     startedAt = Column(DateTime, nullable=False, default=func.now())
-    endedAt = Column(DateTime)
+    endedAt = Column(DateTime)  # 세션에 대한 모든 작업의 최종 작업.
     isReported = Column(Boolean, default=False)
     issue = Column(String(100))
     isTerminated = Column(Boolean, default=False)
     userId = Column(String(50))
+    # 그냥 계속 저장은 해두되, isTerminated가 True인 것들은 아예 외부에서 접근 금지하도록 하는 걸로..
 
 
 class ChatMessage(Base):
@@ -30,6 +31,9 @@ class ChatMessage(Base):
     chatbotSessionId = Column(String(50))
     sender = Column(Enum('bot', 'user', name='sender_enum'), nullable=False)  # type: ignore
     sentAt = Column(DateTime, nullable=False, default=func.now())
+    # 여기에 issue 코드가 있어야, 차후에 쓰지 않을까? -> 이래야 챗봇 이슈와 연결될 수 있음
+    # (차후 학습 데이터로 사용하려면, 어디에서든지 issue 코드를 기반으로 찾아오도록)
+    # 근데 chatbotSession과 1:m 관계인데, 1이 없어져도 되는가?
 
 
 class ChatbotIssue(Base):
@@ -40,124 +44,5 @@ class ChatbotIssue(Base):
     processType = Column(Enum('장애접수', '정기점검', name='process_type_enum'), nullable=False)  # type: ignore
     modeType = Column(Enum('프레스', '용접기', '도장설비', '차량조립설비', name='mode_type_enum'), nullable=False)  # type: ignore
     modeLogId = Column(String(50))
+    # 여기에는 어떤 문제가 있었는지 기억하고자 저장은 해둘 듯..? 아닌가?
 
-
-class PressDefectDetectionLog(Base):
-    """프레스 결함 감지 로그"""
-    __tablename__ = 'PressDefectDetectionLog'
-
-    id = Column(String(50), primary_key=True)
-    machineId = Column(BigInteger)
-    timeStamp = Column(DateTime)
-    machineName = Column(String(100))
-    itemNo = Column(String(50))
-    pressTime = Column(Float)
-    pressure1 = Column(Float)
-    pressure2 = Column(Float)
-    pressure3 = Column(Float)
-    detectCluster = Column(BigInteger)
-    detectType = Column(String(50))
-    issue = Column(String(100))
-    isSolved = Column(Boolean, default=False)
-
-
-class PressFaultDetectionLog(Base):
-    """프레스 고장 감지 로그"""
-    __tablename__ = 'PressFaultDetectionLog'
-
-    id = Column(String(50), primary_key=True)
-    machineId = Column(BigInteger)
-    timeStamp = Column(DateTime)
-    a0Vibration = Column(Float)
-    a1Vibration = Column(Float)
-    a2Current = Column(Float)
-    issue = Column(String(100))
-    isSolved = Column(Boolean, default=False)
-
-
-class WeldingMachineDefectDetectionLog(Base):
-    """용접기 결함 감지 로그"""
-    __tablename__ = 'WeldingMachineDefectDetectionLog'
-
-    id = Column(String(50), primary_key=True)
-    machineId = Column(BigInteger)
-    timeStamp = Column(DateTime)
-    sensorValue0_5ms = Column(Float)
-    sensorValue1_2ms = Column(Float)
-    sensorValue1_9ms = Column(Float)
-    sensorValue2_6ms = Column(Float)
-    sensorValue3_3ms = Column(Float)
-    sensorValue4_0ms = Column(Float)
-    sensorValue4_7ms = Column(Float)
-    sensorValue5_4ms = Column(Float)
-    sensorValue6_1ms = Column(Float)
-    sensorValue6_8ms = Column(Float)
-    sensorValue7_5ms = Column(Float)
-    sensorValue8_2ms = Column(Float)
-    sensorValue8_9ms = Column(Float)
-    sensorValue9_6ms = Column(Float)
-    sensorValue10_3ms = Column(Float)
-    sensorValue11_0ms = Column(Float)
-    sensorValue11_7ms = Column(Float)
-    sensorValue12_4ms = Column(Float)
-    sensorValue13_1ms = Column(Float)
-    sensorValue13_8ms = Column(Float)
-    sensorValue14_5ms = Column(Float)
-    sensorValue15_2ms = Column(Float)
-    sensorValue15_9ms = Column(Float)
-    sensorValue16_6ms = Column(Float)
-    sensorValue17_3ms = Column(Float)
-    issue = Column(String(100))
-    isSolved = Column(Boolean, default=False)
-
-
-class PaintingSurfaceDefectDetectionLog(Base):
-    """도장 표면 결함 감지 로그"""
-    __tablename__ = 'PaintingSurfaceDefectDetectionLog'
-
-    id = Column(String(50), primary_key=True)
-    machineId = Column(BigInteger)
-    timeStamp = Column(DateTime)
-    imageUrl = Column(String(255))
-    label = Column(String(100))
-    type = Column(String(50))
-    x = Column(Float)
-    y = Column(Float)
-    width = Column(Float)
-    height = Column(Float)
-    points = Column(String(500))
-    issue = Column(String(100))
-    isSolved = Column(Boolean, default=False)
-
-
-class PaintingProcessEquipmentDefectDetectionLog(Base):
-    """도장 공정 장비 결함 감지 로그"""
-    __tablename__ = 'PaintingProcessEquipmentDefectDetectionLog'
-
-    id = Column(String(50), primary_key=True)
-    machineId = Column(BigInteger)
-    timeStamp = Column(DateTime)
-    thick = Column(Float)
-    voltage = Column(Float)
-    ampere = Column(Float)
-    temper = Column(Float)
-    issue = Column(String(100))
-    isSolved = Column(Boolean, default=False)
-
-
-class VehicleAssemblyProcessDefectDetectionLog(Base):
-    """차량 조립 공정 결함 감지 로그"""
-    __tablename__ = 'VehicleAssemblyProcessDefectDetectionLog'
-
-    id = Column(String(50), primary_key=True)
-    machineId = Column(BigInteger)
-    timeStamp = Column(DateTime)
-    part = Column(String(100))
-    work = Column(String(100))
-    category = Column(String(100))
-    imageUrl = Column(String(255))
-    imageName = Column(String(100))
-    imageWidth = Column(BigInteger)
-    imageHeight = Column(BigInteger)
-    issue = Column(String(100))
-    isSolved = Column(Boolean, default=False)

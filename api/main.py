@@ -225,24 +225,31 @@ def create_application() -> FastAPI:
                 failed_names = [f['agent_name'] for f in failed_agents_data]
                 executive_summary += f"\n\n⚠️ 주의: {', '.join(failed_names)} 전문가 분석에 오류가 발생했습니다. 다른 전문가의 의견을 바탕으로 답변을 제공합니다."
 
-            # Update session with conversation history and other details
+            # Update session with conversation history and other details - FORCE SAVE
             # This will also increment conversation_count and save to Redis
-            await session_manager.add_conversation_detailed(
-                session_id,
-                {
-                    'user_message': request.user_message,
-                    'bot_response': executive_summary, # Save the actual bot's response
-                    'timestamp': datetime.now().isoformat(),
-                    'agents_used': result_state.get('selected_agents', []),
-                    'processing_time': processing_time,
-                    'issue_code': request.issue_code,
-                    'user_id': request.user_id,
-                    'agent_responses': result_state.get('agent_responses', {}),
-                    'debate_history': result_state.get('debate_rounds', []),
-                    'processing_steps': result_state.get('processing_steps', []),
-                    'confidence_level': final_recommendation.get('confidence_level', 0.5)
-                }
-            )
+            try:
+                print(f"🔍 저장 시도 - 세션 ID: {session_id}")
+                print(f"🔍 사용자 메시지: {request.user_message[:50]}...")
+                print(f"🔍 봇 응답: {executive_summary[:50]}...")
+                
+                # 대화 저장 - add_conversation이 conversation_count도 증가시킴
+                simple_save_success = await session_manager.add_conversation(
+                    session_id, 
+                    request.user_message, 
+                    executive_summary
+                )
+                print(f"✅ 대화 저장 결과: {simple_save_success}")
+                
+                if simple_save_success:
+                    # 저장 후 즉시 확인
+                    check_session = await session_manager.get_session(session_id)
+                    if check_session:
+                        print(f"✅ 저장 후 대화수: {check_session.conversation_count}")
+                        print(f"✅ 저장 후 히스토리 수: {len(check_session.metadata.get('conversation_history', []))}")
+                
+            except Exception as save_error:
+                print(f"❌ 대화 저장 오류: {str(save_error)}")
+                # 저장 실패해도 계속 진행
             
             # Re-fetch session_data to get the updated conversation_count and other fields
             # This is crucial to ensure the ChatResponse has the correct, updated values
@@ -535,6 +542,8 @@ def create_application() -> FastAPI:
         
         return {"message": "세션이 삭제되었습니다", "session_id": session_id}
     
+    
+
     # Individual Agent 라우터 추가
     app.include_router(agent_router)
     

@@ -21,13 +21,7 @@ from .response_models import (
 from .database_models import (
     ChatbotSession,
     ChatMessage,
-    ChatbotIssue,
-    PressDefectDetectionLog,
-    PressFaultDetectionLog,
-    WeldingMachineDefectDetectionLog,
-    PaintingSurfaceDefectDetectionLog,
-    PaintingProcessEquipmentDefectDetectionLog,
-    VehicleAssemblyProcessDefectDetectionLog
+    ChatbotIssue
 )
 
 __all__ = [
@@ -55,10 +49,4 @@ __all__ = [
     'ChatbotSession',
     'ChatMessage',
     'ChatbotIssue',
-    'PressDefectDetectionLog',
-    'PressFaultDetectionLog',
-    'WeldingMachineDefectDetectionLog',
-    'PaintingSurfaceDefectDetectionLog',
-    'PaintingProcessEquipmentDefectDetectionLog',
-    'VehicleAssemblyProcessDefectDetectionLog',
 ]

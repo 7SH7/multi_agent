@@ -6,7 +6,6 @@ from datetime import datetime
 from pydantic import BaseModel
 import time
 import logging
-from models.agent_state import AgentState
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +55,7 @@ class BaseAgent(ABC):
         self.timeout = config.timeout
 
     @abstractmethod
-    async def analyze_and_respond(self, state: AgentState) -> AgentResponse:
+    async def analyze_and_respond(self, state: Dict[str, Any]) -> AgentResponse:
         """문제 분석 및 응답 생성 (하위 클래스에서 구현)"""
         pass
 
@@ -137,7 +136,7 @@ class BaseAgent(ABC):
         import asyncio
         await asyncio.sleep(wait_time)
 
-    def validate_input(self, state: AgentState) -> bool:
+    def validate_input(self, state: Dict[str, Any]) -> bool:
         """입력 유효성 검사"""
         required_fields = ['user_message']
 

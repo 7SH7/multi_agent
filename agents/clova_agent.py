@@ -2,7 +2,6 @@
 
 import httpx
 from typing import Dict, Any, List, Optional
-from models.agent_state import AgentState
 from agents.base_agent import BaseAgent, AgentConfig, AgentResponse, AgentError
 from config.settings import LLM_CONFIGS
 import logging
