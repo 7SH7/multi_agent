@@ -7,6 +7,7 @@ from typing import Optional
 from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import logging
 
@@ -35,6 +36,9 @@ class ChatRequest(BaseModel):
 
 class SessionEndRequest(BaseModel):
     reason: Optional[str] = None
+
+class SessionCompleteRequest(BaseModel):
+    final_summary: Optional[str] = None
 
 def create_application() -> FastAPI:
     # 시작시 설정 검증
@@ -147,6 +151,14 @@ def create_application() -> FastAPI:
                 session_data = await session_manager.get_session(request.session_id)
                 if not session_data:
                     raise HTTPException(status_code=404, detail="세션을 찾을 수 없습니다")
+                
+                # 종료된 세션인지 확인
+                if session_data.metadata.get('isTerminated', False):
+                    raise HTTPException(
+                        status_code=400, 
+                        detail="이미 해결완료된 세션입니다. 더 이상 대화할 수 없습니다."
+                    )
+                
                 session_id = request.session_id
             else:
                 session_data = await session_manager.create_session(
@@ -328,6 +340,119 @@ def create_application() -> FastAPI:
         
         return {"message": "세션이 종료되었습니다", "session_id": session_id}
     
+    @app.post("/session/{session_id}/complete")
+    async def complete_session(
+        session_id: str,
+        request: SessionCompleteRequest,
+        session_manager: SessionManager = Depends(get_session_manager)
+    ):
+        """세션 해결완료 처리 (isTerminated = True)"""
+        try:
+            # 세션 존재 확인
+            session_data = await session_manager.get_session(session_id)
+            if not session_data:
+                raise HTTPException(status_code=404, detail="세션을 찾을 수 없습니다")
+            
+            # 이미 완료된 세션인지 확인
+            if session_data.metadata.get('isTerminated', False):
+                raise HTTPException(status_code=400, detail="이미 완료된 세션입니다")
+            
+            # 세션을 완료 상태로 변경
+            update_data = {
+                'isTerminated': True,
+                'terminated_at': datetime.now().isoformat(),
+                'final_summary': request.final_summary
+            }
+            
+            # 세션 메타데이터 업데이트
+            session_data.metadata.update(update_data)
+            session_data.updated_at = datetime.now()
+            success = await session_manager.update_session(session_data)
+            
+            if not success:
+                raise HTTPException(status_code=500, detail="세션 완료 처리 중 오류가 발생했습니다")
+            
+            return {
+                "message": "세션이 해결완료 처리되었습니다",
+                "session_id": session_id,
+                "isTerminated": True,
+                "terminated_at": update_data['terminated_at']
+            }
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"세션 완료 처리 오류: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"세션 완료 처리 중 오류: {str(e)}")
+    
+    @app.get("/session/{session_id}/download-report")
+    async def download_session_report(
+        session_id: str,
+        session_manager: SessionManager = Depends(get_session_manager)
+    ):
+        """세션 대화 내역 PDF 보고서 다운로드 (isReported = True)"""
+        try:
+            from utils.pdf_generator import generate_session_report
+            
+            # 세션 존재 확인
+            session_data = await session_manager.get_session(session_id)
+            if not session_data:
+                raise HTTPException(status_code=404, detail="세션을 찾을 수 없습니다")
+            
+            # 완료된 세션인지 확인
+            if not session_data.metadata.get('isTerminated', False):
+                raise HTTPException(status_code=400, detail="완료되지 않은 세션은 보고서를 생성할 수 없습니다")
+            
+            # 대화 내역 가져오기
+            conversation_history = session_data.metadata.get('conversation_history', [])
+            
+            # 세션 정보 준비
+            session_info = {
+                'session_id': session_id,
+                'user_id': session_data.user_id,
+                'issue_code': session_data.issue_code,
+                'created_at': session_data.created_at.strftime('%Y-%m-%d %H:%M:%S') if session_data.created_at else 'N/A',
+                'ended_at': session_data.metadata.get('terminated_at', 'N/A'),
+                'conversation_count': session_data.conversation_count,
+                'participating_agents': session_data.metadata.get('all_agents_used', session_data.selected_agents or [])
+            }
+            
+            # 최종 요약
+            final_summary = session_data.metadata.get('final_summary')
+            
+            # PDF 생성
+            pdf_buffer = await generate_session_report(
+                session_id=session_id,
+                conversation_history=conversation_history,
+                session_info=session_info,
+                final_summary=final_summary
+            )
+            
+            # 보고서 생성 완료 표시 (isReported = True)
+            session_data.metadata['isReported'] = True
+            session_data.metadata['report_generated_at'] = datetime.now().isoformat()
+            session_data.updated_at = datetime.now()
+            await session_manager.update_session(session_data)
+            
+            # PDF 파일명 생성
+            filename = f"chatbot_report_{session_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+            
+            # StreamingResponse로 PDF 반환
+            return StreamingResponse(
+                pdf_buffer,
+                media_type='application/pdf',
+                headers={
+                    'Content-Disposition': f'attachment; filename="{filename}"',
+                    'Content-Type': 'application/pdf'
+                }
+            )
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"PDF 보고서 생성 오류: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"PDF 보고서 생성 중 오류: {str(e)}")
+    
     @app.get("/ping")
     async def ping():
         """단순 ping - 의존성 없는 헬스체크"""
@@ -348,6 +473,14 @@ def create_application() -> FastAPI:
                 session_data = await session_manager.get_session(request.session_id)
                 if not session_data:
                     raise HTTPException(status_code=404, detail="세션을 찾을 수 없습니다")
+                
+                # 종료된 세션인지 확인
+                if session_data.metadata.get('isTerminated', False):
+                    raise HTTPException(
+                        status_code=400, 
+                        detail="이미 해결완료된 세션입니다. 더 이상 대화할 수 없습니다."
+                    )
+                
                 session_id = request.session_id
             else:
                 session_data = await session_manager.create_session(
