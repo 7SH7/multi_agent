@@ -1,7 +1,5 @@
-import asyncio
 import aiomysql
 from typing import Dict, Any, List, Optional
-from datetime import datetime
 from contextlib import asynccontextmanager
 
 from config.settings import DATABASE_URL
@@ -39,7 +37,7 @@ class DatabaseManager:
         async with self.connection_pool.acquire() as conn:
             yield conn
 
-    async def execute_query(self, query: str, params: tuple = None) -> List[Dict[str, Any]]:
+    async def execute_query(self, query: str, params: Optional[tuple] = None) -> List[Dict[str, Any]]:
         """Execute SELECT query and return results"""
         async with self.get_connection() as conn:
             async with conn.cursor(aiomysql.DictCursor) as cursor:
@@ -60,7 +58,7 @@ async def get_database_connection():
     return _db_manager
 
 
-async def execute_query(query: str, params: tuple = None) -> List[Dict[str, Any]]:
+async def execute_query(query: str, params: Optional[tuple] = None) -> List[Dict[str, Any]]:
     db = await get_database_connection()
     return await db.execute_query(query, params)
 

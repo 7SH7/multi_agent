@@ -5,9 +5,8 @@ import json
 import os
 import sys
 from datetime import datetime
-from typing import Dict, Any, List, Optional
+from typing import Optional
 from pathlib import Path
-import shutil
 
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -128,7 +127,7 @@ class DataMigrator:
             for table in equipment_tables:
                 try:
                     # Update records with missing issue codes
-                    result = await db.execute_query(f"""
+                    await db.execute_query(f"""
                         UPDATE {table} 
                         SET issue = CONCAT(
                             CASE 
@@ -194,12 +193,12 @@ class DataMigrator:
             db = await get_database_connection()
 
             # Clean old sessions
-            result = await db.execute_query(f"""
+            await db.execute_query(f"""
                 DELETE FROM ChatbotSession 
                 WHERE startedAt < DATE_SUB(NOW(), INTERVAL {days_old} DAY)
                 AND isTerminated = TRUE
             """)
-            print(f"✅ Cleaned up old terminated sessions")
+            print("✅ Cleaned up old terminated sessions")
 
             # Clean old equipment logs
             equipment_tables = [

@@ -1,0 +1,414 @@
+{
+  "equipment_type": "ASSEMBLY_PARTS",
+  "category": "assembly_parts",
+  "cases": [
+    {
+      "case_id": "ASSY_001",
+      "title": "도어 힌지 체결 토크 부족 사례",
+      "issue_code": "ASSY-DOOR-FIX",
+      "issue_type": "고정 불량",
+      "description": "도어 힌지 체결 토크가 기준값 이하로 측정되어 도어 고정력 부족 및 안전성 문제 발생",
+      "quality_analysis": {
+        "parameter": "체결 토크",
+        "standard_value": "45±5 N·m",
+        "detected_value": "32 N·m (기준 미달)",
+        "tolerance_range": "40-50 N·m",
+        "quality_impact": "도어 고정력 30% 저하"
+      },
+      "symptoms": [
+        "도어 개폐 시 이상음 발생",
+        "힌지 부위 유격 증가",
+        "도어 처짐 현상 관찰",
+        "체결 부위 진동 발생"
+      ],
+      "root_causes": [
+        {
+          "cause": "토크렌치 교정 불량",
+          "description": "토크렌치 정확도 저하로 인한 설정값과 실제값 차이",
+          "probability": 0.80,
+          "evidence": ["토크렌치 교정 기록 확인", "다른 작업점 비교 측정"],
+          "fix_time": "1-2시간"
+        },
+        {
+          "cause": "체결면 이물질 개입",
+          "description": "힌지 체결면에 페인트 칠편 또는 먼지 개입",
+          "probability": 0.70,
+          "evidence": ["체결면 육안 검사", "청결도 측정"],
+          "fix_time": "30분-1시간"
+        },
+        {
+          "cause": "볼트 나사선 손상",
+          "description": "볼트 또는 너트 나사선 부분 손상으로 체결력 저하",
+          "probability": 0.60,
+          "evidence": ["나사선 확대경 검사", "체결 저항 측정"],
+          "fix_time": "1-3시간"
+        },
+        {
+          "cause": "작업자 기술 부족",
+          "description": "체결 순서 및 방법 미준수로 인한 토크 손실",
+          "probability": 0.50,
+          "evidence": ["작업 관찰", "표준 작업서 대비 검증"],
+          "fix_time": "교육 3시간"
+        }
+      ],
+      "solution_steps": [
+        {
+          "step": 1,
+          "action": "토크렌치 정확도 검증 및 교정",
+          "details": "토크렌치를 토크 테스터로 교정하고 정확도 ±3% 이내 확인",
+          "time_required": "1시간",
+          "tools_required": ["토크 테스터", "교정용 토크렌치"],
+          "specialist_required": true
+        },
+        {
+          "step": 2,
+          "action": "체결면 청소 및 이물질 제거",
+          "details": "힌지 체결면을 솔벤트로 청소하고 이물질 완전 제거",
+          "time_required": "30분",
+          "tools_required": ["청소용 솔벤트", "브러시", "에어건"],
+          "specialist_required": false
+        },
+        {
+          "step": 3,
+          "action": "볼트 및 너트 교체",
+          "details": "손상된 볼트/너트를 신품으로 교체하고 나사선 상태 확인",
+          "time_required": "1시간",
+          "tools_required": ["신품 볼트/너트", "나사선 게이지"],
+          "specialist_required": false
+        },
+        {
+          "step": 4,
+          "action": "표준 체결 절차 재교육",
+          "details": "작업자에게 정확한 체결 순서 및 토크 적용 방법 교육",
+          "time_required": "2시간",
+          "tools_required": ["표준 작업서", "교육용 지그"],
+          "specialist_required": true
+        }
+      ],
+      "prevention_measures": [
+        "토크렌치 월 1회 정기 교정",
+        "체결면 청결도 관리 표준화",
+        "볼트/너트 입고 검사 강화",
+        "작업자 기술 교육 정기 실시"
+      ],
+      "success_rate": 0.95,
+      "average_fix_time": "2-3시간",
+      "cost_impact": "낮음"
+    },
+    {
+      "case_id": "ASSY_002",
+      "title": "배선 커넥터 삽입 불완전 사례",
+      "issue_code": "ASSY-WIRE-CONN",
+      "issue_type": "연계 불량",
+      "description": "배선 커넥터 삽입이 불완전하여 전기적 접촉 불량 및 신호 전달 오류 발생",
+      "quality_analysis": {
+        "parameter": "삽입력",
+        "standard_value": "15±3 N",
+        "detected_value": "8 N (기준 미달)",
+        "tolerance_range": "12-18 N",
+        "quality_impact": "접촉 저항 150% 증가"
+      },
+      "symptoms": [
+        "전기 신호 간헐적 끊김",
+        "커넥터 접촉 저항 증가",
+        "ECU 통신 오류 발생",
+        "커넥터 발열 현상"
+      ],
+      "root_causes": [
+        {
+          "cause": "커넥터 핀 변형",
+          "description": "반복 삽입/제거로 인한 핀 변형 및 탄성 저하",
+          "probability": 0.85,
+          "evidence": ["핀 현미경 검사", "삽입력 측정"],
+          "fix_time": "2-3시간"
+        },
+        {
+          "cause": "하우징 공차 불량",
+          "description": "커넥터 하우징 내경 공차 초과로 삽입 불량",
+          "probability": 0.75,
+          "evidence": ["하우징 치수 측정", "공차 분석"],
+          "fix_time": "1-2시간"
+        },
+        {
+          "cause": "배선 경로 간섭",
+          "description": "배선이 다른 부품과 간섭하여 커넥터에 응력 전달",
+          "probability": 0.65,
+          "evidence": ["배선 경로 확인", "응력 측정"],
+          "fix_time": "2-4시간"
+        },
+        {
+          "cause": "실링 고무 경화",
+          "description": "방수 실링 고무 경화로 삽입 저항 증가",
+          "probability": 0.55,
+          "evidence": ["실링 경도 측정", "탄성 시험"],
+          "fix_time": "1시간"
+        }
+      ],
+      "solution_steps": [
+        {
+          "step": 1,
+          "action": "커넥터 핀 상태 검사 및 교체",
+          "details": "변형된 핀을 신품으로 교체하고 탄성 복원력 확인",
+          "time_required": "2시간",
+          "tools_required": ["핀 추출기", "신품 핀", "현미경"],
+          "specialist_required": true
+        },
+        {
+          "step": 2,
+          "action": "하우징 치수 검사 및 선별",
+          "details": "하우징 내경을 정밀 측정하여 공차 이내 제품만 사용",
+          "time_required": "1시간",
+          "tools_required": ["3좌표 측정기", "핀 게이지"],
+          "specialist_required": false
+        },
+        {
+          "step": 3,
+          "action": "배선 경로 재설계 및 고정",
+          "details": "배선 경로를 최적화하고 클램프로 고정하여 응력 제거",
+          "time_required": "3시간",
+          "tools_required": ["배선 클램프", "배선 가이드"],
+          "specialist_required": true
+        },
+        {
+          "step": 4,
+          "action": "실링 고무 교체",
+          "details": "경화된 실링 고무를 신품으로 교체하고 윤활제 도포",
+          "time_required": "30분",
+          "tools_required": ["신품 실링", "실리콘 윤활제"],
+          "specialist_required": false
+        }
+      ],
+      "prevention_measures": [
+        "커넥터 삽입력 자동 측정 시스템 도입",
+        "핀 변형 방지를 위한 삽입 가이드 설치",
+        "배선 경로 표준화 및 클램핑 강화",
+        "실링 재료 보관 환경 개선"
+      ],
+      "success_rate": 0.92,
+      "average_fix_time": "3-4시간",
+      "cost_impact": "중간"
+    },
+    {
+      "case_id": "ASSY_003",
+      "title": "범퍼 클립 체결력 부족 사례",
+      "issue_code": "ASSY-BUMP-FIX",
+      "issue_type": "고정 불량",
+      "description": "범퍼 고정용 클립의 체결력이 기준 이하로 측정되어 범퍼 고정 불량 및 이탈 위험 발생",
+      "quality_analysis": {
+        "parameter": "클립 체결력",
+        "standard_value": "25±5 N",
+        "detected_value": "15 N (기준 미달)",
+        "tolerance_range": "20-30 N",
+        "quality_impact": "체결력 40% 저하"
+      },
+      "symptoms": [
+        "범퍼 유격 발생",
+        "주행 중 범퍼 진동",
+        "클립 체결음 이상",
+        "범퍼 처짐 현상"
+      ],
+      "root_causes": [
+        {
+          "cause": "클립 탄성 저하",
+          "description": "클립 재질의 피로 누적으로 탄성력 저하",
+          "probability": 0.80,
+          "evidence": ["클립 탄성 시험", "재질 분석"],
+          "fix_time": "1-2시간"
+        },
+        {
+          "cause": "체결 홀 확장",
+          "description": "반복 체결로 인한 홀 직경 확장 및 변형",
+          "probability": 0.75,
+          "evidence": ["홀 직경 측정", "진원도 검사"],
+          "fix_time": "2-3시간"
+        },
+        {
+          "cause": "범퍼 브라켓 변형",
+          "description": "외부 충격으로 인한 브라켓 변형 및 위치 편차",
+          "probability": 0.70,
+          "evidence": ["브라켓 3D 스캔", "위치 측정"],
+          "fix_time": "3-4시간"
+        },
+        {
+          "cause": "클립 설계 부적합",
+          "description": "클립 형상 및 치수가 체결 조건에 부적합",
+          "probability": 0.45,
+          "evidence": ["설계 치수 검증", "체결력 시뮬레이션"],
+          "fix_time": "설계 변경 필요"
+        }
+      ],
+      "solution_steps": [
+        {
+          "step": 1,
+          "action": "클립 교체 및 탄성 확인",
+          "details": "저하된 클립을 신품으로 교체하고 탄성력 측정",
+          "time_required": "1시간",
+          "tools_required": ["신품 클립", "탄성력 측정기"],
+          "specialist_required": false
+        },
+        {
+          "step": 2,
+          "action": "체결 홀 보수 또는 패널 교체",
+          "details": "확장된 홀을 보수하거나 심한 경우 패널 교체",
+          "time_required": "2-3시간",
+          "tools_required": ["홀 보수 키트", "드릴", "리머"],
+          "specialist_required": true
+        },
+        {
+          "step": 3,
+          "action": "브라켓 교정 및 위치 조정",
+          "details": "변형된 브라켓을 교정하고 정확한 위치로 조정",
+          "time_required": "2-3시간",
+          "tools_required": ["브라켓 교정 지그", "3D 측정기"],
+          "specialist_required": true
+        },
+        {
+          "step": 4,
+          "action": "체결력 재측정 및 검증",
+          "details": "수리 완료 후 클립 체결력을 재측정하여 기준 만족 확인",
+          "time_required": "30분",
+          "tools_required": ["체결력 측정기"],
+          "specialist_required": false
+        }
+      ],
+      "prevention_measures": [
+        "클립 재질 및 설계 개선",
+        "체결 홀 내구성 향상",
+        "브라켓 보강 설계 적용",
+        "정기적 체결력 모니터링"
+      ],
+      "success_rate": 0.88,
+      "average_fix_time": "3-5시간",
+      "cost_impact": "중간"
+    },
+    {
+      "case_id": "ASSY_004",
+      "title": "테일 램프 단차 초과 사례",
+      "issue_code": "ASSY-TAIL-STEP",
+      "issue_type": "단차 불량",
+      "description": "테일 램프와 차체 패널 간 단차가 허용 기준을 초과하여 외관 품질 저하 및 수밀성 문제 발생",
+      "quality_analysis": {
+        "parameter": "패널 단차",
+        "standard_value": "1.5±0.5 mm",
+        "detected_value": "3.2 mm (기준 초과)",
+        "tolerance_range": "1.0-2.0 mm",
+        "quality_impact": "외관 품질 등급 C급으로 저하"
+      },
+      "symptoms": [
+        "테일 램프 주변 단차 육안 확인",
+        "가스켓 압축 불균일",
+        "침수 시험 시 누수 발생",
+        "램프 하우징 틈새 확대"
+      ],
+      "root_causes": [
+        {
+          "cause": "차체 패널 공차 초과",
+          "description": "후면 패널 성형 시 치수 공차 초과로 위치 편차 발생",
+          "probability": 0.85,
+          "evidence": ["패널 3D 측정", "공차 분석"],
+          "fix_time": "4-6시간"
+        },
+        {
+          "cause": "램프 하우징 변형",
+          "description": "운송 또는 보관 중 하우징 변형으로 장착 위치 변화",
+          "probability": 0.70,
+          "evidence": ["하우징 형상 검사", "CMM 측정"],
+          "fix_time": "2-3시간"
+        },
+        {
+          "cause": "체결점 높이 편차",
+          "description": "체결 브라켓의 높이 편차로 램프 위치 틀어짐",
+          "probability": 0.65,
+          "evidence": ["체결점 높이 측정", "수평도 검사"],
+          "fix_time": "2-4시간"
+        },
+        {
+          "cause": "가스켓 두께 불균일",
+          "description": "가스켓 두께 편차로 인한 압축 불균일 및 단차 발생",
+          "probability": 0.50,
+          "evidence": ["가스켓 두께 측정", "압축률 시험"],
+          "fix_time": "1시간"
+        }
+      ],
+      "solution_steps": [
+        {
+          "step": 1,
+          "action": "차체 패널 치수 정밀 측정",
+          "details": "3D 측정기로 패널 전체 치수를 정밀 측정하고 편차 분석",
+          "time_required": "2시간",
+          "tools_required": ["3D 측정기", "CAD 데이터"],
+          "specialist_required": true
+        },
+        {
+          "step": 2,
+          "action": "램프 하우징 교정 또는 교체",
+          "details": "변형된 하우징을 교정하거나 심한 경우 신품으로 교체",
+          "time_required": "2시간",
+          "tools_required": ["교정 지그", "신품 하우징"],
+          "specialist_required": true
+        },
+        {
+          "step": 3,
+          "action": "체결점 높이 조정",
+          "details": "브라켓 높이를 조정하고 심 또는 스페이서로 정밀 조정",
+          "time_required": "3시간",
+          "tools_required": ["조정용 심", "스페이서", "높이 게이지"],
+          "specialist_required": true
+        },
+        {
+          "step": 4,
+          "action": "가스켓 선별 및 교체",
+          "details": "적정 두께의 가스켓으로 선별 교체하고 압축률 확인",
+          "time_required": "1시간",
+          "tools_required": ["가스켓 세트", "두께 게이지"],
+          "specialist_required": false
+        }
+      ],
+      "prevention_measures": [
+        "패널 성형 공정 정밀도 향상",
+        "하우징 보관 및 운송 개선",
+        "체결점 위치 정밀도 관리",
+        "가스켓 품질 관리 강화"
+      ],
+      "success_rate": 0.90,
+      "average_fix_time": "4-6시간",
+      "cost_impact": "높음"
+    }
+  ],
+  "summary_statistics": {
+    "total_cases": 4,
+    "average_success_rate": 0.91,
+    "most_common_issues": [
+      "ASSY-DOOR-FIX",
+      "ASSY-WIRE-CONN", 
+      "ASSY-BUMP-FIX",
+      "ASSY-TAIL-STEP"
+    ],
+    "average_resolution_time": "3-4시간",
+    "cost_impact_distribution": {
+      "낮음": 1,
+      "중간": 2,
+      "높음": 1
+    }
+  },
+  "quality_improvement_metrics": {
+    "defect_reduction_rate": "25%",
+    "first_pass_yield_improvement": "18%", 
+    "rework_cost_reduction": "35%",
+    "customer_satisfaction_increase": "12%"
+  },
+  "assembly_quality_recommendations": [
+    "체결 토크 자동 모니터링 시스템 확대 적용",
+    "3D 측정 시스템을 활용한 실시간 품질 검사",
+    "작업자 기술 교육 프로그램 강화",
+    "예방 정비 주기 최적화를 통한 설비 신뢰성 향상"
+  ],
+  "automation_improvements": [
+    "자동 토크렌치 시스템 도입",
+    "커넥터 자동 삽입 및 검증 시스템",
+    "클립 체결력 실시간 모니터링",
+    "패널 단차 자동 측정 및 보정 시스템"
+  ],
+  "created_date": "2025-08-01",
+  "last_updated": "2025-08-01"
+}

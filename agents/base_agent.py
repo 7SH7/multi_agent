@@ -6,6 +6,7 @@ from datetime import datetime
 from pydantic import BaseModel
 import time
 import logging
+from models.agent_state import AgentState
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +38,7 @@ class AgentResponse(BaseModel):
 
 class AgentError(Exception):
     """Agent 관련 예외"""
-    def __init__(self, message: str, agent_name: str, error_code: str = None):
+    def __init__(self, message: str, agent_name: str, error_code: Optional[str] = None):
         self.message = message
         self.agent_name = agent_name
         self.error_code = error_code
@@ -55,7 +56,7 @@ class BaseAgent(ABC):
         self.timeout = config.timeout
 
     @abstractmethod
-    async def analyze_and_respond(self, state: Dict[str, Any]) -> AgentResponse:
+    async def analyze_and_respond(self, state: AgentState) -> AgentResponse:
         """문제 분석 및 응답 생성 (하위 클래스에서 구현)"""
         pass
 
@@ -63,8 +64,8 @@ class BaseAgent(ABC):
                        response_text: str,
                        confidence: float,
                        processing_time: float,
-                       token_usage: Dict[str, int] = None,
-                       error: str = None) -> AgentResponse:
+                       token_usage: Optional[Dict[str, int]] = None,
+                       error: Optional[str] = None) -> AgentResponse:
         """표준 응답 생성"""
         return AgentResponse(
             agent_name=self.name,
@@ -119,6 +120,15 @@ class BaseAgent(ABC):
 
                 # 재시도 전 대기
                 await self._wait_before_retry(attempt)
+        
+        # This should never be reached due to the logic above, but adding for mypy
+        processing_time = time.time() - start_time
+        return self.create_response(
+            response_text="모든 재시도가 실패했습니다",
+            confidence=0.0,
+            processing_time=processing_time,
+            error="MAX_RETRIES_EXCEEDED"
+        )
 
     async def _wait_before_retry(self, attempt: int):
         """재시도 전 대기 (지수 백오프)"""
@@ -127,7 +137,7 @@ class BaseAgent(ABC):
         import asyncio
         await asyncio.sleep(wait_time)
 
-    def validate_input(self, state: Dict[str, Any]) -> bool:
+    def validate_input(self, state: AgentState) -> bool:
         """입력 유효성 검사"""
         required_fields = ['user_message']
 
@@ -141,7 +151,7 @@ class BaseAgent(ABC):
 
         return True
 
-    def calculate_confidence(self, response_length: int, token_usage: Dict[str, int] = None) -> float:
+    def calculate_confidence(self, response_length: int, token_usage: Optional[Dict[str, int]] = None) -> float:
         """응답 신뢰도 계산"""
         base_confidence = 0.7
 

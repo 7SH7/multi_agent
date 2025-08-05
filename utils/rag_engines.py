@@ -1,11 +1,11 @@
 import asyncio
 import chromadb
 from elasticsearch import AsyncElasticsearch
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from dataclasses import dataclass
 from datetime import datetime
 import hashlib
-import json
+from utils.exceptions import RAGError
 
 @dataclass
 class RAGResult:
@@ -26,7 +26,7 @@ class ChromaEngine:
     def _initialize_collection(self):
         try:
             self.collection = self.client.get_collection(self.collection_name)
-        except:
+        except Exception:
             self.collection = self.client.create_collection(
                 name=self.collection_name,
                 metadata={"description": "Manufacturing equipment knowledge base"}
@@ -91,7 +91,9 @@ class ElasticsearchEngine:
         }], 
         retry_on_timeout=True,
         max_retries=3,
-        request_timeout=5)
+        request_timeout=5,
+        # 버전 호환성 이슈로 인해 비활성화 상태 유지
+        )
         self.index_name = "manufacturing_docs"
         self.is_available = False
         self._initialized = False
@@ -134,11 +136,11 @@ class ElasticsearchEngine:
                         "properties": {
                             "content": {
                                 "type": "text",
-                                "analyzer": "korean"
+                                "analyzer": "standard"
                             },
                             "title": {
                                 "type": "text",
-                                "analyzer": "korean"
+                                "analyzer": "standard"
                             },
                             "category": {
                                 "type": "keyword"
@@ -154,9 +156,8 @@ class ElasticsearchEngine:
                     "settings": {
                         "analysis": {
                             "analyzer": {
-                                "korean": {
-                                    "type": "custom",
-                                    "tokenizer": "nori_tokenizer"
+                                "standard": {
+                                    "type": "standard"
                                 }
                             }
                         }
@@ -165,7 +166,8 @@ class ElasticsearchEngine:
 
                 await self.client.indices.create(
                     index=self.index_name,
-                    body=mapping
+                    mappings=mapping["mappings"],
+                    settings=mapping["settings"]
                 )
         except Exception as e:
             print(f"Elasticsearch 인덱스 생성 오류: {e}")
@@ -209,24 +211,20 @@ class ElasticsearchEngine:
         try:
             search_body = {
                 "query": {
-                    "multi_match": {
-                        "query": query,
-                        "fields": ["content^2", "title^1.5"],
-                        "type": "best_fields",
-                        "fuzziness": "AUTO"
+                    "bool": {
+                        "should": [
+                            {"match": {"content": {"query": query, "boost": 2}}},
+                            {"match": {"title": {"query": query, "boost": 1.5}}}
+                        ]
                     }
                 },
-                "size": top_k,
-                "highlight": {
-                    "fields": {
-                        "content": {}
-                    }
-                }
+                "size": top_k
             }
 
             response = await self.client.search(
                 index=self.index_name,
-                body=search_body
+                query=search_body["query"],
+                size=search_body["size"]
             )
 
             rag_results = []
@@ -243,7 +241,7 @@ class ElasticsearchEngine:
         except Exception as e:
             print(f"Elasticsearch 검색 오류: {e}")
             self.is_available = False  # 연결 상태 업데이트
-            return []
+            raise RAGError(f"Elasticsearch search failed: {e}", search_type="elasticsearch")
 
     async def close(self):
         """Elasticsearch 클라이언트 리소스 정리"""
@@ -269,18 +267,23 @@ class HybridRAGEngine:
         chroma_task = self.chroma_engine.search(query, top_k//2 + 1)
         es_task = self.elasticsearch_engine.search(query, top_k//2 + 1)
 
-        chroma_results, es_results = await asyncio.gather(
+        results = await asyncio.gather(
             chroma_task, es_task, return_exceptions=True
         )
+        chroma_results, es_results = results[0], results[1]
 
         # 결과 통합
         all_results = []
 
         if isinstance(chroma_results, list):
             all_results.extend(chroma_results)
+        elif isinstance(chroma_results, Exception):
+            print(f"ChromaDB 검색 오류: {chroma_results}")
 
         if isinstance(es_results, list):
             all_results.extend(es_results)
+        elif isinstance(es_results, Exception):
+            print(f"Elasticsearch 검색 오류: {es_results}")
 
         # 중복 제거 및 점수 기반 정렬
         unique_results = []

@@ -1,7 +1,6 @@
 import logging
 import sys
-from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from enum import Enum
 
 
@@ -16,7 +15,7 @@ class LogLevel(Enum):
 def setup_logging(log_level: str = "INFO", log_file: Optional[str] = None) -> None:
     """Setup logging configuration"""
 
-    handlers = []
+    handlers: List[logging.Handler] = []
 
     # Console handler
     console_handler = logging.StreamHandler(sys.stdout)

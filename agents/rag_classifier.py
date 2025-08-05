@@ -3,9 +3,9 @@
 import redis.asyncio as redis
 import json
 from datetime import datetime
-from typing import Dict, Any, List
+from typing import Dict, Any
 from models.agent_state import AgentState
-from config.issue_database import ISSUE_DATABASE
+from config import ISSUE_DATABASE
 from utils.rag_engines import ChromaEngine, ElasticsearchEngine
 import logging
 
@@ -35,7 +35,7 @@ class RAGClassifier:
 
         try:
             user_question = state.get('user_message', '')
-            issue_code = state.get('issue_code', '')
+            issue_code = state.get('issue_code') or ''
 
             logger.info(f"RAG 분류 시작 - 질문: {user_question[:50]}...")
 
@@ -61,7 +61,7 @@ class RAGClassifier:
                 },
                 'question_category': question_category,
                 'rag_context': rag_context,
-                'processing_steps': state.get('processing_steps', []) + ['rag_classification_completed']
+                'processing_steps': (state.get('processing_steps') or []) + ['rag_classification_completed']
             })
 
             logger.info(f"RAG 분류 완료 - 카테고리: {question_category}, 신뢰도: {classification_confidence}")
@@ -72,7 +72,7 @@ class RAGClassifier:
             logger.error(f"RAG 분류 오류: {str(e)}")
             state.update({
                 'error': f"RAG 분류 실패: {str(e)}",
-                'processing_steps': state.get('processing_steps', []) + ['rag_classification_failed']
+                'processing_steps': (state.get('processing_steps') or []) + ['rag_classification_failed']
             })
             return state
 
@@ -205,7 +205,7 @@ class RAGClassifier:
         except Exception as e:
             logger.warning(f"캐시 조회 실패: {str(e)}")
 
-        return None
+        return {}
 
     async def cache_search_result(self, query_hash: str, result: Dict[str, Any], ttl: int = 3600):
         """검색 결과 캐시 저장"""

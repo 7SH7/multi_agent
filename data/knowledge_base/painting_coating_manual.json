@@ -1,0 +1,276 @@
+{
+  "equipment_type": "PAINTING_COATING",
+  "model": "도장포막 컬링 탐지 시스템 CoatingDetect Pro",
+  "sections": [
+    {
+      "title": "도장포막 컬링 결함 탐지 및 관리",
+      "content": "도장포막 컬링 탐지에서 발생하는 주요 이슈들은 스크래치, 도장 흘러내림, 이물질 혼입, 물자국 등으로 분류되며, 각 결함은 크기와 심각도에 따라 체계적인 등급화가 필요합니다.",
+      "keywords": ["도장포막", "컬링탐지", "스크래치", "흘러내림", "이물질혼입", "물자국", "결함등급화"],
+      "defect_size_distribution": {
+        "Q1": {
+          "width": 10,
+          "height": 16,
+          "area": 164,
+          "description": "소형 결함이 많음 - 전체 결함의 25%",
+          "detection_priority": "조기 발견 중요"
+        },
+        "Q2": {
+          "width": 31,
+          "height": 47,
+          "area": 1626,
+          "description": "절반 이상의 결함이 중소형 - 일반적인 결함 크기",
+          "detection_priority": "표준 검출 대상"
+        },
+        "Q3": {
+          "width": 126.25,
+          "height": 165,
+          "area": 20146,
+          "description": "상위 25%의 결함은 상당히 큰 편 - 심각한 품질 문제",
+          "detection_priority": "즉시 대응 필요"
+        }
+      },
+      "defect_classification_system": {
+        "size_based_grading": [
+          {
+            "grade": "A급 (소형)",
+            "area_range": "< 500",
+            "action": "모니터링 및 예방 조치",
+            "urgency": "낮음"
+          },
+          {
+            "grade": "B급 (중형)",
+            "area_range": "500 - 5000",
+            "action": "즉시 원인 분석 및 수정",
+            "urgency": "중간"
+          },
+          {
+            "grade": "C급 (대형)",
+            "area_range": "> 5000",
+            "action": "생산 중단 및 긴급 대응",
+            "urgency": "높음"
+          }
+        ]
+      },
+      "subsections": [
+        {
+          "title": "도장면 스크래치 (PAINT-VIS-SCRATCH)",
+          "issue_code": "PAINT-VIS-SCRATCH",
+          "affected_parts": ["도장면", "차체 표면"],
+          "issue_name": "스크래치",
+          "occurrence_location": "도장면에서 주로 발생",
+          "causes": [
+            "건조 전 조립 간섭 - 도장 미완전 건조 상태에서 후속 조립 작업 진행",
+            "로봇 간 동선 충돌 - 도장 로봇과 다른 로봇 시스템 간 간섭",
+            "표면 접촉 - 취급 과정에서 도구나 부품 접촉",
+            "환경 요인 - 작업장 내 이물질이나 먼지"
+          ],
+          "solutions": [
+            "공정 간 간섭 방지 설계 개선",
+            "로봇 동선 최적화 및 충돌 회피 시스템",
+            "3D 시뮬레이션 기반 사전 검증",
+            "건조 시간 최적화 및 모니터링",
+            "작업 환경 청결도 관리 강화"
+          ],
+          "technical_details": {
+            "detection_method": "컬링 비전 시스템 + AI 패턴 인식",
+            "typical_characteristics": {
+              "appearance": "선형 또는 불규칙한 표면 손상",
+              "size_range": "폭 1-10픽셀, 길이 10-500픽셀",
+              "depth": "표면층 ~ 중간층"
+            },
+            "severity_indicators": [
+              "길이 > 100픽셀: 중간 심각도",
+              "폭 > 5픽셀: 높은 심각도",
+              "깊이 > 도막 두께 50%: 매우 높음"
+            ]
+          }
+        },
+        {
+          "title": "도장 흘러내림 (PAINT-VIS-RUNS)",
+          "issue_code": "PAINT-VIS-RUNS",
+          "affected_parts": ["도장면", "수직 표면", "경사면"],
+          "issue_name": "도장 흘러내림",
+          "occurrence_location": "도장면 수직 및 경사 부위",
+          "causes": [
+            "분사 압력 불균형 - 스프레이 압력과 이동 속도 부조화",
+            "속도 불균형 - 로봇 이동 속도 부적절",
+            "점도 과도 - 도료 점도가 최적 범위 초과",
+            "환경 조건 - 온도, 습도 부적절",
+            "도장 두께 과다 - 1회 적용량 초과"
+          ],
+          "solutions": [
+            "도장 압력 튜닝 및 자동 제어 시스템",
+            "점도 주기 점검 시스템 도입",
+            "실시간 환경 모니터링 및 제어",
+            "로봇 속도 프로파일 최적화",
+            "도장 두께 실시간 측정 및 피드백"
+          ],
+          "technical_details": {
+            "detection_method": "표면 윤곽 분석 + 두께 편차 측정",
+            "typical_characteristics": {
+              "appearance": "수직 방향 도료 흘림 패턴",
+              "thickness_variation": "정상 대비 150-300% 증가",
+              "pattern": "물방울 형태 또는 연속적 흘림"
+            },
+            "optimal_conditions": {
+              "spray_pressure": "2.0-3.5 bar",
+              "paint_viscosity": "15-25초 (Ford Cup #4)",
+              "robot_speed": "300-800 mm/min",
+              "temperature": "20-25°C",
+              "humidity": "50-65% RH"
+            }
+          }
+        },
+        {
+          "title": "도장면 이물질 혼입 (PAINT-VIS-DIRT)",
+          "issue_code": "PAINT-VIS-DIRT",
+          "affected_parts": ["도장면", "전체 표면"],
+          "issue_name": "이물질 혼입",
+          "occurrence_location": "도장면 전 영역",
+          "causes": [
+            "도장 부스 내 부유 먼지 - 공기 정화 시스템 효율 저하",
+            "정전기 유도 이물 부착 - 정전기 제거 시스템 부족",
+            "필터 성능 저하 - 교체 주기 초과 또는 막힘",
+            "외부 오염원 유입 - 부스 밀폐성 불량",
+            "작업자 유입 오염 - 청결 관리 부족"
+          ],
+          "solutions": [
+            "부스 정압 및 필터 유지 관리 시스템",
+            "이온 블로워 도입 및 정전기 제거",
+            "HEPA 필터 정기 교체 체계",
+            "부스 밀폐성 개선 및 점검",
+            "작업자 청결 프로토콜 강화"
+          ],
+          "technical_details": {
+            "detection_method": "입자 크기 분석 + 표면 텍스처 검사",
+            "typical_characteristics": {
+              "appearance": "점형 또는 불규칙한 돌출",
+              "size_range": "0.1-10mm 직경",
+              "distribution": "랜덤 또는 집중 패턴"
+            },
+            "air_quality_standards": {
+              "particle_count": "< 500 particles/m³ (≥0.5μm)",
+              "air_changes": "25-35 회/시간",
+              "positive_pressure": "15-25 Pa"
+            }
+          }
+        },
+        {
+          "title": "루프/본넷 물자국 (PAINT-VIS-WATERMARKS)",
+          "issue_code": "PAINT-VIS-WATERMARKS",
+          "affected_parts": ["루프", "본넷", "수평 표면"],
+          "issue_name": "물자국",
+          "occurrence_location": "루프/본넷 등 수평 표면",
+          "causes": [
+            "세척 후 잔수 미건조 - 전처리 공정 불완전",
+            "건조라인 습도 과다 - 환경 제어 시스템 부족",
+            "응축수 발생 - 온도 편차로 인한 결로",
+            "급수 시스템 누수 - 배관이나 밸브 문제",
+            "건조 시간 부족 - 공정 시간 단축으로 인한 문제"
+          ],
+          "solutions": [
+            "에어블로우 강화 시스템 도입",
+            "건조라인 온습도 모니터링 체계 구축",
+            "표면 온도 균일화 제어",
+            "급수 시스템 정기 점검 및 보수",
+            "단계별 건조 프로세스 최적화"
+          ],
+          "technical_details": {
+            "detection_method": "표면 반사율 분석 + 수분 함량 측정",
+            "typical_characteristics": {
+              "appearance": "원형 또는 불규칙한 얼룩",
+              "size_range": "5-50mm 직경",
+              "pattern": "수평면 집중 분포"
+            },
+            "optimal_drying_conditions": {
+              "temperature": "70-85°C",
+              "humidity": "< 60% RH",
+              "air_velocity": "3-6 m/s",
+              "drying_time": "20-30분"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "title": "결함 크기별 대응 체계",
+      "content": "도장포막 컬링 결함 탐지 시 결함 크기의 분포가 넓고 다양한 형태로 존재하므로, 결함 크기에 따른 등급화와 이슈별 원인 및 해결 방안의 체계적인 적용이 중요합니다.",
+      "systematic_approach": {
+        "size_based_response": [
+          {
+            "category": "소형 결함 (Q1 구간)",
+            "characteristics": "width ≤ 10, height ≤ 16, area ≤ 164",
+            "response_strategy": [
+              "예방적 모니터링 강화",
+              "원인 분석 및 트렌드 파악",
+              "정기 점검 주기 단축"
+            ],
+            "automation_level": "자동 모니터링"
+          },
+          {
+            "category": "중형 결함 (Q1-Q3 구간)",
+            "characteristics": "Q1 < 크기 ≤ Q3",
+            "response_strategy": [
+              "즉시 원인 분석",
+              "공정 파라미터 조정",
+              "품질 관리자 알림"
+            ],
+            "automation_level": "반자동 대응"
+          },
+          {
+            "category": "대형 결함 (Q3 초과)",
+            "characteristics": "width > 126.25, height > 165, area > 20146",
+            "response_strategy": [
+              "생산 라인 즉시 중단",
+              "긴급 대응팀 투입",
+              "전면적 원인 조사"
+            ],
+            "automation_level": "수동 대응 필수"
+          }
+        ]
+      }
+    }
+  ],
+  "technical_specifications": {
+    "detection_accuracy": {
+      "PAINT-VIS-SCRATCH": "96.5%",
+      "PAINT-VIS-RUNS": "94.2%",
+      "PAINT-VIS-DIRT": "97.8%",
+      "PAINT-VIS-WATERMARKS": "91.3%"
+    },
+    "processing_speed": "< 50ms per frame",
+    "resolution": "0.1mm 이상 결함 탐지 가능"
+  },
+  "safety_guidelines": [
+    "도장포막 컬링 탐지 작업 시 보안경 착용 필수",
+    "이물질 제거 작업 시 방진마스크 착용",
+    "청소 작업 시 정전기 방지 조치",
+    "화학 세정제 사용 시 환기 확보",
+    "전기 안전 규정 준수"
+  ],
+  "emergency_procedures": [
+    "대형 결함 발견 시 즉시 생산 중단",
+    "시스템 오류 시 안전 모드 전환",
+    "화재 발생 시 전원 차단 후 대피",
+    "응급상황 시 관리자 즉시 연락"
+  ],
+  "maintenance_schedule": {
+    "daily": [
+      "컬링 탐지 시스템 캘리브레이션",
+      "부스 내 청결도 점검",
+      "환경 조건 모니터링"
+    ],
+    "weekly": [
+      "필터 상태 점검 및 교체",
+      "이온 블로워 성능 확인",
+      "결함 검출 정확도 검증"
+    ],
+    "monthly": [
+      "전체 시스템 정밀 점검",
+      "AI 모델 성능 평가",
+      "결함 데이터 분석 및 리포트"
+    ]
+  },
+  "created_date": "2024-08-04",
+  "last_updated": "2024-08-04"
+}

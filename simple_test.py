@@ -2,7 +2,6 @@
 """간단한 API 테스트"""
 
 import requests
-import json
 import time
 
 def test_server_startup():

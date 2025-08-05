@@ -1,0 +1,385 @@
+{
+  "equipment_type": "PRESS_PRODUCTIVITY",
+  "category": "생산성 및 품질 개선",
+  "cases": [
+    {
+      "case_id": "PRESS_PROD_001",
+      "title": "프레스 제품 주름 발생 해결",
+      "issue_code": "PRESS-WRINKLE-ERR",
+      "description": "플렌지 부위에 과도한 압축 응력으로 인한 주름 발생",
+      "symptoms": [
+        "플렌지 부위 주름 형성",
+        "금속 안정성 상실",
+        "제품 외관 품질 저하",
+        "치수 정확도 감소"
+      ],
+      "root_causes": [
+        {
+          "cause": "블랭크 홀더 압력 부족",
+          "probability": 0.85,
+          "evidence": ["홀더 압력 측정값 부족", "시트 고정 불안정"],
+          "fix_time": "2-3시간"
+        },
+        {
+          "cause": "평탄 반경 설계 미흡",
+          "probability": 0.7,
+          "evidence": ["다이 설계 분석", "응력 집중 시뮬레이션"],
+          "fix_time": "4-8시간"
+        },
+        {
+          "cause": "소재 물성 부적합",
+          "probability": 0.6,
+          "evidence": ["재료 시험 결과", "연신율 부족"],
+          "fix_time": "소재 변경 필요"
+        }
+      ],
+      "solution_steps": [
+        {
+          "step": 1,
+          "action": "블랭크 홀더 압력 최적화",
+          "details": "홀더 압력을 적정 수준으로 조정하여 시트 고정력 확보",
+          "time_required": "1-2시간",
+          "tools_required": ["압력 게이지", "유압 조절 밸브"]
+        },
+        {
+          "step": 2,
+          "action": "시트 고정 시스템 점검",
+          "details": "홀더 패드 상태 확인 및 고정 메커니즘 개선",
+          "time_required": "2-3시간",
+          "parts_needed": ["홀더 패드", "고정 볼트"]
+        },
+        {
+          "step": 3,
+          "action": "다이 설계 개선",
+          "details": "평탄 반경 조정 및 응력 분산 최적화",
+          "time_required": "6-8시간",
+          "specialist_required": true,
+          "tools_required": ["CAD 소프트웨어", "FEM 해석"]
+        },
+        {
+          "step": 4,
+          "action": "성형 조건 최적화",
+          "details": "성형 속도 및 압력 프로파일 조정",
+          "time_required": "2-3시간",
+          "tools_required": ["프레스 제어 시스템"]
+        }
+      ],
+      "prevention": [
+        "블랭크 홀더 압력 정기 점검 (일 1회)",
+        "다이 상태 점검 (주 1회)",
+        "소재 입고 검사 강화",
+        "성형 조건 모니터링"
+      ],
+      "cost_estimate": {
+        "parts": "500,000원",
+        "labor": "1,200,000원",
+        "design_modification": "2,000,000원",
+        "total": "3,700,000원"
+      },
+      "success_rate": 0.88,
+      "last_updated": "2024-08-01"
+    },
+    {
+      "case_id": "PRESS_PROD_002",
+      "title": "프레스 제품 터짐(크랙) 발생 해결",
+      "issue_code": "PRESS-CRACK-ERR",
+      "description": "과도한 인장 응력으로 인한 제품 터짐 현상",
+      "symptoms": [
+        "성형품 균열 발생",
+        "재료 파단",
+        "제품 강도 저하",
+        "불량률 급증"
+      ],
+      "root_causes": [
+        {
+          "cause": "과도한 인장 응력",
+          "probability": 0.9,
+          "evidence": ["응력 해석 결과", "파단면 분석"],
+          "fix_time": "4-6시간"
+        },
+        {
+          "cause": "다이 모서리 반경 부족",
+          "probability": 0.8,
+          "evidence": ["다이 형상 측정", "응력 집중 분석"],
+          "fix_time": "8-12시간"
+        },
+        {
+          "cause": "성형 속도 과다",
+          "probability": 0.7,
+          "evidence": ["성형 속도 데이터", "동적 응력 분석"],
+          "fix_time": "2-3시간"
+        }
+      ],
+      "solution_steps": [
+        {
+          "step": 1,
+          "action": "성형 압력 및 속도 조절",
+          "details": "점진적 성형을 위한 압력 프로파일 최적화",
+          "time_required": "2-3시간",
+          "tools_required": ["프레스 제어 시스템", "압력 센서"]
+        },
+        {
+          "step": 2,
+          "action": "다이 모서리 반경 증대",
+          "details": "응력 집중 완화를 위한 다이 가공 수정",
+          "time_required": "8-12시간",
+          "specialist_required": true,
+          "tools_required": ["정밀 가공 장비", "측정 도구"]
+        },
+        {
+          "step": 3,
+          "action": "단계별 성형 공정 도입",
+          "details": "다단계 성형을 통한 점진적 변형",
+          "time_required": "4-6시간",
+          "parts_needed": ["중간 성형 다이"]
+        },
+        {
+          "step": 4,
+          "action": "윤활유 적용 시스템",
+          "details": "성형 마찰 저감을 위한 윤활 시스템 구축",
+          "time_required": "3-4시간",
+          "parts_needed": ["윤활 장치", "윤활유"]
+        }
+      ],
+      "prevention": [
+        "다이 상태 정기 점검 (주 1회)",
+        "성형 조건 모니터링 (실시간)",
+        "소재 인장 시험 (배치별)",
+        "윤활 시스템 점검 (일 1회)"
+      ],
+      "cost_estimate": {
+        "parts": "1,200,000원",
+        "labor": "1,800,000원",
+        "die_modification": "5,000,000원",
+        "total": "8,000,000원"
+      },
+      "success_rate": 0.85,
+      "last_updated": "2024-08-01"
+    },
+    {
+      "case_id": "PRESS_PROD_003",
+      "title": "프레스 제품 버(BURR) 발생 해결",
+      "issue_code": "PRESS-BURR-ERR",
+      "description": "전단부에 발생하는 버로 인한 제품 품질 저하",
+      "symptoms": [
+        "전단면 거친 버 형성",
+        "치수 정확도 저하",
+        "후가공 공정 문제",
+        "안전 위험 요소"
+      ],
+      "root_causes": [
+        {
+          "cause": "다이 클리어런스 부적절",
+          "probability": 0.9,
+          "evidence": ["클리어런스 측정", "전단면 상태"],
+          "fix_time": "2-4시간"
+        },
+        {
+          "cause": "펀치 및 다이 마모",
+          "probability": 0.8,
+          "evidence": ["날끝 상태 검사", "마모량 측정"],
+          "fix_time": "4-6시간"
+        },
+        {
+          "cause": "전단 속도 부적절",
+          "probability": 0.6,
+          "evidence": ["속도 프로파일 분석", "버 형성 패턴"],
+          "fix_time": "1-2시간"
+        }
+      ],
+      "solution_steps": [
+        {
+          "step": 1,
+          "action": "다이 클리어런스 최적화",
+          "details": "소재 두께 대비 적정 클리어런스 설정 (5-8%)",
+          "time_required": "2-3시간",
+          "tools_required": ["게이지", "심 세트"]
+        },
+        {
+          "step": 2,
+          "action": "펀치 및 다이 연마/교체",
+          "details": "마모된 날끝 연마 또는 신규 교체",
+          "time_required": "4-6시간",
+          "parts_needed": ["펀치", "다이", "연마 장비"]
+        },
+        {
+          "step": 3,
+          "action": "전단 속도 조절",
+          "details": "적정 전단 속도로 조정하여 깨끗한 전단면 확보",
+          "time_required": "1시간",
+          "tools_required": ["속도 제어기"]
+        },
+        {
+          "step": 4,
+          "action": "윤활유 적용",
+          "details": "전단부 윤활을 통한 마찰 저감",
+          "time_required": "30분",
+          "parts_needed": ["윤활유", "도포 장치"]
+        }
+      ],
+      "prevention": [
+        "다이 클리어런스 정기 측정 (주 1회)",
+        "펀치/다이 날끝 상태 점검 (일 1회)",
+        "전단 속도 모니터링",
+        "윤활 상태 점검 (일 1회)"
+      ],
+      "cost_estimate": {
+        "parts": "800,000원",
+        "labor": "600,000원",
+        "total": "1,400,000원"
+      },
+      "success_rate": 0.92,
+      "last_updated": "2024-08-01"
+    }
+  ],
+  "statistical_analysis": {
+    "process_data_overview": {
+      "total_normal_samples": 64359,
+      "data_collection_period": "2024년 1월~7월",
+      "analysis_method": "GMM 클러스터링 + 통계 분석"
+    },
+    "key_process_parameters": [
+      {
+        "parameter": "Press Time",
+        "unit": "ms",
+        "mean": 550.13,
+        "std_dev": 18.5,
+        "operating_range": "500-574 ms",
+        "stability": "안정적인 작업 사이클 유지"
+      },
+      {
+        "parameter": "Pressure 1",
+        "unit": "bar",
+        "mean": 275.07,
+        "std_dev": 12.3,
+        "operating_range": "250-300 bar",
+        "description": "주 성형 압력"
+      },
+      {
+        "parameter": "Pressure 2",
+        "unit": "bar",
+        "mean": 269.79,
+        "std_dev": 11.8,
+        "operating_range": "245-295 bar",
+        "description": "보조 성형 압력"
+      },
+      {
+        "parameter": "Pressure 5",
+        "unit": "bar",
+        "mean": 544.85,
+        "std_dev": 25.2,
+        "operating_range": "490-600 bar",
+        "description": "블랭크 홀더 압력"
+      }
+    ],
+    "gmm_clustering_results": {
+      "total_clusters": 4,
+      "cluster_distribution": [
+        {
+          "cluster_id": 0,
+          "percentage": 28.5,
+          "characteristics": "표준 성형 조건",
+          "typical_products": "일반 패널류"
+        },
+        {
+          "cluster_id": 1,
+          "percentage": 31.2,
+          "characteristics": "고압 성형 조건",
+          "typical_products": "구조 부품"
+        },
+        {
+          "cluster_id": 2,
+          "percentage": 22.8,
+          "characteristics": "정밀 성형 조건",
+          "typical_products": "외관 부품"
+        },
+        {
+          "cluster_id": 3,
+          "percentage": 17.5,
+          "characteristics": "특수 성형 조건",
+          "typical_products": "복잡 형상 부품"
+        }
+      ]
+    },
+    "process_capability_analysis": {
+      "press_time_capability": {
+        "cpk": 1.42,
+        "cp": 1.38,
+        "status": "양호"
+      },
+      "pressure_stability": {
+        "cv_pressure1": "4.5%",
+        "cv_pressure2": "4.4%", 
+        "cv_pressure5": "4.6%",
+        "overall_assessment": "안정적"
+      }
+    }
+  },
+  "predictive_maintenance": {
+    "early_warning_indicators": [
+      {
+        "parameter": "Press Time 변동",
+        "threshold": "±10% from mean",
+        "action": "성형 조건 점검"
+      },
+      {
+        "parameter": "압력 편차 증가",
+        "threshold": "CV > 6%",
+        "action": "유압 시스템 점검"
+      },
+      {
+        "parameter": "클러스터 분포 변화",
+        "threshold": "분포 변화 > 5%",
+        "action": "공정 안정성 분석"
+      }
+    ],
+    "maintenance_recommendations": [
+      "다이 마모 상태 주간 점검",
+      "압력 센서 교정 (월 1회)",
+      "유압 시스템 정기 점검 (분기 1회)",
+      "GMM 모델 업데이트 (월 1회)"
+    ]
+  },
+  "quality_improvement_strategies": [
+    {
+      "strategy": "사전 진단 체계 강화",
+      "implementation": [
+        "실시간 통계 모니터링",
+        "이상 패턴 자동 감지",
+        "예측 모델 기반 경고"
+      ],
+      "expected_improvement": "불량률 30% 감소"
+    },
+    {
+      "strategy": "예지보전 시스템 도입",
+      "implementation": [
+        "머신러닝 기반 예측",
+        "부품 수명 예측",
+        "최적 교체 시기 제안"
+      ],
+      "expected_improvement": "계획 외 정지시간 50% 감소"
+    },
+    {
+      "strategy": "공정 표준화",
+      "implementation": [
+        "클러스터별 최적 조건 설정",
+        "제품별 표준 작업 조건",
+        "자동 조건 전환 시스템"
+      ],
+      "expected_improvement": "품질 편차 40% 감소"
+    }
+  ],
+  "summary_statistics": {
+    "total_cases": 6,
+    "average_success_rate": 0.87,
+    "average_fix_time": "4-8시간",
+    "common_issues": ["주름 발생", "터짐 발생", "버 발생"]
+  },
+  "quality_metrics": {
+    "prevention_effectiveness": "90%",
+    "cost_reduction": "35%",
+    "downtime_reduction": "45%"
+  },
+  "created_date": "2024-08-04",
+  "last_updated": "2024-08-04"
+}

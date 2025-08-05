@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional, Callable
 from dataclasses import dataclass, field
 from enum import Enum
-import json
 from collections import defaultdict, deque
 
 
@@ -64,7 +63,7 @@ class SystemMonitor:
         self._start_time = datetime.now()
 
     def record_metric(self, name: str, value: float, metric_type: MetricType,
-                      labels: Dict[str, str] = None, metadata: Dict[str, Any] = None):
+                      labels: Optional[Dict[str, str]] = None, metadata: Optional[Dict[str, Any]] = None):
         metric = PerformanceMetric(
             name=name,
             metric_type=metric_type,
@@ -87,16 +86,16 @@ class SystemMonitor:
         # Check alert rules
         self._check_alerts(name, value)
 
-    def increment_counter(self, name: str, value: float = 1.0, labels: Dict[str, str] = None):
+    def increment_counter(self, name: str, value: float = 1.0, labels: Optional[Dict[str, str]] = None):
         self.record_metric(name, value, MetricType.COUNTER, labels)
 
-    def set_gauge(self, name: str, value: float, labels: Dict[str, str] = None):
+    def set_gauge(self, name: str, value: float, labels: Optional[Dict[str, str]] = None):
         self.record_metric(name, value, MetricType.GAUGE, labels)
 
-    def record_histogram(self, name: str, value: float, labels: Dict[str, str] = None):
+    def record_histogram(self, name: str, value: float, labels: Optional[Dict[str, str]] = None):
         self.record_metric(name, value, MetricType.HISTOGRAM, labels)
 
-    def time_function(self, name: str, labels: Dict[str, str] = None):
+    def time_function(self, name: str, labels: Optional[Dict[str, str]] = None):
         def decorator(func):
             async def async_wrapper(*args, **kwargs):
                 start_time = time.time()
@@ -146,7 +145,7 @@ class SystemMonitor:
                 # Log alert (in production, send to alerting system)
                 print(f"ALERT [{alert.level.value.upper()}] {alert.message}")
 
-    def get_metric_summary(self, name: str, time_window: timedelta = None) -> Dict[str, Any]:
+    def get_metric_summary(self, name: str, time_window: Optional[timedelta] = None) -> Dict[str, Any]:
         if name not in self.metrics:
             return {}
 
@@ -172,7 +171,7 @@ class SystemMonitor:
             'latest_timestamp': metrics[-1].timestamp.isoformat()
         }
 
-    def get_all_metrics_summary(self, time_window: timedelta = None) -> Dict[str, Dict[str, Any]]:
+    def get_all_metrics_summary(self, time_window: Optional[timedelta] = None) -> Dict[str, Dict[str, Any]]:
         return {
             name: self.get_metric_summary(name, time_window)
             for name in self.metrics.keys()

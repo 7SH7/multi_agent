@@ -1,11 +1,11 @@
 """GPT 기반 종합 분석 전문가 Agent"""
 
 import openai
-from datetime import datetime
-from typing import Dict, Any, List
+from typing import Dict, List, Optional, Any
 from models.agent_state import AgentState
 from agents.base_agent import BaseAgent, AgentConfig, AgentResponse, AgentError
 from config.settings import LLM_CONFIGS
+from utils.knowledge_connector import get_knowledge_connector
 import logging
 
 logger = logging.getLogger(__name__)
@@ -27,8 +27,11 @@ class GPTAgent(BaseAgent):
         self.client = openai.AsyncOpenAI(
             api_key=LLM_CONFIGS["openai"]["api_key"]
         )
+        
+        # Knowledge Connector 초기화
+        self.knowledge_connector = get_knowledge_connector()
 
-    async def analyze_and_respond(self, state: AgentState) -> AgentResponse:
+    async def analyze_and_respond(self, state: Dict[str, Any]) -> AgentResponse:
         """GPT 기반 종합 분석"""
 
         self.validate_input(state)
@@ -36,21 +39,40 @@ class GPTAgent(BaseAgent):
         user_question = state.get('user_message', '')
         rag_context = state.get('rag_context', {})
         issue_classification = state.get('issue_classification', {})
+        conversation_history = state.get('conversation_history', [])
+        
+        # 동적 토큰 한계 계산
+        from utils.token_manager import get_token_manager
+        token_manager = get_token_manager()
+        dynamic_max_tokens = token_manager.get_agent_specific_limit('gpt', state)
 
+        # Knowledge Base 컨텍스트 추가
+        knowledge_context = self._get_knowledge_context(user_question, issue_classification or {})
+        
         # 프롬프트 구성
-        prompt = self.build_analysis_prompt(user_question, rag_context, issue_classification)
+        prompt = self.build_analysis_prompt(user_question, rag_context or {}, issue_classification or {}, conversation_history, knowledge_context)
 
         try:
             logger.info(f"GPT Agent 분석 시작 - 모델: {self.model}")
 
+            # 대화 히스토리를 포함한 메시지 구성
+            messages = [{"role": "system", "content": self.get_system_prompt()}]
+            
+            # 이전 대화 히스토리 추가
+            if conversation_history:
+                for conv in conversation_history:
+                    if isinstance(conv, dict):
+                        if conv.get("role") and conv.get("content"):
+                            messages.append(conv)
+            
+            # 현재 질문 추가
+            messages.append({"role": "user", "content": prompt})
+
             response = await self.client.chat.completions.create(
                 model=self.model,
-                messages=[
-                    {"role": "system", "content": self.get_system_prompt()},
-                    {"role": "user", "content": prompt}
-                ],
+                messages=messages,
                 temperature=self.config.temperature,
-                max_tokens=self.config.max_tokens
+                max_tokens=dynamic_max_tokens
             )
 
             response_text = response.choices[0].message.content
@@ -104,7 +126,7 @@ class GPTAgent(BaseAgent):
 
 응답은 명확하고 실행 가능한 형태로 작성하세요."""
 
-    def build_analysis_prompt(self, question: str, rag_context: Dict, issue_info: Dict) -> str:
+    def build_analysis_prompt(self, question: str, rag_context: Dict, issue_info: Dict, conversation_history: Optional[List] = None, knowledge_context: str = "") -> str:
         """분석 프롬프트 구성"""
 
         # RAG 컨텍스트 정리
@@ -112,14 +134,36 @@ class GPTAgent(BaseAgent):
         if rag_context.get('chroma_results'):
             context_text += "관련 기술 문서:\n"
             for i, result in enumerate(rag_context['chroma_results'][:3], 1):
-                content = result.get('content', '')[:300]
+                # RAGResult 객체와 dictionary 둘 다 처리
+                if hasattr(result, 'content'):
+                    content = result.content[:300]
+                else:
+                    content = result.get('content', '')[:300]
                 context_text += f"{i}. {content}...\n"
 
         if rag_context.get('elasticsearch_results'):
             context_text += "\n관련 해결 사례:\n"
             for i, result in enumerate(rag_context['elasticsearch_results'][:3], 1):
-                content = result.get('content', '')[:300]
+                # RAGResult 객체와 dictionary 둘 다 처리
+                if hasattr(result, 'content'):
+                    content = result.content[:300]
+                else:
+                    content = result.get('content', '')[:300]
                 context_text += f"{i}. {content}...\n"
+
+        # 대화 기록 정리
+        conversation_context = ""
+        if conversation_history:
+            conversation_context = "\n이전 대화 기록:\n"
+            for i, conv in enumerate(conversation_history[-3:], 1):  # 최근 3개만
+                if isinstance(conv, dict):
+                    user_msg = conv.get('user_message', '')
+                    timestamp = conv.get('timestamp', '')
+                    agents_used = conv.get('agents_used', [])
+                    if user_msg:
+                        conversation_context += f"{i}. [{timestamp[:16]}] 사용자: {user_msg}\n"
+                        if agents_used:
+                            conversation_context += f"   → 참여 전문가: {', '.join(agents_used)}\n"
 
         # 이슈 컨텍스트 정리
         issue_context = ""
@@ -138,12 +182,17 @@ class GPTAgent(BaseAgent):
         return f"""
 사용자 질문: {question}
 
+{conversation_context}
+
 {issue_context}
 
 배경 정보:
 {context_text}
 
+{knowledge_context}
+
 위 정보를 종합하여 제조업 전문가 관점에서 분석하고 해결책을 제시해주세요.
+이전 대화가 있다면 그 맥락을 고려하여 연속성 있는 답변을 제공하세요.
 특히 다음 사항을 중점적으로 다뤄주세요:
 
 1. 문제의 근본 원인 분석
@@ -163,7 +212,7 @@ class GPTAgent(BaseAgent):
         """GPT Agent의 중점 영역"""
         return ["문제진단", "해결절차", "위험평가", "예방방안", "종합판단"]
 
-    def calculate_confidence(self, response_length: int, token_usage: Dict[str, int] = None) -> float:
+    def calculate_confidence(self, response_length: int, token_usage: Optional[Dict[str, int]] = None) -> float:
         """GPT 응답 신뢰도 계산"""
         base_confidence = 0.8  # GPT는 기본적으로 높은 신뢰도
 
@@ -182,3 +231,56 @@ class GPTAgent(BaseAgent):
                 base_confidence -= 0.1
 
         return min(0.95, max(0.3, base_confidence))
+
+    def _get_knowledge_context(self, question: str, issue_info: Dict) -> str:
+        """Knowledge Base에서 관련 컨텍스트 정보 추출"""
+        try:
+            context_parts = []
+            
+            # 장비 타입 추출 시도
+            equipment_type = None
+            equipment_keywords = {
+                'PRESS_HYDRAULIC': ['유압', '프레스', 'press', 'hydraulic'],
+                'PRESS_PRODUCTIVITY': ['생산성', 'productivity', '프레스'],
+                'WELDING_ROBOT_KAMP': ['용접', '로봇', 'welding', 'robot', 'kamp'],
+                'PAINTING_COATING': ['도장', '코팅', 'painting', 'coating'],
+                'PAINTING_EQUIPMENT': ['도장장비', 'painting equipment'],
+                'ASSEMBLY_PARTS': ['조립', '부품', 'assembly', 'parts']
+            }
+            
+            for eq_type, keywords in equipment_keywords.items():
+                if any(keyword in question.lower() for keyword in keywords):
+                    equipment_type = eq_type
+                    break
+            
+            # 이슈 코드에서 장비 타입 추출
+            issue_code = issue_info.get('issue_code') if issue_info else None
+            if not equipment_type and issue_code:
+                for eq_type in equipment_keywords.keys():
+                    if eq_type.lower() in issue_code.lower():
+                        equipment_type = eq_type
+                        break
+            
+            # Knowledge Base 컨텍스트 생성
+            if equipment_type:
+                kb_context = self.knowledge_connector.get_context_for_agent(
+                    equipment_type=equipment_type,
+                    issue_code=issue_code
+                )
+                if kb_context:
+                    context_parts.append(f"[지식베이스 정보]\n{kb_context}")
+            
+            # 이슈별 해결책 검색
+            if issue_code:
+                solution_info = self.knowledge_connector.search_solutions(issue_code)
+                if solution_info.get('found'):
+                    issue_data = solution_info['issue']
+                    context_parts.append(f"[해결책 데이터베이스]\n문제: {issue_data.get('description', '')}")
+                    if issue_data.get('standard_solutions'):
+                        context_parts.append(f"표준 해결책: {', '.join(issue_data['standard_solutions'][:3])}")
+            
+            return "\n\n".join(context_parts) if context_parts else ""
+            
+        except Exception as e:
+            logger.warning(f"Knowledge context 생성 중 오류: {str(e)}")
+            return ""

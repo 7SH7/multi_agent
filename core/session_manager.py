@@ -6,6 +6,7 @@ from typing import Dict, Any, Optional, List
 from dataclasses import dataclass, asdict
 from enum import Enum
 from config.settings import REDIS_CONFIG
+from utils.exceptions import SessionError
 
 
 class SessionStatus(Enum):
@@ -49,7 +50,7 @@ class SessionManager:
             )
         return self.redis_client
 
-    async def create_session(self, user_id: str = None, issue_code: str = None) -> SessionData:
+    async def create_session(self, user_id: Optional[str] = None, issue_code: Optional[str] = None) -> SessionData:
         session_id = f"sess_{uuid.uuid4().hex[:12]}"
         now = datetime.now()
 
@@ -104,11 +105,14 @@ class SessionManager:
 
         except Exception as e:
             print(f"Error retrieving session {session_id}: {e}")
-            return None
+            raise SessionError(f"Failed to retrieve session {session_id}: {e}", session_id=session_id)
 
     async def update_session(self, session_data: SessionData) -> bool:
         session_data.updated_at = datetime.now()
-        return await self._save_session(session_data)
+        print(f"🔄 세션 업데이트: {session_data.session_id}, 대화수: {session_data.conversation_count}")
+        result = await self._save_session(session_data)
+        print(f"✅ 세션 저장 결과: {result}")
+        return result
 
     async def _save_session(self, session_data: SessionData) -> bool:
         redis_client = await self._get_redis_client()
@@ -157,7 +161,11 @@ class SessionManager:
             print(f"Error deleting session {session_id}: {e}")
             return False
 
-    async def list_active_sessions(self, user_id: str = None) -> List[SessionData]:
+    async def clear_session(self, session_id: str) -> bool:
+        """세션 초기화 (delete_session의 별칭)"""
+        return await self.delete_session(session_id)
+
+    async def list_active_sessions(self, user_id: Optional[str] = None) -> List[SessionData]:
         redis_client = await self._get_redis_client()
 
         try:
@@ -233,6 +241,32 @@ class SessionManager:
         
         session_data.conversation_count += 1
         return await self.update_session(session_data)
+
+    async def add_conversation_detailed(self, session_id: str, conversation_data: Dict[str, Any]) -> bool:
+        """세션에 상세한 대화 기록 추가 (확장된 형태)"""
+        session_data = await self.get_session(session_id)
+        if not session_data:
+            return False
+        
+        # 대화 기록을 metadata에 저장
+        if 'conversation_history' not in session_data.metadata:
+            session_data.metadata['conversation_history'] = []
+        
+        # 타임스탬프 자동 추가
+        if 'timestamp' not in conversation_data:
+            conversation_data['timestamp'] = datetime.now().isoformat()
+        
+        session_data.metadata['conversation_history'].append(conversation_data)
+        session_data.conversation_count += 1
+        return await self.update_session(session_data)
+
+    async def get_conversation_history(self, session_id: str) -> List[Dict[str, Any]]:
+        """세션의 대화 기록 조회"""
+        session_data = await self.get_session(session_id)
+        if not session_data:
+            return []
+        
+        return session_data.metadata.get('conversation_history', [])
 
     async def get_session_stats(self) -> Dict[str, Any]:
         redis_client = await self._get_redis_client()

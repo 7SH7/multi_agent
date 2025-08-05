@@ -1,6 +1,6 @@
 """동적 Agent 선택 시스템"""
 
-from typing import List, Dict, Any, Optional
+from typing import List, Dict
 from datetime import datetime
 from pydantic import BaseModel
 from models.agent_state import AgentState
@@ -52,16 +52,16 @@ class DynamicAgentSelector:
             }
         }
 
-        # 카테고리별 선택 규칙
+        # 카테고리별 선택 규칙 (Gemini 일시 비활성화)
         self.selection_rules = {
             "전기문제": SelectionRule(
                 category="전기문제",
-                agents=["GPT", "Gemini"],
+                agents=["GPT", "Clova"],
                 confidence_threshold=0.75
             ),
             "기계문제": SelectionRule(
                 category="기계문제",
-                agents=["Gemini", "Clova"],
+                agents=["GPT", "Clova"],
                 confidence_threshold=0.70
             ),
             "품질문제": SelectionRule(
@@ -71,9 +71,9 @@ class DynamicAgentSelector:
             ),
             "안전문제": SelectionRule(
                 category="안전문제",
-                agents=["GPT", "Gemini", "Clova"],  # 안전은 모든 관점 필요
+                agents=["GPT", "Clova"],  # Gemini 제외
                 confidence_threshold=0.80,
-                max_agents=3
+                max_agents=2
             ),
             "비용문제": SelectionRule(
                 category="비용문제",
@@ -82,7 +82,7 @@ class DynamicAgentSelector:
             ),
             "긴급문제": SelectionRule(
                 category="긴급문제",
-                agents=["GPT", "Gemini"],  # 빠른 응답
+                agents=["GPT", "Clova"],  # Gemini 제외
                 confidence_threshold=0.75
             ),
             "일반문제": SelectionRule(
@@ -95,18 +95,15 @@ class DynamicAgentSelector:
     def select_agents(self, state: AgentState) -> AgentState:
         """최적 Agent 선택"""
 
-        start_time = datetime.now()
-
         try:
             question_category = state.get('question_category', '일반문제')
-            classification_info = state.get('issue_classification', {})
+            classification_info = state.get('issue_classification') or {}
             confidence = classification_info.get('classification_confidence', 0.5)
-            session_id = state.get('session_id', '')
 
             logger.info(f"Agent 선택 시작 - 카테고리: {question_category}, 신뢰도: {confidence}")
 
             # 기본 Agent 선택
-            selection_result = self._apply_selection_rules(question_category, confidence, state)
+            selection_result = self._apply_selection_rules(question_category or '일반문제', confidence, state)
 
             # 컨텍스트 기반 조정
             selection_result = self._adjust_based_on_context(selection_result, state)
@@ -121,7 +118,6 @@ class DynamicAgentSelector:
             state.update({
                 'selected_agents': selection_result.selected_agents,
                 'selection_reasoning': selection_result.selection_reasoning,
-                'agent_selection_result': selection_result.dict(),
                 'processing_steps': state.get('processing_steps', []) + ['agent_selection_completed']
             })
 
@@ -167,7 +163,8 @@ class DynamicAgentSelector:
                     break
 
         # 특수 상황 처리
-        issue_info = state.get('issue_classification', {}).get('issue_info', {})
+        classification = state.get('issue_classification') or {}
+        issue_info = classification.get('issue_info', {})
         if not issue_info.get('error'):
             severity = issue_info.get('severity', '')
             if severity in ['높음', '매우높음']:
@@ -193,7 +190,7 @@ class DynamicAgentSelector:
     def _adjust_based_on_context(self, result: AgentSelectionResult, state: AgentState) -> AgentSelectionResult:
         """컨텍스트 기반 조정"""
 
-        rag_context = state.get('rag_context', {})
+        rag_context = state.get('rag_context') or {}
 
         # 검색 결과의 품질에 따른 조정
         chroma_results = rag_context.get('chroma_results', [])

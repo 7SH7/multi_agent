@@ -370,7 +370,6 @@ elasticsearch_data/
 # 모델 파일 (용량이 클 수 있음)
 *.model
 *.bin
-models/
 checkpoints/
 
 # API 문서 생성 파일

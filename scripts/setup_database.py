@@ -4,20 +4,14 @@
 import asyncio
 import aiomysql
 from datetime import datetime
-from typing import Dict, Any, List
+from typing import Dict, Any
 import sys
 import os
 
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from config.settings import DATABASE_URL, settings
-from models.database_models import (
-    ChatbotSession, ChatMessage, ChatbotIssue,
-    PressDefectDetectionLog, PressFaultDetectionLog,
-    WeldingMachineDefectDetectionLog, PaintingSurfaceDefectDetectionLog,
-    PaintingProcessEquipmentDefectDetectionLog, VehicleAssemblyProcessDefectDetectionLog
-)
+from config.settings import DATABASE_URL
 
 
 class DatabaseSetup:
@@ -310,7 +304,8 @@ class DatabaseSetup:
 
     async def validate_schema(self) -> Dict[str, Any]:
         """데이터베이스 스키마 검증"""
-        validation_results = {
+        from typing import List
+        validation_results: Dict[str, Any] = {
             'tables_exist': {},
             'columns_match': {},
             'indexes_exist': {},
@@ -337,7 +332,9 @@ class DatabaseSetup:
                     exists = table in existing_tables
                     validation_results['tables_exist'][table] = exists
                     if not exists:
-                        validation_results['errors'].append(f"테이블 '{table}' 누락")
+                        errors = validation_results['errors']
+                        if isinstance(errors, list):
+                            errors.append(f"테이블 '{table}' 누락")
                         validation_results['overall_status'] = False
                 
                 # 2. 각 테이블의 컬럼 구조 검증
@@ -354,13 +351,17 @@ class DatabaseSetup:
                         actual_columns = [row[0] for row in await cursor.fetchall()]
                         
                         missing_columns = set(expected_columns) - set(actual_columns)
-                        validation_results['columns_match'][table_name] = {
-                            'missing': list(missing_columns),
-                            'status': len(missing_columns) == 0
-                        }
+                        columns_match = validation_results['columns_match']
+                        if isinstance(columns_match, dict):
+                            columns_match[table_name] = {
+                                'missing': list(missing_columns),
+                                'status': len(missing_columns) == 0
+                            }
                         
                         if missing_columns:
-                            validation_results['errors'].append(f"테이블 '{table_name}'에서 컬럼 누락: {', '.join(missing_columns)}")
+                            errors = validation_results['errors']
+                            if isinstance(errors, list):
+                                errors.append(f"테이블 '{table_name}'에서 컬럼 누락: {', '.join(missing_columns)}")
                             validation_results['overall_status'] = False
                 
                 # 3. 중요 인덱스 존재 확인
@@ -376,13 +377,17 @@ class DatabaseSetup:
                         actual_indexes = [row[2] for row in await cursor.fetchall() if row[2] != 'PRIMARY']
                         
                         missing_indexes = set(expected_indexes) - set(actual_indexes)
-                        validation_results['indexes_exist'][table_name] = {
-                            'missing': list(missing_indexes),
-                            'status': len(missing_indexes) == 0
-                        }
+                        indexes_exist = validation_results['indexes_exist']
+                        if isinstance(indexes_exist, dict):
+                            indexes_exist[table_name] = {
+                                'missing': list(missing_indexes),
+                                'status': len(missing_indexes) == 0
+                            }
                         
                         if missing_indexes:
-                            validation_results['errors'].append(f"테이블 '{table_name}'에서 인덱스 누락: {', '.join(missing_indexes)}")
+                            errors = validation_results['errors']
+                            if isinstance(errors, list):
+                                errors.append(f"테이블 '{table_name}'에서 인덱스 누락: {', '.join(missing_indexes)}")
                 
                 # 4. 외래 키 제약조건 확인
                 await cursor.execute("""
@@ -406,11 +411,15 @@ class DatabaseSetup:
                 
                 if missing_fks:
                     for fk in missing_fks:
-                        validation_results['errors'].append(f"외래 키 누락: {fk[0]}.{fk[1]} -> {fk[2]}.{fk[3]}")
+                        errors = validation_results['errors']
+                        if isinstance(errors, list):
+                            errors.append(f"외래 키 누락: {fk[0]}.{fk[1]} -> {fk[2]}.{fk[3]}")
                         validation_results['overall_status'] = False
 
             except Exception as e:
-                validation_results['errors'].append(f"스키마 검증 중 오류: {str(e)}")
+                errors = validation_results['errors']
+                if isinstance(errors, list):
+                    errors.append(f"스키마 검증 중 오류: {str(e)}")
                 validation_results['overall_status'] = False
         
         return validation_results

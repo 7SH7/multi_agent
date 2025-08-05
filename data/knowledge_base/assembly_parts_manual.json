@@ -1,0 +1,373 @@
+{
+  "equipment_type": "ASSEMBLY_PARTS",
+  "model": "조립 공정 품질 관리 시스템 AssemblyQuality Pro",
+  "sections": [
+    {
+      "title": "조립 공정 품질 이슈 관리",
+      "content": "조립 공정에서 발생하는 주요 품질 이슈를 부품별로 체계적으로 관리하여 조립 품질의 일관성 확보와 불량률 감소에 효과적으로 기여하는 시스템입니다.",
+      "keywords": ["조립공정", "품질관리", "부품별관리", "불량률감소", "체계적관리", "일관성확보"],
+      "assembly_components": {
+        "exterior_parts": [
+          "도어(Door)",
+          "라디에이터 그릴(Radiator Grill)",
+          "루프사이드(Roof Side)",
+          "범퍼(Bumper)",
+          "카울커버(Cowl Cover)",
+          "펜더(Fender)",
+          "헤드램프(Head Lamp)",
+          "테일 램프(Tail Lamp)"
+        ],
+        "interior_parts": [
+          "배선(Wiring)",
+          "커넥터(Connector)",
+          "프레임(Frame)",
+          "클립(Clip)"
+        ]
+      },
+      "subsections": [
+        {
+          "title": "도어 조립 이슈 (ASSY-DOOR-FIX)",
+          "issue_code": "ASSY-DOOR-FIX",
+          "component": "도어",
+          "issue_type": "고정 불량",
+          "common_causes": [
+            "힌지 체결 토크 부족",
+            "도어 프레임 변형",
+            "가스켓 압축 불량",
+            "클립 위치 불일치"
+          ],
+          "solutions": [
+            "힌지 체결 토크 기준 설정 및 관리",
+            "도어 프레임 정밀도 검사",
+            "가스켓 압축력 조정",
+            "클립 위치 조정 및 표준화"
+          ],
+          "prevention_measures": [
+            "체결 토크 자동 관리 시스템 도입",
+            "도어 조립 지그 정밀도 향상",
+            "정기적 힌지 점검"
+          ]
+        },
+        {
+          "title": "라디에이터 그릴 유격 (ASSY-GRILL-GAP)",
+          "issue_code": "ASSY-GRILL-GAP",
+          "component": "라디에이터 그릴",
+          "issue_type": "유격 불량",
+          "common_causes": [
+            "그릴 브라켓 변형",
+            "체결점 위치 편차",
+            "범퍼와의 간섭",
+            "온도 변화에 따른 팽창"
+          ],
+          "solutions": [
+            "브라켓 변형 검사 및 교체",
+            "체결점 위치 정밀 조정",
+            "범퍼-그릴 간섭 여유 확보",
+            "열팽창 고려 설계 적용"
+          ],
+          "prevention_measures": [
+            "브라켓 품질 관리 강화",
+            "조립 순서 최적화",
+            "온도 보상 설계 적용"
+          ]
+        },
+        {
+          "title": "루프사이드 체결 (ASSY-ROOF-BOLT)",
+          "issue_code": "ASSY-ROOF-BOLT",
+          "component": "루프사이드",
+          "issue_type": "체결 불량",
+          "common_causes": [
+            "체결용 볼트 규격 불일치",
+            "너트 삽입 불량",
+            "체결 각도 편차",
+            "실링 재료 과다 적용"
+          ],
+          "solutions": [
+            "볼트 규격 표준화 및 관리",
+            "너트 삽입 지그 개선",
+            "체결 각도 가이드 설치",
+            "실링 재료 적용량 기준 설정"
+          ],
+          "prevention_measures": [
+            "볼트 자동 공급 시스템",
+            "체결 토크 모니터링",
+            "실링 자동 도포 시스템"
+          ]
+        },
+        {
+          "title": "배선 연계 불량 (ASSY-WIRE-CONN)",
+          "issue_code": "ASSY-WIRE-CONN",
+          "component": "배선",
+          "issue_type": "연계 불량",
+          "common_causes": [
+            "커넥터 삽입 불완전",
+            "배선 경로 간섭",
+            "핀 변형 또는 손상",
+            "방수 실링 불량"
+          ],
+          "solutions": [
+            "커넥터 삽입 확인 시스템",
+            "배선 경로 최적화",
+            "핀 변형 검사 강화",
+            "방수 실링 품질 관리"
+          ],
+          "prevention_measures": [
+            "배선 클램핑 표준화",
+            "커넥터 자동 삽입 검증",
+            "방수 테스트 강화"
+          ]
+        },
+        {
+          "title": "범퍼 고정 불량 (ASSY-BUMP-FIX)",
+          "issue_code": "ASSY-BUMP-FIX",
+          "component": "범퍼",
+          "issue_type": "고정 불량",
+          "common_causes": [
+            "클립 체결력 부족",
+            "범퍼 브라켓 변형",
+            "체결점 위치 오차",
+            "범퍼 재질 변형"
+          ],
+          "solutions": [
+            "클립 체결력 기준 재설정",
+            "브라켓 변형 검사 및 교체",
+            "체결점 위치 정밀 측정",
+            "범퍼 재질 품질 관리"
+          ],
+          "prevention_measures": [
+            "클립 자동 체결 시스템",
+            "범퍼 형상 검사 강화",
+            "체결점 위치 표준화"
+          ]
+        },
+        {
+          "title": "카울커버 맞물림 (ASSY-COWL-ENGAGE)",
+          "issue_code": "ASSY-COWL-ENGAGE",
+          "component": "카울커버",
+          "issue_type": "맞물림 불량",
+          "common_causes": [
+            "맞물림 부위 설계 공차 과대",
+            "카울커버 변형",
+            "클립 위치 불일치",
+            "이물질 개입"
+          ],
+          "solutions": [
+            "맞물림 설계 보강 및 공차 조정",
+            "카울커버 형상 검사 강화",
+            "클립 위치 조정 및 고정",
+            "조립 전 청결도 관리"
+          ],
+          "prevention_measures": [
+            "맞물림 부위 가이드 개선",
+            "자동 위치 확인 시스템",
+            "청결도 관리 표준화"
+          ]
+        },
+        {
+          "title": "커넥터 체결 압력 (ASSY-CONN-PRESS)",
+          "issue_code": "ASSY-CONN-PRESS",
+          "component": "커넥터",
+          "issue_type": "체결 압력 불량",
+          "common_causes": [
+            "커넥터 삽입력 부족",
+            "핀 접촉 불량",
+            "실링 압축 과다/부족",
+            "커넥터 하우징 변형"
+          ],
+          "solutions": [
+            "체결 압력 기준 설정 및 관리",
+            "핀 접촉 검사 시스템 도입",
+            "실링 압축력 최적화",
+            "커넥터 하우징 품질 관리"
+          ],
+          "prevention_measures": [
+            "자동 삽입력 측정 시스템",
+            "핀 접촉 저항 검사",
+            "실링 자동 검사"
+          ]
+        },
+        {
+          "title": "테일 램프 단차 (ASSY-TAIL-STEP)",
+          "issue_code": "ASSY-TAIL-STEP",
+          "component": "테일 램프",
+          "issue_type": "단차 불량",
+          "common_causes": [
+            "램프 하우징 변형",
+            "차체 패널 단차",
+            "체결점 높이 편차",
+            "가스켓 두께 불균일"
+          ],
+          "solutions": [
+            "램프 하우징 형상 검사",
+            "차체 패널 단차 조정",
+            "체결점 높이 정밀 측정",
+            "가스켓 두께 표준화"
+          ],
+          "prevention_measures": [
+            "3D 측정 시스템 도입",
+            "패널 단차 자동 검사",
+            "가스켓 자동 선별"
+          ]
+        },
+        {
+          "title": "프레임 실링 불량 (ASSY-FRAME-SEAL)",
+          "issue_code": "ASSY-FRAME-SEAL",
+          "component": "프레임",
+          "issue_type": "실링 불량",
+          "common_causes": [
+            "실링 재료 경화 불량",
+            "실링 건 노즐 막힘",
+            "적용량 편차",
+            "표면 오염"
+          ],
+          "solutions": [
+            "실링 재료 품질 관리",
+            "실링 건 정비 및 노즐 교체",
+            "자동 도포 시스템 도입",
+            "표면 청결도 관리 강화"
+          ],
+          "prevention_measures": [
+            "실링 건 정기 정비",
+            "실링 재료 보관 관리",
+            "표면 전처리 표준화"
+          ]
+        },
+        {
+          "title": "헤드램프 외관 손상 (ASSY-HEAD-DAMAGE)",
+          "issue_code": "ASSY-HEAD-DAMAGE",
+          "component": "헤드램프",
+          "issue_type": "외관 손상",
+          "common_causes": [
+            "조립 중 접촉 손상",
+            "보호 필름 미부착",
+            "취급 부주의",
+            "포장재 불량"
+          ],
+          "solutions": [
+            "조립 지그 보호 패드 설치",
+            "보호 필름 자동 부착",
+            "취급 절차 표준화",
+            "포장재 품질 개선"
+          ],
+          "prevention_measures": [
+            "조립 작업 표준 교육",
+            "보호 장비 의무 사용",
+            "품질 검사 강화"
+          ]
+        },
+        {
+          "title": "펜더 헤밍 불량 (ASSY-FEND-HEM)",
+          "issue_code": "ASSY-FEND-HEM",
+          "component": "펜더",
+          "issue_type": "헤밍 불량",
+          "common_causes": [
+            "헤밍 다이 마모",
+            "재료 두께 편차",
+            "헤밍 압력 부족",
+            "재료 경도 변화"
+          ],
+          "solutions": [
+            "헤밍 다이 정기 교체",
+            "재료 두께 사전 검사",
+            "헤밍 압력 자동 제어",
+            "재료 경도 관리 강화"
+          ],
+          "prevention_measures": [
+            "다이 마모 예측 시스템",
+            "재료 품질 관리 강화",
+            "헤밍 공정 자동화"
+          ]
+        },
+        {
+          "title": "클립 홀 변형 (ASSY-CLIP-HOLE)",
+          "issue_code": "ASSY-CLIP-HOLE",
+          "component": "클립",
+          "issue_type": "홀 변형",
+          "common_causes": [
+            "클립 삽입력 과다",
+            "홀 가공 정밀도 불량",
+            "클립 재질 경도 과다",
+            "반복 삽입/제거"
+          ],
+          "solutions": [
+            "클립 삽입력 최적화",
+            "홀 가공 정밀도 향상",
+            "클립 재질 개선",
+            "삽입/제거 횟수 관리"
+          ],
+          "prevention_measures": [
+            "홀 가공 품질 관리",
+            "클립 설계 개선",
+            "삽입 가이드 설치"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "조립 품질 관리 시스템",
+      "content": "부품별 이슈 코드, 발생 부품명, 이슈명, 발생 원인, 해결책을 체계적으로 관리하여 조립 품질의 일관성 확보와 불량률 감소를 실현하는 통합 관리 시스템입니다.",
+      "quality_management": {
+        "issue_classification": {
+          "고정_불량": ["ASSY-DOOR-FIX", "ASSY-BUMP-FIX"],
+          "유격_불량": ["ASSY-GRILL-GAP"],
+          "체결_불량": ["ASSY-ROOF-BOLT", "ASSY-CONN-PRESS"],
+          "연계_불량": ["ASSY-WIRE-CONN"],
+          "맞물림_불량": ["ASSY-COWL-ENGAGE"],
+          "단차_불량": ["ASSY-TAIL-STEP"],
+          "실링_불량": ["ASSY-FRAME-SEAL"],
+          "외관_손상": ["ASSY-HEAD-DAMAGE"],
+          "헤밍_불량": ["ASSY-FEND-HEM"],
+          "홀_변형": ["ASSY-CLIP-HOLE"]
+        },
+        "prevention_strategies": [
+          "체결 압력 기준 설정 및 자동 제어",
+          "클립 위치 조정 및 표준화",
+          "맞물림 설계 보강 및 가이드 개선",
+          "실링 건 정비 및 자동 도포",
+          "금형 점검 및 정밀도 관리",
+          "체결력 제어 시스템 도입",
+          "가이드 설치 및 위치 표준화"
+        ]
+      }
+    }
+  ],
+  "technical_specifications": {
+    "measurement_accuracy": "±0.1mm",
+    "torque_control_range": "1-50 Nm",
+    "inspection_cycle": "실시간 모니터링",
+    "quality_standards": "ISO 9001, TS 16949",
+    "defect_detection_rate": "> 99.5%"
+  },
+  "maintenance_schedule": {
+    "daily": [
+      "체결 토크 값 확인",
+      "클립 위치 정확도 검사",
+      "실링 건 상태 점검"
+    ],
+    "weekly": [
+      "조립 지그 정밀도 검사",
+      "품질 데이터 분석",
+      "불량률 트렌드 모니터링"
+    ],
+    "monthly": [
+      "금형 및 다이 정밀 검사",
+      "예방 정비 계획 수립",
+      "품질 개선 활동 평가"
+    ]
+  },
+  "safety_guidelines": [
+    "조립 작업 시 개인보호구 필수 착용",
+    "전동 공구 사용 시 차단기 및 누전차단기 점검",
+    "고소 작업 시 안전대 및 하니스 착용",
+    "자동화 설비 작동 시 안전 거리 확보",
+    "화학 물질 사용 시 MSDS 확인 및 환기"
+  ],
+  "emergency_procedures": [
+    "비상정지 버튼 즉시 작동",
+    "상해 발생 시 응급처치 후 의료진 연락",
+    "화재 발생 시 소화기 사용 및 대피",
+    "기계 고장 시 구역 안전 확보 후 전문가 연락"
+  ],
+  "created_date": "2024-08-04",
+  "last_updated": "2024-08-04"
+}

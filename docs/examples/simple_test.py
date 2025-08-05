@@ -7,7 +7,6 @@
 """
 
 import requests
-import json
 from datetime import datetime
 
 def test_chatbot():
@@ -23,7 +22,7 @@ def test_chatbot():
             print("python -m uvicorn api.main:app --host 0.0.0.0 --port 8000")
             return
         print("✅ 서버 실행 중")
-    except:
+    except Exception:
         print("❌ 서버 연결 실패! localhost:8000에서 서버를 시작해주세요.")
         return
     
@@ -66,7 +65,7 @@ def test_chatbot():
         if choice < 0 or choice >= len(test_cases):
             print("잘못된 선택입니다. 1번을 사용합니다.")
             choice = 0
-    except:
+    except Exception:
         print("잘못된 입력입니다. 1번을 사용합니다.")
         choice = 0
     
@@ -97,7 +96,7 @@ def test_chatbot():
             print("🎉" * 20)
             
             # 핵심 정보 출력
-            print(f"\n📊 분석 결과 요약:")
+            print("\n📊 분석 결과 요약:")
             print(f"   🆔 세션 ID: {result.get('session_id', 'N/A')}")
             print(f"   🤖 참여 전문가: {', '.join(result.get('participating_agents', []))}")
             print(f"   ⚡ 처리 시간: {result.get('processing_time', 0):.1f}초")
@@ -105,13 +104,13 @@ def test_chatbot():
             print(f"   💬 토론 라운드: {result.get('debate_rounds', 0)}")
             
             # 핵심 해결책
-            print(f"\n📋 전문가 종합 분석:")
+            print("\n📋 전문가 종합 분석:")
             summary = result.get('executive_summary', '')
             if summary:
                 print(f"   {summary}")
             
             # 즉시 조치사항
-            print(f"\n🛠️ 즉시 조치사항:")
+            print("\n🛠️ 즉시 조치사항:")
             actions = result.get('immediate_actions', [])
             if actions:
                 for i, action in enumerate(actions[:3], 1):
@@ -124,7 +123,7 @@ def test_chatbot():
                 print("   (상세 분석 필요)")
             
             # 비용 추정
-            print(f"\n💰 예상 비용:")
+            print("\n💰 예상 비용:")
             cost = result.get('cost_estimation', {})
             if cost and any(cost.values()):
                 print(f"   부품비: {cost.get('parts', 'N/A')}")
@@ -136,22 +135,22 @@ def test_chatbot():
             # 안전 수칙
             safety = result.get('safety_precautions', [])
             if safety:
-                print(f"\n⚠️ 안전 수칙:")
+                print("\n⚠️ 안전 수칙:")
                 for i, rule in enumerate(safety[:3], 1):
                     print(f"   {i}. {rule}")
             
-            print(f"\n✅ 완료! 전체 JSON 응답을 보려면 다음 URL을 확인하세요:")
-            print(f"   http://localhost:8000/docs")
+            print("\n✅ 완료! 전체 JSON 응답을 보려면 다음 URL을 확인하세요:")
+            print("   http://localhost:8000/docs")
             
         else:
-            print(f"\n❌ 오류 발생!")
+            print("\n❌ 오류 발생!")
             print(f"   HTTP 상태: {response.status_code}")
             print(f"   오류 내용: {response.text}")
             
     except requests.exceptions.Timeout:
-        print(f"\n⏰ 타임아웃 발생 (3분 초과)")
-        print(f"   💡 AI 전문가들이 복잡한 분석을 진행 중일 수 있습니다.")
-        print(f"   💡 브라우저에서 http://localhost:8000/docs 에서 다시 시도해보세요.")
+        print("\n⏰ 타임아웃 발생 (3분 초과)")
+        print("   💡 AI 전문가들이 복잡한 분석을 진행 중일 수 있습니다.")
+        print("   💡 브라우저에서 http://localhost:8000/docs 에서 다시 시도해보세요.")
         
     except Exception as e:
         print(f"\n❌ 예외 발생: {str(e)}")

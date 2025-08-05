@@ -1,0 +1,440 @@
+{
+  "equipment_type": "PAINTING_COATING",
+  "category": "painting_coating", 
+  "cases": [
+    {
+      "case_id": "COATING_001",
+      "title": "도장면 스크래치 컬링 탐지 문제 해결",
+      "issue_code": "PAINT-VIS-SCRATCH",
+      "affected_parts": ["도장면", "차체 표면"],
+      "description": "도장면에서 주로 발생하는 스크래치를 컬링 탐지 시스템으로 식별 및 해결",
+      "defect_size_analysis": {
+        "detected_sizes": [
+          {"width": 8, "height": 12, "area": 96, "grade": "A급 소형"},
+          {"width": 35, "height": 52, "area": 1820, "grade": "B급 중형"},
+          {"width": 145, "height": 180, "area": 26100, "grade": "C급 대형"}
+        ],
+        "distribution_pattern": "Q1구간 30%, Q2구간 45%, Q3초과 25%"
+      },
+      "symptoms": [
+        "컬링 비전 시스템에서 선형 패턴 탐지",
+        "표면 반사율 이상 감지",
+        "깊이 측정에서 임계값 초과",
+        "AI 패턴 인식에서 스크래치 분류"
+      ],
+      "root_causes": [
+        {
+          "cause": "건조 전 조립 간섭",
+          "description": "도장 미완전 건조 상태에서 후속 조립 작업 진행",
+          "probability": 0.85,
+          "evidence": ["건조 시간 데이터 부족", "조립 타이밍 불일치", "표면 경도 미달"],
+          "fix_time": "4-6시간"
+        },
+        {
+          "cause": "로봇 간 동선 충돌",
+          "description": "도장 로봇과 다른 로봇 시스템 간 간섭",
+          "probability": 0.75,
+          "evidence": ["충돌 로그 기록", "궤적 중복 구간", "안전 거리 부족"],
+          "fix_time": "3-4시간"
+        },
+        {
+          "cause": "표면 접촉 손상",
+          "description": "취급 과정에서 도구나 부품의 부적절한 접촉",
+          "probability": 0.65,
+          "evidence": ["접촉 흔적 패턴", "취급 절차 미준수", "보호 장비 부족"],
+          "fix_time": "2-3시간"
+        },
+        {
+          "cause": "환경 오염 요인",
+          "description": "작업장 내 이물질이나 먼지로 인한 손상",
+          "probability": 0.45,
+          "evidence": ["청결도 측정치 초과", "필터 효율 저하", "오염원 식별"],
+          "fix_time": "1-2시간"
+        }
+      ],
+      "solution_steps": [
+        {
+          "step": 1,
+          "action": "공정 간 간섭 방지 설계 개선",
+          "details": "3D 시뮬레이션을 통한 조립 순서 최적화 및 안전 구역 설정",
+          "time_required": "6-8시간",
+          "tools_required": ["3D CAD 소프트웨어", "시뮬레이션 도구", "간섭 체크 시스템"],
+          "specialist_required": true
+        },
+        {
+          "step": 2,
+          "action": "로봇 동선 최적화 및 충돌 회피 시스템",
+          "details": "로봇 경로 재설계 및 실시간 충돌 감지 시스템 도입",
+          "time_required": "4-6시간",
+          "tools_required": ["로봇 프로그래밍 도구", "충돌 감지 센서", "안전 제어 시스템"],
+          "specialist_required": true
+        },
+        {
+          "step": 3,
+          "action": "건조 시간 최적화 및 모니터링",
+          "details": "도장 경화도 실시간 측정 및 자동 공정 제어",
+          "time_required": "3-4시간",
+          "tools_required": ["경화도 측정기", "온도 센서", "자동 제어 시스템"],
+          "specialist_required": false
+        },
+        {
+          "step": 4,
+          "action": "작업 환경 청결도 관리 강화",
+          "details": "공기 정화 시스템 개선 및 청결 프로토콜 강화",
+          "time_required": "2-3시간",
+          "tools_required": ["HEPA 필터", "공기질 측정기", "청소 장비"],
+          "specialist_required": false
+        }
+      ],
+      "prevention_measures": [
+        "실시간 컬링 탐지 시스템 24시간 모니터링",
+        "AI 기반 예측 모델을 통한 사전 경고",
+        "작업자 교육 및 표준 작업 절차 준수",
+        "정기적인 시스템 캘리브레이션"
+      ],
+      "success_rate": 0.94,
+      "average_fix_time": "4-5시간",
+      "cost_impact": "높음"
+    },
+    {
+      "case_id": "COATING_002",
+      "title": "도장 흘러내림 컬링 탐지 문제 해결",
+      "issue_code": "PAINT-VIS-RUNS",
+      "affected_parts": ["도장면", "수직 표면", "경사면"],
+      "description": "수직 및 경사면에서 발생하는 도장 흘러내림을 컬링 시스템으로 탐지 및 해결",
+      "defect_size_analysis": {
+        "detected_sizes": [
+          {"width": 15, "height": 25, "area": 375, "thickness_variation": "150%"},
+          {"width": 45, "height": 70, "area": 3150, "thickness_variation": "200%"},
+          {"width": 80, "height": 120, "area": 9600, "thickness_variation": "300%"}
+        ],
+        "flow_pattern": "수직 방향 연속 흘림"
+      },
+      "symptoms": [
+        "표면 윤곽 분석에서 두께 편차 감지",
+        "물방울 형태 패턴 인식",
+        "도막 두께 측정에서 국소적 과다",
+        "표면 거칠기 임계값 초과"
+      ],
+      "root_causes": [
+        {
+          "cause": "분사 압력 불균형",
+          "description": "스프레이 압력과 이동 속도 부조화",
+          "probability": 0.80,
+          "evidence": ["압력 센서 데이터", "속도 프로파일 분석", "분사 패턴 불균일"],
+          "fix_time": "3-4시간"
+        },
+        {
+          "cause": "점도 과도",
+          "description": "도료 점도가 최적 범위 초과",
+          "probability": 0.75,
+          "evidence": ["점도 측정 데이터", "온도 보정 결과", "희석제 비율 확인"],
+          "fix_time": "2-3시간"
+        },
+        {
+          "cause": "환경 조건 부적절",
+          "description": "온도, 습도 조건이 도장에 부적합",
+          "probability": 0.65,
+          "evidence": ["온습도 로그", "건조 속도 측정", "표면 온도 분포"],
+          "fix_time": "4-5시간"
+        },
+        {
+          "cause": "로봇 속도 프로그래밍 오류",
+          "description": "도장 로봇의 이동 속도 부적절",
+          "probability": 0.55,
+          "evidence": ["속도 프로그램 분석", "궤적 데이터", "가속도 프로파일"],
+          "fix_time": "2-4시간"
+        }
+      ],
+      "solution_steps": [
+        {
+          "step": 1,
+          "action": "도장 압력 튜닝 및 자동 제어 시스템",
+          "details": "최적 압력 설정 및 실시간 피드백 제어",
+          "time_required": "4-5시간",
+          "tools_required": ["압력 조절 밸브", "압력 센서", "PID 제어기"],
+          "specialist_required": true
+        },
+        {
+          "step": 2,
+          "action": "점도 주기 점검 시스템 도입",
+          "details": "자동 점도 측정 및 희석제 자동 공급",
+          "time_required": "5-6시간",
+          "tools_required": ["온라인 점도계", "희석제 공급 시스템", "자동 혼합기"],
+          "specialist_required": true
+        },
+        {
+          "step": 3,
+          "action": "환경 모니터링 및 제어 시스템",
+          "details": "온습도 실시간 모니터링 및 자동 조절",
+          "time_required": "3-4시간",
+          "tools_required": ["온습도 센서", "환경 제어 시스템", "데이터 로거"],
+          "specialist_required": false
+        },
+        {
+          "step": 4,
+          "action": "로봇 속도 프로파일 최적화",
+          "details": "표면별 최적 속도 설정 및 프로그래밍",
+          "time_required": "3-4시간",
+          "tools_required": ["로봇 프로그래밍 소프트웨어", "속도 최적화 알고리즘"],
+          "specialist_required": true
+        }
+      ],
+      "prevention_measures": [
+        "실시간 두께 측정 및 피드백 제어",
+        "환경 조건 자동 보정 시스템",
+        "예측 모델 기반 사전 조치",
+        "정기적인 시스템 파라미터 검증"
+      ],
+      "success_rate": 0.91,
+      "average_fix_time": "4-5시간",
+      "cost_impact": "중간"
+    },
+    {
+      "case_id": "COATING_003",
+      "title": "도장면 이물질 혼입 컬링 탐지 문제 해결",
+      "issue_code": "PAINT-VIS-DIRT",
+      "affected_parts": ["도장면", "전체 표면"],
+      "description": "도장면 전체에서 발생하는 이물질 혼입을 컬링 시스템으로 탐지 및 해결",
+      "defect_size_analysis": {
+        "detected_sizes": [
+          {"diameter": "0.5mm", "type": "먼지 입자", "density": "5개/m²"},
+          {"diameter": "2.0mm", "type": "금속 파편", "density": "2개/m²"},
+          {"diameter": "5.0mm", "type": "이물질 덩어리", "density": "0.5개/m²"}
+        ],
+        "distribution_pattern": "랜덤 분포, 일부 구역 집중"
+      },
+      "symptoms": [
+        "입자 크기 분석에서 이상 입자 탐지",
+        "표면 텍스처 검사에서 돌출 감지",
+        "반사율 분석에서 국소적 이상",
+        "AI 분류에서 이물질 패턴 인식"
+      ],
+      "root_causes": [
+        {
+          "cause": "도장 부스 내 부유 먼지",
+          "description": "공기 정화 시스템 효율 저하",
+          "probability": 0.85,
+          "evidence": ["입자 계수기 데이터", "필터 차압 증가", "공기 흐름 분석"],
+          "fix_time": "4-6시간"
+        },
+        {
+          "cause": "정전기 유도 이물 부착",
+          "description": "정전기 제거 시스템 부족",
+          "probability": 0.70,
+          "evidence": ["정전기 측정치", "이온 밸런스 불균형", "대전 전압 과다"],
+          "fix_time": "3-4시간"
+        },
+        {
+          "cause": "필터 성능 저하",
+          "description": "에어 필터 교체 주기 초과 또는 막힘",
+          "probability": 0.75,
+          "evidence": ["필터 차압 데이터", "교체 이력", "여과 효율 측정"],
+          "fix_time": "2-3시간"
+        },
+        {
+          "cause": "외부 오염원 유입",
+          "description": "부스 밀폐성 불량으로 인한 외부 오염",
+          "probability": 0.60,
+          "evidence": ["밀폐성 테스트", "외부 환경 분석", "오염원 추적"],
+          "fix_time": "3-5시간"
+        }
+      ],
+      "solution_steps": [
+        {
+          "step": 1,
+          "action": "부스 정압 및 필터 유지 관리 시스템",
+          "details": "HEPA 필터 정기 교체 및 정압 자동 제어",
+          "time_required": "4-5시간",
+          "tools_required": ["HEPA 필터", "정압 제어 시스템", "자동 교체 알람"],
+          "specialist_required": false
+        },
+        {
+          "step": 2,
+          "action": "이온 블로워 도입 및 정전기 제거",
+          "details": "정전기 제거 시스템 설치 및 자동 운영",
+          "time_required": "5-6시간",
+          "tools_required": ["이온 블로워", "정전기 측정기", "자동 제어 시스템"],
+          "specialist_required": true
+        },
+        {
+          "step": 3,
+          "action": "공기질 실시간 모니터링 시스템",
+          "details": "입자 계수 및 공기질 24시간 모니터링",
+          "time_required": "3-4시간",
+          "tools_required": ["입자 계수기", "공기질 센서", "모니터링 소프트웨어"],
+          "specialist_required": false
+        },
+        {
+          "step": 4,
+          "action": "부스 밀폐성 개선 및 점검",
+          "details": "출입구 및 연결부 밀폐 강화",
+          "time_required": "2-4시간",
+          "tools_required": ["실링재", "밀폐 테스트 장비", "압력 측정기"],
+          "specialist_required": false
+        }
+      ],
+      "prevention_measures": [
+        "일일 공기질 데이터 분석",
+        "예방적 필터 교체 스케줄",
+        "작업자 청결 프로토콜 강화",
+        "이물질 발생원 정기 점검"
+      ],
+      "success_rate": 0.96,
+      "average_fix_time": "4-5시간",
+      "cost_impact": "중간"
+    },
+    {
+      "case_id": "COATING_004",
+      "title": "루프/본넷 물자국 컬링 탐지 문제 해결",
+      "issue_code": "PAINT-VIS-WATERMARKS",
+      "affected_parts": ["루프", "본넷", "수평 표면"],
+      "description": "수평 표면에서 발생하는 물자국을 컬링 시스템으로 탐지 및 해결",
+      "defect_size_analysis": {
+        "detected_sizes": [
+          {"diameter": "8mm", "shape": "원형", "intensity": "약함"},
+          {"diameter": "15mm", "shape": "불규칙", "intensity": "중간"},
+          {"diameter": "25mm", "shape": "연결형", "intensity": "강함"}
+        ],
+        "distribution_pattern": "수평면 집중, 중력 방향 패턴"
+      },
+      "symptoms": [
+        "표면 반사율 분석에서 얼룩 패턴 탐지",
+        "수분 함량 측정에서 국소적 증가",
+        "광택도 측정에서 불균일성 감지",
+        "적외선 열화상에서 온도 편차"
+      ],
+      "root_causes": [
+        {
+          "cause": "세척 후 잔수 미건조",
+          "description": "전처리 공정에서 완전 건조 미실시",
+          "probability": 0.80,
+          "evidence": ["건조 시간 부족", "잔수 확인", "표면 온도 불균일"],
+          "fix_time": "3-4시간"
+        },
+        {
+          "cause": "건조라인 습도 과다",
+          "description": "건조 환경의 습도 제어 실패",
+          "probability": 0.75,
+          "evidence": ["습도 측정 데이터", "결로점 분석", "환경 제어 오류"],
+          "fix_time": "4-5시간"
+        },
+        {
+          "cause": "응축수 발생",
+          "description": "온도 편차로 인한 표면 결로 현상",
+          "probability": 0.65,
+          "evidence": ["온도 분포 불균일", "결로점 도달", "표면 냉각"],
+          "fix_time": "5-6시간"
+        },
+        {
+          "cause": "급수 시스템 누수",
+          "description": "배관이나 밸브에서 발생하는 누수",
+          "probability": 0.40,
+          "evidence": ["누수 흔적", "압력 테스트", "배관 점검"],
+          "fix_time": "2-3시간"
+        }
+      ],
+      "solution_steps": [
+        {
+          "step": 1,
+          "action": "에어블로우 강화 시스템 도입",
+          "details": "고압 에어블로우로 완전 건조 실현",
+          "time_required": "4-5시간",
+          "tools_required": ["고압 에어블로우", "노즐 시스템", "자동 제어"],
+          "specialist_required": true
+        },
+        {
+          "step": 2,
+          "action": "건조라인 온습도 모니터링 체계",
+          "details": "실시간 환경 모니터링 및 자동 제어",
+          "time_required": "5-6시간",
+          "tools_required": ["온습도 센서", "제습기", "자동 제어 시스템"],
+          "specialist_required": true
+        },
+        {
+          "step": 3,
+          "action": "표면 온도 균일화 제어",
+          "details": "적외선 히터를 통한 온도 균일화",
+          "time_required": "4-5시간",
+          "tools_required": ["적외선 히터", "온도 센서", "온도 제어기"],
+          "specialist_required": true
+        },
+        {
+          "step": 4,
+          "action": "급수 시스템 정기 점검 및 보수",
+          "details": "배관 누수 방지 및 예방 정비",
+          "time_required": "2-3시간",
+          "tools_required": ["누수 탐지기", "배관 수리 도구", "압력 테스터"],
+          "specialist_required": false
+        }
+      ],
+      "prevention_measures": [
+        "표면 온도 실시간 모니터링",
+        "건조 조건 자동 최적화",
+        "예방적 배관 점검 스케줄",
+        "환경 데이터 트렌드 분석"
+      ],
+      "success_rate": 0.89,
+      "average_fix_time": "4-5시간",
+      "cost_impact": "중간"
+    }
+  ],
+  "summary_statistics": {
+    "total_cases": 4,
+    "average_success_rate": 0.925,
+    "most_common_issues": [
+      "PAINT-VIS-SCRATCH",
+      "PAINT-VIS-RUNS", 
+      "PAINT-VIS-DIRT",
+      "PAINT-VIS-WATERMARKS"
+    ],
+    "average_resolution_time": "4-5시간",
+    "cost_impact_distribution": {
+      "높음": 1,
+      "중간": 3,
+      "낮음": 0
+    }
+  },
+  "coating_detection_performance": {
+    "overall_accuracy": "95.2%",
+    "detection_speed": "< 50ms per frame", 
+    "false_positive_rate": "< 2%",
+    "false_negative_rate": "< 3%",
+    "system_uptime": "99.5%"
+  },
+  "defect_size_distribution_analysis": {
+    "Q1_characteristics": {
+      "size_range": "width ≤ 10, height ≤ 16, area ≤ 164",
+      "frequency": "30% of total defects",
+      "response_time": "자동 모니터링",
+      "intervention": "예방적 조치"
+    },
+    "Q2_characteristics": {
+      "size_range": "width ≤ 31, height ≤ 47, area ≤ 1626",
+      "frequency": "45% of total defects",
+      "response_time": "1시간 이내",
+      "intervention": "즉시 원인 분석"
+    },
+    "Q3_plus_characteristics": {
+      "size_range": "width > 126.25, height > 165, area > 20146",
+      "frequency": "25% of total defects",
+      "response_time": "즉시",
+      "intervention": "긴급 대응"
+    }
+  },
+  "systematic_improvement_recommendations": [
+    "결함 크기별 자동 등급화 시스템 도입",
+    "AI 예측 모델을 통한 사전 경고 시스템",
+    "실시간 컬링 탐지 정확도 향상",
+    "통합 환경 제어 시스템 구축",
+    "예방 정비 스케줄 자동화"
+  ],
+  "quality_metrics": {
+    "defect_reduction_rate": "85%",
+    "detection_improvement": "40%",
+    "process_efficiency": "30% 향상",
+    "cost_saving": "연간 15% 절감"
+  },
+  "created_date": "2025-08-01",
+  "last_updated": "2025-08-01"
+}
