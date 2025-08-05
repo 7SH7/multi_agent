@@ -55,4 +55,10 @@ __all__ = [
     'ChatbotSession',
     'ChatMessage',
     'ChatbotIssue',
+    'PressDefectDetectionLog',
+    'PressFaultDetectionLog',
+    'WeldingMachineDefectDetectionLog',
+    'PaintingSurfaceDefectDetectionLog',
+    'PaintingProcessEquipmentDefectDetectionLog',
+    'VehicleAssemblyProcessDefectDetectionLog',
 ]

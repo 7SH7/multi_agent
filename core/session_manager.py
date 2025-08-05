@@ -6,6 +6,7 @@ from typing import Dict, Any, Optional, List
 from dataclasses import dataclass, asdict
 from enum import Enum
 from config.settings import REDIS_CONFIG
+from utils.exceptions import SessionError
 
 
 class SessionStatus(Enum):
@@ -49,7 +50,7 @@ class SessionManager:
             )
         return self.redis_client
 
-    async def create_session(self, user_id: str = None, issue_code: str = None) -> SessionData:
+    async def create_session(self, user_id: Optional[str] = None, issue_code: Optional[str] = None) -> SessionData:
         session_id = f"sess_{uuid.uuid4().hex[:12]}"
         now = datetime.now()
 
@@ -108,7 +109,10 @@ class SessionManager:
 
     async def update_session(self, session_data: SessionData) -> bool:
         session_data.updated_at = datetime.now()
-        return await self._save_session(session_data)
+        print(f"🔄 세션 업데이트: {session_data.session_id}, 대화수: {session_data.conversation_count}")
+        result = await self._save_session(session_data)
+        print(f"✅ 세션 저장 결과: {result}")
+        return result
 
     async def _save_session(self, session_data: SessionData) -> bool:
         redis_client = await self._get_redis_client()
@@ -161,7 +165,7 @@ class SessionManager:
         """세션 초기화 (delete_session의 별칭)"""
         return await self.delete_session(session_id)
 
-    async def list_active_sessions(self, user_id: str = None) -> List[SessionData]:
+    async def list_active_sessions(self, user_id: Optional[str] = None) -> List[SessionData]:
         redis_client = await self._get_redis_client()
 
         try:

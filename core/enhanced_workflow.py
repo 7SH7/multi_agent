@@ -1,7 +1,6 @@
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
 from datetime import datetime
-import asyncio
 import logging
 
 # 워크플로우 라우팅 수정: 2025-08-04
@@ -47,7 +46,7 @@ class EnhancedWorkflowManager:
         self.session_manager = SessionManager()
         self.workflow = self._create_workflow()
 
-    def _create_workflow(self) -> StateGraph:
+    def _create_workflow(self):
         workflow = StateGraph(AgentState)
 
         # Add nodes
@@ -82,7 +81,8 @@ class EnhancedWorkflowManager:
         # End workflow
         workflow.add_edge("debate_moderator", END)
 
-        return workflow.compile()
+        compiled_workflow = workflow.compile()
+        return compiled_workflow
 
     async def _execute_rag_classifier(self, state: AgentState) -> AgentState:
         return await self.rag_classifier.classify_and_search(state)
@@ -91,23 +91,23 @@ class EnhancedWorkflowManager:
         return self.agent_selector.select_agents(state)
 
     async def _execute_gpt_agent(self, state: AgentState) -> AgentState:
-        selected_agents = state.get('selected_agents', [])
+        selected_agents = state.get('selected_agents') or []
         # 대소문자 구분 없이 체크
         if any(agent.lower() == 'gpt' for agent in selected_agents):
             try:
                 logger.info("GPT Agent 실행 시작")
                 response = await self.gpt_agent.analyze_and_respond(state)
-                agent_responses = state.get('agent_responses', {})
+                agent_responses = state.get('agent_responses') or {}
                 agent_responses['GPT'] = response  # 대문자로 저장
                 state['agent_responses'] = agent_responses
                 logger.info("GPT Agent 실행 성공")
-                processing_steps = state.get('processing_steps', [])
+                processing_steps = state.get('processing_steps') or []
                 processing_steps.append('gpt_agent_completed')
                 state['processing_steps'] = processing_steps
             except Exception as e:
                 logger.error(f"GPT Agent 실행 실패: {str(e)}")
                 # 실패한 Agent 정보를 상태에 기록
-                failed_agents = state.get('failed_agents', [])
+                failed_agents = state.get('failed_agents') or []
                 failed_agents.append({
                     'agent_name': 'GPT',
                     'error_message': str(e),
@@ -117,34 +117,34 @@ class EnhancedWorkflowManager:
                 state['failed_agents'] = failed_agents
                 
                 # 실패한 Agent의 응답도 agent_responses에 추가하여 DebateModerator가 처리할 수 있도록 함
-                agent_responses = state.get('agent_responses', {})
+                agent_responses = state.get('agent_responses') or {}
                 agent_responses['GPT'] = {'error': str(e), 'agent_name': 'GPT', 'response': 'GPT Agent failed to generate a response.'}
                 state['agent_responses'] = agent_responses
 
                 # 처리 단계에 실패 기록 추가
-                processing_steps = state.get('processing_steps', [])
+                processing_steps = state.get('processing_steps') or []
                 processing_steps.append('gpt_agent_failed')
                 state['processing_steps'] = processing_steps
         return state
 
     async def _execute_gemini_agent(self, state: AgentState) -> AgentState:
-        selected_agents = state.get('selected_agents', [])
+        selected_agents = state.get('selected_agents') or []
         # 대소문자 구분 없이 체크
         if any(agent.lower() == 'gemini' for agent in selected_agents):
             try:
                 logger.info("Gemini Agent 실행 시작")
                 response = await self.gemini_agent.analyze_and_respond(state)
-                agent_responses = state.get('agent_responses', {})
+                agent_responses = state.get('agent_responses') or {}
                 agent_responses['Gemini'] = response  # 대문자로 저장
                 state['agent_responses'] = agent_responses
                 logger.info("Gemini Agent 실행 성공")
-                processing_steps = state.get('processing_steps', [])
+                processing_steps = state.get('processing_steps') or []
                 processing_steps.append('gemini_agent_completed')
                 state['processing_steps'] = processing_steps
             except Exception as e:
                 logger.error(f"Gemini Agent 실행 실패: {str(e)}")
                 # 실패한 Agent 정보를 상태에 기록
-                failed_agents = state.get('failed_agents', [])
+                failed_agents = state.get('failed_agents') or []
                 failed_agents.append({
                     'agent_name': 'Gemini',
                     'error_message': str(e),
@@ -154,32 +154,32 @@ class EnhancedWorkflowManager:
                 state['failed_agents'] = failed_agents
                 
                 # 처리 단계에 실패 기록 추가
-                processing_steps = state.get('processing_steps', [])
+                processing_steps = state.get('processing_steps') or []
                 processing_steps.append('gemini_agent_failed')
                 state['processing_steps'] = processing_steps
         return state
 
     async def _execute_clova_agent(self, state: AgentState) -> AgentState:
-        selected_agents = state.get('selected_agents', [])
+        selected_agents = state.get('selected_agents') or []
         # 대소문자 구분 없이 체크
         if any(agent.lower() == 'clova' for agent in selected_agents):
             try:
                 logger.info("Clova Agent 실행 시작")
                 response = await self.clova_agent.analyze_and_respond(state)
-                agent_responses = state.get('agent_responses', {})
+                agent_responses = state.get('agent_responses') or {}
                 agent_responses['Clova'] = response  # 대문자로 저장
                 state['agent_responses'] = agent_responses
                 logger.info("Clova Agent 실행 성공")
-                processing_steps = state.get('processing_steps', [])
+                processing_steps = state.get('processing_steps') or []
                 processing_steps.append('clova_agent_completed')
                 state['processing_steps'] = processing_steps
             except Exception as e:
                 logger.error(f"Clova Agent 실행 실패: {str(e)}")
                 # 에러가 발생해도 workflow는 계속 진행하되, 에러 정보를 상태에 기록
-                agent_responses = state.get('agent_responses', {})
+                agent_responses = state.get('agent_responses') or {}
                 agent_responses['Clova'] = {'error': str(e), 'agent_name': 'Clova'}
                 state['agent_responses'] = agent_responses
-                failed_agents = state.get('failed_agents', [])
+                failed_agents = state.get('failed_agents') or []
                 failed_agents.append({
                     'agent_name': 'Clova',
                     'error_message': str(e),
@@ -189,7 +189,7 @@ class EnhancedWorkflowManager:
                 state['failed_agents'] = failed_agents
                 
                 # 처리 단계에 실패 기록 추가
-                processing_steps = state.get('processing_steps', [])
+                processing_steps = state.get('processing_steps') or []
                 processing_steps.append('clova_agent_failed')
                 state['processing_steps'] = processing_steps
         return state
@@ -198,7 +198,7 @@ class EnhancedWorkflowManager:
         return await self.debate_moderator.moderate_debate(state)
 
     def _route_to_agents(self, state: AgentState) -> str:
-        selected_agents = state.get('selected_agents', [])
+        selected_agents = state.get('selected_agents') or []
         if not selected_agents:
             logger.warning("선택된 Agent가 없습니다. 워크플로우를 종료합니다.")
             return END  # 선택된 Agent가 없으면 워크플로우 종료
@@ -208,7 +208,7 @@ class EnhancedWorkflowManager:
             return "multiple_agents"
 
     def _route_after_gpt(self, state: AgentState) -> str:
-        selected_agents = state.get('selected_agents', [])
+        selected_agents = state.get('selected_agents') or []
         # 대소문자 구분 없이 체크
         has_gemini = any(agent.lower() == 'gemini' for agent in selected_agents)
         has_clova = any(agent.lower() == 'clova' for agent in selected_agents)
@@ -223,7 +223,7 @@ class EnhancedWorkflowManager:
             return "debate"
 
     def _route_after_gemini(self, state: AgentState) -> str:
-        selected_agents = state.get('selected_agents', [])
+        selected_agents = state.get('selected_agents') or []
         # 대소문자 구분 없이 체크
         has_clova = any(agent.lower() == 'clova' for agent in selected_agents)
         

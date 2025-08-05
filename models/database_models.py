@@ -3,9 +3,9 @@
 from sqlalchemy import Column, String, DateTime, Boolean, BigInteger, Float, Text, Enum
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
-from datetime import datetime
+from typing import Any
 
-Base = declarative_base()
+Base: Any = declarative_base()
 
 
 class ChatbotSession(Base):
@@ -28,7 +28,7 @@ class ChatMessage(Base):
     chatMessageId = Column(String(50), primary_key=True)
     chatMessage = Column(Text, nullable=False)
     chatbotSessionId = Column(String(50))
-    sender = Column(Enum('bot', 'user', name='sender_enum'), nullable=False)
+    sender = Column(Enum('bot', 'user', name='sender_enum'), nullable=False)  # type: ignore
     sentAt = Column(DateTime, nullable=False, default=func.now())
 
 
@@ -37,8 +37,8 @@ class ChatbotIssue(Base):
     __tablename__ = 'ChatbotIssue'
 
     issue = Column(String(100), primary_key=True)
-    processType = Column(Enum('장애접수', '정기점검', name='process_type_enum'), nullable=False)
-    modeType = Column(Enum('프레스', '용접기', '도장설비', '차량조립설비', name='mode_type_enum'), nullable=False)
+    processType = Column(Enum('장애접수', '정기점검', name='process_type_enum'), nullable=False)  # type: ignore
+    modeType = Column(Enum('프레스', '용접기', '도장설비', '차량조립설비', name='mode_type_enum'), nullable=False)  # type: ignore
     modeLogId = Column(String(50))
 
 

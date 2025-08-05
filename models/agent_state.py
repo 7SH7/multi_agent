@@ -70,3 +70,4 @@ class AgentState(TypedDict):
     # 모니터링
     performance_metrics: Optional[Dict[str, Any]]
     resource_usage: Optional[Dict[str, Any]]
+    failed_agents: Optional[List[Dict[str, Any]]]

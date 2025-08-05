@@ -1,9 +1,10 @@
 """개별 Agent API 엔드포인트"""
 
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, HTTPException
 from typing import Optional
 from pydantic import BaseModel
 import logging
+from datetime import datetime
 
 # 기존 conversation_manager 제거 - SessionManager로 완전 대체
 from agents.gpt_agent import GPTAgent
@@ -33,9 +34,11 @@ class AgentChatResponse(BaseModel):
         protected_namespaces = ()
 
 # Agent 인스턴스 생성 (lazy loading)
-_agents = {}
+from typing import Union, Dict, Any
 
-def get_agent(agent_name: str):
+_agents: Dict[str, Any] = {}
+
+def get_agent(agent_name: str) -> Union[GPTAgent, GeminiAgent, ClovaAgent, AnthropicClient]:
     """Agent 인스턴스 가져오기 (lazy loading)"""
     if agent_name not in _agents:
         if agent_name == "gpt":
@@ -71,13 +74,12 @@ async def process_agent_request(agent_name: str, request: AgentChatRequest) -> A
         if not session_data:
             session_data = await session_manager.create_session(
                 user_id=f"user_{agent_name}",
-                issue_code=None
+                issue_code="GENERAL"
             )
             # 새로 생성된 세션은 Agent별 고유 ID 사용
             if not request.session_id:
                 session_id = f"{agent_name}_user_session"
                 # 실제 생성된 세션을 Agent별 ID로 덮어쓰기
-                original_session_id = session_data.session_id
                 session_data.session_id = session_id
                 await session_manager.update_session(session_data)
         
@@ -104,30 +106,59 @@ async def process_agent_request(agent_name: str, request: AgentChatRequest) -> A
         # Agent별 응답 생성 방식
         if agent_name == "claude":
             # Anthropic client 사용
-            response_text = await agent.generate_simple_response(messages)
-            model_details = {"model": "claude-3-5-sonnet", "provider": "anthropic"}
+            from utils.llm_clients import AnthropicClient
+            if isinstance(agent, AnthropicClient):
+                response_text = await agent.generate_simple_response(messages)
+                model_details = {"model": "claude-3-5-sonnet", "provider": "anthropic"}
+            else:
+                raise ValueError("Claude agent not properly initialized")
         else:
             # 기존 Agent 클래스 사용
             # AgentState 생성
             from models.agent_state import AgentState
             
-            agent_state = AgentState()
-            agent_state.update({
-                'user_message': request.message,
-                'conversation_history': messages[:-1],  # 현재 메시지 제외한 히스토리
-                'rag_context': {},
-                'issue_classification': {'category': 'general', 'confidence': 0.8}
-            })
+            agent_state = AgentState(
+                session_id=session_id,
+                conversation_count=len(messages),
+                response_type="first_question" if len(messages) == 1 else "follow_up",
+                user_message=request.message,
+                issue_code="GENERAL",
+                user_id=f"user_{agent_name}",
+                issue_classification=None,
+                question_category=None,
+                rag_context={},
+                selected_agents=[agent_name],
+                selection_reasoning=f"Direct {agent_name} agent request",
+                agent_responses=None,
+                response_quality_scores=None,
+                debate_rounds=None,
+                consensus_points=None,
+                final_recommendation=None,
+                equipment_type=None,
+                equipment_kr=None,
+                problem_type=None,
+                root_causes=None,
+                severity_level=None,
+                analysis_confidence=None,
+                conversation_history=[],
+                processing_steps=[],
+                total_processing_time=0.0,
+                timestamp=datetime.now(),
+                error=None,
+                performance_metrics={},
+                resource_usage={},
+                failed_agents=None
+            )
             
             if hasattr(agent, 'analyze_and_respond'):
                 # analyze_and_respond 메서드 사용
-                agent_response = await agent.analyze_and_respond(agent_state)
+                agent_response = await agent.analyze_and_respond(dict(agent_state))
                 response_text = agent_response.response
                 model_details = {
                     "model": agent_response.model_used,
                     "provider": agent_name,
-                    "confidence": agent_response.confidence,
-                    "processing_time": agent_response.processing_time
+                    "confidence": str(agent_response.confidence),
+                    "processing_time": str(agent_response.processing_time)
                 }
             elif hasattr(agent, 'analyze_issue'):
                 # analyze_issue 메서드가 있는 경우
@@ -154,7 +185,6 @@ async def process_agent_request(agent_name: str, request: AgentChatRequest) -> A
         )
         
         # 응답 생성
-        from datetime import datetime
         return AgentChatResponse(
             response=response_text,
             session_id=session_id,

@@ -3,7 +3,7 @@
 import asyncio
 import logging
 from typing import Dict, Any, Optional, List
-from datetime import datetime, timedelta
+from datetime import datetime
 from dataclasses import dataclass
 from enum import Enum
 
@@ -45,7 +45,20 @@ class ServiceHealthChecker:
             from config.settings import REDIS_CONFIG
             
             # Redis 연결 테스트
-            r = redis.Redis(**REDIS_CONFIG)
+            redis_config = {
+                "host": str(REDIS_CONFIG["host"]),
+                "port": int(str(REDIS_CONFIG["port"])),
+                "db": int(str(REDIS_CONFIG["db"])),
+                "password": str(REDIS_CONFIG["password"]) if REDIS_CONFIG["password"] else None,
+                "decode_responses": bool(REDIS_CONFIG["decode_responses"])
+            }
+            r = redis.Redis(
+                host=redis_config["host"],
+                port=redis_config["port"],
+                db=redis_config["db"],
+                password=redis_config["password"],
+                decode_responses=redis_config["decode_responses"]
+            )
             await asyncio.wait_for(
                 asyncio.to_thread(r.ping), 
                 timeout=5.0
@@ -79,10 +92,11 @@ class ServiceHealthChecker:
             from config.settings import ELASTICSEARCH_CONFIG
             
             # Elasticsearch 연결 테스트
-            es_client = AsyncElasticsearch([{
-                'host': ELASTICSEARCH_CONFIG['host'],
-                'port': ELASTICSEARCH_CONFIG['port']
-            }])
+            es_config = {
+                'host': str(ELASTICSEARCH_CONFIG['host']),
+                'port': str(ELASTICSEARCH_CONFIG['port'])
+            }
+            es_client = AsyncElasticsearch([es_config])
             
             # 클러스터 헬스 체크
             health_response = await asyncio.wait_for(
@@ -130,8 +144,8 @@ class ServiceHealthChecker:
             
             # ChromaDB 연결 테스트
             client = chromadb.HttpClient(
-                host=CHROMADB_CONFIG['host'],
-                port=CHROMADB_CONFIG['port']
+                host=str(CHROMADB_CONFIG['host']),
+                port=str(CHROMADB_CONFIG['port'])
             )
             
             # 간단한 버전 체크로 연결 확인

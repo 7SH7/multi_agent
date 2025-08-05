@@ -26,7 +26,7 @@ async def integration_test():
         print(f"✅ 테스트 세션 생성: {session_id[:8]}...")
         
         # 2. 첫 번째 질문 (메모리 없음)
-        print(f"\n1️⃣ 첫 번째 질문 - 메모리 없는 상태")
+        print("\n1️⃣ 첫 번째 질문 - 메모리 없는 상태")
         print("-" * 40)
         
         first_state = AgentState({
@@ -55,7 +55,7 @@ async def integration_test():
         })
         
         # 3. 두 번째 질문 (메모리 있음)
-        print(f"\n2️⃣ 두 번째 질문 - 이전 대화 기억하는 상태")
+        print("\n2️⃣ 두 번째 질문 - 이전 대화 기억하는 상태")
         print("-" * 40)
         
         # 대화 기록 조회
@@ -79,7 +79,7 @@ async def integration_test():
             print(f"💡 답변 요약: {summary[:100]}...")
         
         # 4. RAG 데이터 활용 확인
-        print(f"\n3️⃣ RAG 데이터 활용 확인")
+        print("\n3️⃣ RAG 데이터 활용 확인")
         print("-" * 40)
         
         rag_context = first_result.get('rag_context', {})
@@ -95,7 +95,7 @@ async def integration_test():
             print(f"   Elasticsearch 샘플: {es_results[0].content[:60]}...")
         
         # 5. 메모리 연속성 테스트
-        print(f"\n4️⃣ 메모리 연속성 테스트")
+        print("\n4️⃣ 메모리 연속성 테스트")
         print("-" * 40)
         
         # Agent별 메모리 사용 확인
@@ -113,7 +113,7 @@ async def integration_test():
                 has_memory_reference = any(keyword in response_text for keyword in memory_keywords)
                 print(f"🧠 {agent_name} 메모리 활용: {'✅' if has_memory_reference else '⚠️'}")
         
-        print(f"\n" + "=" * 60)
+        print("\n" + "=" * 60)
         print("🎯 통합 테스트 결과")
         print("=" * 60)
         
@@ -139,7 +139,7 @@ async def integration_test():
             print("\n🎉🎉🎉 완전한 통합 시스템이 정상 작동합니다! 🎉🎉🎉")
             print("🚀 Multi-Agent + RAG + Memory 시스템 준비 완료!")
         else:
-            print(f"\n⚠️  일부 기능에 문제가 있을 수 있습니다.")
+            print("\n⚠️  일부 기능에 문제가 있을 수 있습니다.")
         
     except Exception as e:
         print(f"\n❌ 통합 테스트 중 오류 발생: {str(e)}")

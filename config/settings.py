@@ -1,7 +1,5 @@
 """Configuration settings for Multi-Agent chatbot system."""
 
-import os
-from typing import Dict, Any
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):

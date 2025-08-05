@@ -3,7 +3,7 @@ Knowledge Base Connector
 Agent들이 config/와 data/ 정보를 쉽게 사용할 수 있도록 하는 연결 모듈
 """
 
-from typing import Dict, List, Any, Optional
+from typing import Dict, Any, Optional
 from data import load_knowledge_data, get_available_datasets
 from config.equipment_thresholds import (
     EQUIPMENT_THRESHOLDS, 
@@ -24,7 +24,7 @@ class KnowledgeConnector:
         """장비 타입에 대한 모든 정보를 통합하여 반환"""
         equipment_type = equipment_type.upper()
         
-        result = {
+        result: Dict[str, Any] = {
             "equipment_type": equipment_type,
             "korean_name": EQUIPMENT_TRANSLATIONS.get(equipment_type, equipment_type),
             "thresholds": EQUIPMENT_THRESHOLDS.get(equipment_type, {}),
@@ -107,7 +107,7 @@ class KnowledgeConnector:
         context_parts = []
         
         if equipment_type:
-            eq_info = self.get_equipment_info(equipment_type)
+            eq_info: Dict[str, Any] = self.get_equipment_info(equipment_type)
             context_parts.append(f"[장비 정보: {eq_info['korean_name']} ({equipment_type})]")
             
             # 임계값 정보
@@ -128,7 +128,7 @@ class KnowledgeConnector:
         if issue_code:
             solution_info = self.search_solutions(issue_code)
             if solution_info['found']:
-                issue = solution_info['issue']
+                issue: Dict[str, Any] = solution_info['issue']
                 context_parts.append(f"[이슈 정보: {issue.get('description', '')}]")
                 context_parts.append(f"심각도: {issue.get('severity', '')}")
                 if issue.get('common_causes'):

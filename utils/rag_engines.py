@@ -1,11 +1,11 @@
 import asyncio
 import chromadb
 from elasticsearch import AsyncElasticsearch
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from dataclasses import dataclass
 from datetime import datetime
 import hashlib
-import json
+from utils.exceptions import RAGError
 
 @dataclass
 class RAGResult:
@@ -26,7 +26,7 @@ class ChromaEngine:
     def _initialize_collection(self):
         try:
             self.collection = self.client.get_collection(self.collection_name)
-        except:
+        except Exception:
             self.collection = self.client.create_collection(
                 name=self.collection_name,
                 metadata={"description": "Manufacturing equipment knowledge base"}
@@ -267,18 +267,23 @@ class HybridRAGEngine:
         chroma_task = self.chroma_engine.search(query, top_k//2 + 1)
         es_task = self.elasticsearch_engine.search(query, top_k//2 + 1)
 
-        chroma_results, es_results = await asyncio.gather(
+        results = await asyncio.gather(
             chroma_task, es_task, return_exceptions=True
         )
+        chroma_results, es_results = results[0], results[1]
 
         # 결과 통합
         all_results = []
 
         if isinstance(chroma_results, list):
             all_results.extend(chroma_results)
+        elif isinstance(chroma_results, Exception):
+            print(f"ChromaDB 검색 오류: {chroma_results}")
 
         if isinstance(es_results, list):
             all_results.extend(es_results)
+        elif isinstance(es_results, Exception):
+            print(f"Elasticsearch 검색 오류: {es_results}")
 
         # 중복 제거 및 점수 기반 정렬
         unique_results = []

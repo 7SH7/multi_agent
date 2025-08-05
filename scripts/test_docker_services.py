@@ -5,11 +5,8 @@ ChromaDB와 Elasticsearch 연결 테스트
 """
 
 import asyncio
-import requests
 import chromadb
 from elasticsearch import Elasticsearch
-import time
-import json
 
 def test_docker_chromadb():
     """Docker ChromaDB 연결 테스트"""
@@ -38,7 +35,7 @@ def test_elasticsearch():
         
         # 클러스터 health 확인
         health = es.cluster.health()
-        print(f"✅ Elasticsearch 연결 성공!")
+        print("✅ Elasticsearch 연결 성공!")
         print(f"   클러스터 상태: {health['status']}")
         print(f"   노드 수: {health['number_of_nodes']}")
         

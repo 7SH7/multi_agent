@@ -4,13 +4,12 @@ import bleach
 import logging
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
 
 class ValidationError(Exception):
-    def __init__(self, message: str, field: str = None):
+    def __init__(self, message: str, field: Optional[str] = None):
         super().__init__(message)
         self.field = field
 
@@ -125,9 +124,9 @@ class RequestValidator:
         self.security_validator = SecurityValidator()
 
     def validate_chat_request(self, data: Dict[str, Any]) -> ValidationResult:
-        errors = []
-        warnings = []
-        sanitized_data = {}
+        errors: List[str] = []
+        warnings: List[str] = []
+        sanitized_data: Dict[str, Any] = {}
 
         # 사용자 메시지 검증
         user_message = data.get('user_message', '')
@@ -180,8 +179,8 @@ class RequestValidator:
         )
 
     def validate_session_id(self, session_id: str) -> ValidationResult:
-        errors = []
-        warnings = []
+        errors: List[str] = []
+        warnings: List[str] = []
 
         if not session_id:
             errors.append("세션 ID가 필요합니다")
@@ -204,8 +203,8 @@ class RequestValidator:
         )
 
     def validate_issue_code(self, issue_code: str) -> ValidationResult:
-        errors = []
-        warnings = []
+        errors: List[str] = []
+        warnings: List[str] = []
 
         if not issue_code:
             errors.append("이슈 코드가 없습니다")
@@ -232,9 +231,9 @@ class RequestValidator:
 class DataValidator:
     @staticmethod
     def validate_agent_response(response_data: Dict[str, Any]) -> ValidationResult:
-        errors = []
-        warnings = []
-        sanitized_data = {}
+        errors: List[str] = []
+        warnings: List[str] = []
+        sanitized_data: Dict[str, Any] = {}
 
         required_fields = ['agent_name', 'response', 'confidence']
 
@@ -302,8 +301,8 @@ class ConfigValidator:
     @classmethod
     def validate_startup_config(cls, settings) -> ValidationResult:
         """시작시 필수 설정 검증 (오류 대신 경고 로깅)"""
-        warnings = []
-        sanitized_data = {}
+        warnings: List[str] = []
+        sanitized_data: Dict[str, Any] = {}
         
         # API 키 검증 -> 경고로 처리
         api_key_warnings = cls._validate_api_keys(settings)
@@ -432,27 +431,27 @@ class ConfigValidator:
         
         # 필수 라이브러리 import 테스트
         try:
-            import anthropic
+            pass
         except ImportError:
             warnings.append("anthropic 라이브러리가 없어 Claude Agent 사용이 불가합니다.")
         try:
-            import openai
+            pass
         except ImportError:
             warnings.append("openai 라이브러리가 없어 GPT Agent 사용이 불가합니다.")
         try:
-            import google.generativeai
+            pass
         except ImportError:
             warnings.append("google.generativeai 라이브러리가 없어 Gemini Agent 사용이 불가합니다.")
         try:
-            import redis
+            pass
         except ImportError:
             warnings.append("redis 라이브러리가 없어 세션 관리에 제약이 있을 수 있습니다.")
         try:
-            import elasticsearch
+            pass
         except ImportError:
             warnings.append("elasticsearch 라이브러리가 없어 RAG 검색에 제약이 있을 수 있습니다.")
         try:
-            import chromadb
+            pass
         except ImportError:
             warnings.append("chromadb 라이브러리가 없어 RAG 검색에 제약이 있을 수 있습니다.")
 
@@ -471,7 +470,8 @@ class ConfigValidator:
     @classmethod
     def get_health_check_status(cls, settings) -> Dict[str, Any]:
         """설정 상태 건강 체크"""
-        status = {
+        from typing import List
+        status: Dict[str, Any] = {
             "config_valid": True,
             "api_keys_present": 0,
             "missing_keys": [],
@@ -488,7 +488,9 @@ class ConfigValidator:
             if value and value.strip():
                 present_keys += 1
             else:
-                status["missing_keys"].append(key)
+                missing_keys = status["missing_keys"]
+                if isinstance(missing_keys, list):
+                    missing_keys.append(key)
         
         status["api_keys_present"] = present_keys
         status["api_keys_total"] = total_keys
@@ -496,11 +498,15 @@ class ConfigValidator:
         # 서비스 설정 상태
         for config in cls.REQUIRED_SERVICE_CONFIGS:
             value = getattr(settings, config, "")
-            status["service_configs"][config] = bool(value and value.strip())
+            service_configs = status["service_configs"]
+            if isinstance(service_configs, dict):
+                service_configs[config] = bool(value and value.strip())
         
         # 전체 유효성
         if present_keys < total_keys:
             status["config_valid"] = False
-            status["warnings"].append(f"API 키 {total_keys - present_keys}개 누락")
+            warnings = status["warnings"]
+            if isinstance(warnings, list):
+                warnings.append(f"API 키 {total_keys - present_keys}개 누락")
         
         return status

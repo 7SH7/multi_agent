@@ -4,7 +4,7 @@ config/와 data/ 폴더의 데이터를 API로 제공
 """
 
 from fastapi import APIRouter, HTTPException, Query
-from typing import Dict, List, Any, Optional
+from typing import Optional
 from data import load_knowledge_data, get_available_datasets, validate_data_structure
 from config.equipment_thresholds import (
     EQUIPMENT_THRESHOLDS, 
@@ -128,7 +128,8 @@ async def search_knowledge(
 ):
     """지식베이스 통합 검색"""
     try:
-        results = {
+        from typing import List, Dict, Any
+        results: Dict[str, Any] = {
             "query": query,
             "manuals": [],
             "issues": [],
@@ -150,13 +151,15 @@ async def search_knowledge(
                     
                     if (query.lower() in content or 
                         any(query.lower() in str(keyword).lower() for keyword in keywords)):
-                        results["manuals"].append({
-                            "dataset": dataset,
-                            "equipment_type": data.get("equipment_type"),
-                            "section_title": section.get("title"),
-                            "content_preview": content[:200] + "..." if len(content) > 200 else content
-                        })
-            except:
+                        manuals = results["manuals"]
+                        if isinstance(manuals, list):
+                            manuals.append({
+                                "dataset": dataset,
+                                "equipment_type": data.get("equipment_type"),
+                                "section_title": section.get("title"),
+                                "content_preview": content[:200] + "..." if len(content) > 200 else content
+                            })
+            except Exception:
                 continue
         
         # 2. 이슈 검색  
@@ -167,12 +170,14 @@ async def search_knowledge(
                 if category and issue_data.get("category") != category:
                     continue
                     
-                results["issues"].append({
-                    "issue_code": issue_code,
-                    "description": issue_data.get("description"),
-                    "category": issue_data.get("category"),
-                    "severity": issue_data.get("severity")
-                })
+                issues = results["issues"]
+                if isinstance(issues, list):
+                    issues.append({
+                        "issue_code": issue_code,
+                        "description": issue_data.get("description"),
+                        "category": issue_data.get("category"),
+                        "severity": issue_data.get("severity")
+                    })
         
         # 3. 임계값 검색
         for eq_type, thresholds in EQUIPMENT_THRESHOLDS.items():
@@ -181,11 +186,13 @@ async def search_knowledge(
                 
             for param_name, param_data in thresholds.items():
                 if query.lower() in param_name.lower():
-                    results["thresholds"].append({
-                        "equipment_type": eq_type,
-                        "parameter": param_name,
-                        "thresholds": param_data
-                    })
+                    thresholds_list = results["thresholds"]
+                    if isinstance(thresholds_list, list):
+                        thresholds_list.append({
+                            "equipment_type": eq_type,
+                            "parameter": param_name,
+                            "thresholds": param_data
+                        })
         
         return {
             "search_results": results,
@@ -217,7 +224,7 @@ async def get_analytics_summary():
                     equipment_stats[eq_type] = {"manuals": 0, "sections": 0}
                 equipment_stats[eq_type]["manuals"] += 1
                 equipment_stats[eq_type]["sections"] += len(data.get("sections", []))
-            except:
+            except Exception:
                 continue
         
         # 이슈 통계

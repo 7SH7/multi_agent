@@ -1,8 +1,7 @@
 """GPT 기반 종합 분석 전문가 Agent"""
 
 import openai
-from datetime import datetime
-from typing import Dict, Any, List
+from typing import Dict, List, Optional, Any
 from models.agent_state import AgentState
 from agents.base_agent import BaseAgent, AgentConfig, AgentResponse, AgentError
 from config.settings import LLM_CONFIGS
@@ -32,7 +31,7 @@ class GPTAgent(BaseAgent):
         # Knowledge Connector 초기화
         self.knowledge_connector = get_knowledge_connector()
 
-    async def analyze_and_respond(self, state: AgentState) -> AgentResponse:
+    async def analyze_and_respond(self, state: Dict[str, Any]) -> AgentResponse:
         """GPT 기반 종합 분석"""
 
         self.validate_input(state)
@@ -48,10 +47,10 @@ class GPTAgent(BaseAgent):
         dynamic_max_tokens = token_manager.get_agent_specific_limit('gpt', state)
 
         # Knowledge Base 컨텍스트 추가
-        knowledge_context = self._get_knowledge_context(user_question, issue_classification)
+        knowledge_context = self._get_knowledge_context(user_question, issue_classification or {})
         
         # 프롬프트 구성
-        prompt = self.build_analysis_prompt(user_question, rag_context, issue_classification, conversation_history, knowledge_context)
+        prompt = self.build_analysis_prompt(user_question, rag_context or {}, issue_classification or {}, conversation_history, knowledge_context)
 
         try:
             logger.info(f"GPT Agent 분석 시작 - 모델: {self.model}")
@@ -117,7 +116,7 @@ class GPTAgent(BaseAgent):
 
 응답은 명확하고 실행 가능한 형태로 작성하세요."""
 
-    def build_analysis_prompt(self, question: str, rag_context: Dict, issue_info: Dict, conversation_history: List = None, knowledge_context: str = "") -> str:
+    def build_analysis_prompt(self, question: str, rag_context: Dict, issue_info: Dict, conversation_history: Optional[List] = None, knowledge_context: str = "") -> str:
         """분석 프롬프트 구성"""
 
         # RAG 컨텍스트 정리
@@ -203,7 +202,7 @@ class GPTAgent(BaseAgent):
         """GPT Agent의 중점 영역"""
         return ["문제진단", "해결절차", "위험평가", "예방방안", "종합판단"]
 
-    def calculate_confidence(self, response_length: int, token_usage: Dict[str, int] = None) -> float:
+    def calculate_confidence(self, response_length: int, token_usage: Optional[Dict[str, int]] = None) -> float:
         """GPT 응답 신뢰도 계산"""
         base_confidence = 0.8  # GPT는 기본적으로 높은 신뢰도
 

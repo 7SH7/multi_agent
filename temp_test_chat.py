@@ -1,10 +1,9 @@
 import requests
-import json
 
 test_data = {
-    "user_message": "컨베이어 벨트가 자꾸 멈춰요. 어떻게 해결하면 좋을까요?",
-    "issue_code": "CONV-BELT-001",
-    "user_id": "test_user"
+    "user_message": "제품에 균열이 자꾸 생겨요. 원인을 찾아주세요.",
+    "issue_code": "QUALITY-CRACK-003",
+    "user_id": "qc_03"
 }
 
 response = requests.post(

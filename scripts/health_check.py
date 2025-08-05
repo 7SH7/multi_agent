@@ -9,7 +9,6 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import logging
 from datetime import datetime
-from typing import Dict, List, Tuple
 
 # 프로젝트 루트 추가
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -46,7 +45,7 @@ class SystemHealthChecker:
             
             key_status = {}
             for service, config in LLM_CONFIGS.items():
-                api_key = config.get('api_key', '')
+                api_key = str(config.get('api_key', ''))
                 if api_key and not api_key.startswith('your_') and len(api_key) > 10:
                     key_status[service] = True
                     self.add_result(f"API 키 ({service})", True, "설정됨")
@@ -86,16 +85,16 @@ class SystemHealthChecker:
         # Elasticsearch 확인
         try:
             from elasticsearch import AsyncElasticsearch
-            client = AsyncElasticsearch([{
+            es_client = AsyncElasticsearch([{
                 'host': 'localhost',
                 'port': 9200,
                 'scheme': 'http'
             }], request_timeout=3)
             
-            await client.cluster.health(wait_for_status='yellow', timeout='3s')
+            await es_client.cluster.health(wait_for_status='yellow', timeout='3s')
             self.add_result("Elasticsearch", True, "연결 성공")
             db_results.append(True)
-            await client.close()
+            await es_client.close()
         except Exception as e:
             self.add_result("Elasticsearch", False, f"연결 실패: {str(e)} (선택사항)")
             db_results.append(False)
@@ -103,11 +102,11 @@ class SystemHealthChecker:
         # Redis 확인
         try:
             import redis.asyncio as redis
-            client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
-            await client.ping()
+            redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+            await redis_client.ping()
             self.add_result("Redis", True, "연결 성공")
             db_results.append(True)
-            await client.aclose()
+            await redis_client.aclose()
         except Exception as e:
             self.add_result("Redis", False, f"연결 실패: {str(e)} (선택사항)")
             db_results.append(False)
@@ -125,12 +124,39 @@ class SystemHealthChecker:
             from agents.clova_agent import ClovaAgent
             from models.agent_state import AgentState
             
-            test_state = AgentState()
-            test_state.update({
-                'user_message': '시스템 테스트',
+            from datetime import datetime
+            test_state: AgentState = {
                 'session_id': 'health_check',
-                'timestamp': datetime.now()
-            })
+                'conversation_count': 1,
+                'response_type': 'first_question',
+                'user_message': '시스템 테스트',
+                'issue_code': None,
+                'user_id': None,
+                'issue_classification': None,
+                'question_category': None,
+                'rag_context': None,
+                'selected_agents': None,
+                'selection_reasoning': None,
+                'agent_responses': None,
+                'response_quality_scores': None,
+                'debate_rounds': None,
+                'consensus_points': None,
+                'final_recommendation': None,
+                'equipment_type': None,
+                'equipment_kr': None,
+                'problem_type': None,
+                'root_causes': None,
+                'severity_level': None,
+                'analysis_confidence': None,
+                'conversation_history': [],
+                'processing_steps': [],
+                'total_processing_time': None,
+                'timestamp': datetime.now(),
+                'error': None,
+                'performance_metrics': None,
+                'resource_usage': None,
+                'failed_agents': None
+            }
             
             agents = [
                 ("GPT", GPTAgent()),
@@ -172,15 +198,15 @@ class SystemHealthChecker:
             from core.monitoring import get_system_monitor
             
             # 워크플로우 매니저 초기화
-            workflow_manager = get_enhanced_workflow()
+            get_enhanced_workflow()
             self.add_result("워크플로우 매니저", True, "초기화 성공")
             
             # 세션 매니저 초기화
-            session_manager = SessionManager()
+            SessionManager()
             self.add_result("세션 매니저", True, "초기화 성공")
             
             # 모니터링 시스템 초기화
-            monitor = get_system_monitor()
+            get_system_monitor()
             self.add_result("모니터링 시스템", True, "초기화 성공")
             
             return True
@@ -221,13 +247,13 @@ class SystemHealthChecker:
         print(f"❌ 치명적 실패: {len(critical_failures)}개")
         
         if critical_failures:
-            print(f"\n🚨 치명적 문제:")
+            print("\n🚨 치명적 문제:")
             for failure in critical_failures:
                 print(f"   - {failure}")
             print("\n💡 시스템을 시작하기 전에 위 문제들을 해결해야 합니다.")
             return False
         elif warnings:
-            print(f"\n⚠️  경고 사항:")
+            print("\n⚠️  경고 사항:")
             for warning in warnings:
                 print(f"   - {warning}")
             print("\n💡 시스템은 시작 가능하지만 일부 기능이 제한될 수 있습니다.")

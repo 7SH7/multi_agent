@@ -5,9 +5,8 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from core.session_manager import SessionManager
 from core.enhanced_workflow import get_enhanced_workflow
-from core.monitoring import get_system_monitor
 from config.settings import APP_CONFIG, LLM_CONFIGS
-from utils.validators import RequestValidator
+
 
 # Global instances
 _session_manager = None
@@ -66,18 +65,15 @@ def get_workflow_manager():
         _workflow_manager = get_enhanced_workflow()
     return _workflow_manager
 
-def get_system_monitor():
-    from core.monitoring import get_system_monitor as get_monitor
-    return get_monitor()
+
 
 async def validate_request(request: Request) -> Dict[str, Any]:
     """Request validation"""
-    validator = RequestValidator()
     
     # Check request size
     if hasattr(request, 'body'):
         body = await request.body()
-        if len(body) > APP_CONFIG['max_request_size']:
+        if len(body) > int(str(APP_CONFIG['max_request_size'])):
             raise HTTPException(
                 status_code=413,
                 detail="Request too large"

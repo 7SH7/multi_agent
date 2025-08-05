@@ -1,9 +1,7 @@
 """Clova 기반 실무 경험 전문가 Agent"""
 
 import httpx
-import json
-from datetime import datetime
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from models.agent_state import AgentState
 from agents.base_agent import BaseAgent, AgentConfig, AgentResponse, AgentError
 from config.settings import LLM_CONFIGS
@@ -30,7 +28,7 @@ class ClovaAgent(BaseAgent):
         self.api_url = "https://clovastudio.stream.ntruss.com/testapp/v1/chat-completions/HCX-003"
         self.request_id = "smartfactory-request"
 
-    async def analyze_and_respond(self, state: AgentState) -> AgentResponse:
+    async def analyze_and_respond(self, state: Dict[str, Any]) -> AgentResponse:
         """Clova 기반 실무 분석"""
 
         self.validate_input(state)
@@ -81,7 +79,7 @@ class ClovaAgent(BaseAgent):
             logger.error(f"Clova Agent 분석 오류: {str(e)}")
             raise AgentError(f"실무 분석 중 오류가 발생했습니다: {str(e)}", self.name, "ANALYSIS_ERROR")
 
-    async def _call_clova_api(self, prompt: str, max_tokens: int = None) -> Dict[str, Any]:
+    async def _call_clova_api(self, prompt: str, max_tokens: Optional[int] = None) -> Dict[str, Any]:
         """Clova API 호출"""
 
         headers = {
@@ -253,7 +251,7 @@ class ClovaAgent(BaseAgent):
 
 실무진이 바로 적용할 수 있는 구체적이고 현실적인 조언을 제공해주세요."""
 
-    def build_practical_prompt(self, question: str, rag_context: Dict, issue_info: Dict, conversation_history: List = None) -> str:
+    def build_practical_prompt(self, question: str, rag_context: Dict, issue_info: Dict, conversation_history: Optional[List] = None) -> str:
         """실무 중심 프롬프트 구성"""
 
         # 실무 사례 추출
@@ -325,7 +323,7 @@ class ClovaAgent(BaseAgent):
         """Clova Agent의 중점 영역"""
         return ["현장개선", "비용절감", "작업효율", "실행가능성", "경험활용"]
 
-    def calculate_confidence(self, response_length: int) -> float:
+    def calculate_confidence(self, response_length: int, token_usage: Optional[Dict[str, int]] = None) -> float:
         """Clova 응답 신뢰도 계산"""
         base_confidence = 0.7  # Clova 기본 신뢰도
 

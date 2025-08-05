@@ -1,8 +1,7 @@
 """Gemini 기반 기술 정확성 전문가 Agent"""
 
 import google.generativeai as genai
-from datetime import datetime
-from typing import Dict, Any, List
+from typing import Dict, List, Optional, Any
 from models.agent_state import AgentState
 from agents.base_agent import BaseAgent, AgentConfig, AgentResponse, AgentError
 from config.settings import LLM_CONFIGS
@@ -27,7 +26,7 @@ class GeminiAgent(BaseAgent):
         genai.configure(api_key=LLM_CONFIGS["google"]["api_key"])
         self.model_instance = genai.GenerativeModel(self.model)
 
-    async def analyze_and_respond(self, state: AgentState) -> AgentResponse:
+    async def analyze_and_respond(self, state: Dict[str, Any]) -> AgentResponse:
         """Gemini 기반 기술 분석"""
 
         self.validate_input(state)
@@ -43,7 +42,7 @@ class GeminiAgent(BaseAgent):
         dynamic_max_tokens = token_manager.get_agent_specific_limit('gemini', state)
 
         # 프롬프트 구성
-        prompt = self.build_technical_prompt(user_question, rag_context, issue_classification, conversation_history)
+        prompt = self.build_technical_prompt(user_question, rag_context or {}, issue_classification or {}, conversation_history)
 
         try:
             logger.info(f"Gemini Agent 분석 시작 - 모델: {self.model}, 토큰 한계: {dynamic_max_tokens}")
@@ -64,14 +63,15 @@ class GeminiAgent(BaseAgent):
                     raise e
 
             response_text = response.text
-            confidence = self.calculate_confidence(len(response_text))
-
+            
             # 토큰 사용량 추정 (Gemini는 정확한 토큰 수를 제공하지 않음)
             estimated_tokens = len(response_text) // 4  # 대략적인 추정
             token_usage = {
                 "estimated_total_tokens": estimated_tokens,
                 "estimated_completion_tokens": estimated_tokens // 2
             }
+            
+            confidence = self.calculate_confidence(len(response_text), token_usage)
 
             logger.info(f"Gemini Agent 분석 완료 - 예상 토큰: {estimated_tokens}")
 
@@ -94,7 +94,7 @@ class GeminiAgent(BaseAgent):
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, self.model_instance.generate_content, prompt)
 
-    def build_technical_prompt(self, question: str, rag_context: Dict, issue_info: Dict, conversation_history: List = None) -> str:
+    def build_technical_prompt(self, question: str, rag_context: Dict, issue_info: Dict, conversation_history: Optional[List] = None) -> str:
         """기술적 분석 프롬프트 구성"""
 
         # 기술 데이터 추출
@@ -166,7 +166,7 @@ class GeminiAgent(BaseAgent):
         """Gemini Agent의 중점 영역"""
         return ["기술분석", "데이터검증", "성능측정", "규격준수", "최적화"]
 
-    def calculate_confidence(self, response_length: int) -> float:
+    def calculate_confidence(self, response_length: int, token_usage: Optional[Dict[str, int]] = None) -> float:
         """Gemini 응답 신뢰도 계산"""
         base_confidence = 0.75  # Gemini 기본 신뢰도
 

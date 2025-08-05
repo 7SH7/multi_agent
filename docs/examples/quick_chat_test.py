@@ -9,7 +9,6 @@
 
 import sys
 import requests
-import json
 from datetime import datetime
 
 def quick_test(user_message=None):
@@ -32,7 +31,7 @@ def quick_test(user_message=None):
     try:
         requests.get("http://localhost:8000/ping", timeout=2)
         print("✅ 서버 연결됨")
-    except:
+    except Exception:
         print("❌ 서버 실행 필요: python -m uvicorn api.main:app --host 0.0.0.0 --port 8000")
         return
     
@@ -71,20 +70,20 @@ def quick_test(user_message=None):
             # 핵심 답변
             summary = result.get('executive_summary', '')
             if summary:
-                print(f"\n💡 전문가 종합 의견:")
+                print("\n💡 전문가 종합 의견:")
                 print(f"   {summary}")
             
             # 즉시 조치
             actions = result.get('immediate_actions', [])
             if actions:
-                print(f"\n🔧 즉시 조치사항:")
+                print("\n🔧 즉시 조치사항:")
                 for i, action in enumerate(actions[:2], 1):
                     if isinstance(action, dict):
                         print(f"   {i}. {action.get('action', 'N/A')}")
             
             # 상세 결과 안내
-            print(f"\n📋 상세 결과는 다음에서 확인:")
-            print(f"   • 웹 UI: http://localhost:8000/docs")
+            print("\n📋 상세 결과는 다음에서 확인:")
+            print("   • 웹 UI: http://localhost:8000/docs")
             print(f"   • 세션 ID: {result.get('session_id', 'N/A')}")
             
         else:

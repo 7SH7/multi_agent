@@ -1,7 +1,6 @@
 """API response models."""
 
-from typing import List, Dict, Any, Optional
-from datetime import datetime
+from typing import List, Dict, Optional
 from pydantic import BaseModel, Field
 
 class ChatRequest(BaseModel):

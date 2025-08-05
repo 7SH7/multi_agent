@@ -2,7 +2,7 @@
 
 import anthropic
 from datetime import datetime
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from models.agent_state import AgentState
 from config.settings import LLM_CONFIGS
 import logging
@@ -31,10 +31,10 @@ class DebateModerator:
     async def moderate_debate(self, state: AgentState) -> AgentState:
         """Agent들의 응답을 토론시키고 최종 결론 도출"""
 
-        agent_responses = state.get('agent_responses', {})
+        agent_responses = state.get('agent_responses') or {}
         user_question = state.get('user_message', '')
-        issue_info = state.get('issue_classification', {})
-        conversation_history = state.get('conversation_history', [])
+        issue_info = state.get('issue_classification') or {}
+        conversation_history = state.get('conversation_history') or []
 
         logger.info(f"토론 진행 시작 - 참여 Agent 수: {len(agent_responses)}")
 
@@ -61,7 +61,7 @@ class DebateModerator:
                 'debate_rounds': [debate_results],
                 'consensus_points': debate_results.get('consensus_points', []),
                 'final_recommendation': final_recommendation,
-                'processing_steps': state.get('processing_steps', []) + ['debate_completed']
+                'processing_steps': (state.get('processing_steps') or []) + ['debate_completed']
             })
 
             logger.info("토론 진행 완료")
@@ -71,7 +71,7 @@ class DebateModerator:
             logger.error(f"토론 진행 오류: {str(e)}")
             return self.handle_debate_failure(state, agent_responses)
 
-    async def analyze_response_differences(self, agent_responses: Dict[str, Dict]) -> Dict[str, Any]:
+    async def analyze_response_differences(self, agent_responses: Dict[str, Any]) -> Dict[str, Any]:
         """Agent 응답 간 차이점 분석"""
 
         responses_text = ""
@@ -148,8 +148,8 @@ class DebateModerator:
             logger.error(f"응답 차이 분석 오류: {str(e)}")
             return {"error": f"분석 실패: {str(e)}"}
 
-    async def simulate_expert_debate(self, agent_responses: Dict, differences: Dict,
-                                   user_question: str, issue_info: Dict) -> Dict[str, Any]:
+    async def simulate_expert_debate(self, agent_responses: Dict[str, Any], differences: Dict[str, Any],
+                                   user_question: str, issue_info: Dict[str, Any]) -> Dict[str, Any]:
         """전문가 간 토론 시뮬레이션"""
 
         participants = list(agent_responses.keys())
@@ -171,7 +171,7 @@ class DebateModerator:
 
             debate_prompt += f"{agent}: {response}...\n"
 
-        debate_prompt += f"""
+        debate_prompt += """
 다음 형식으로 토론 결과를 정리해주세요 (JSON 없이):
 
 합의점:
@@ -231,8 +231,8 @@ class DebateModerator:
                 "moderated_at": datetime.now().isoformat()
             }
 
-    async def synthesize_final_solution(self, agent_responses: Dict, debate_results: Dict,
-                                      user_question: str, conversation_history: List = None) -> Dict[str, Any]:
+    async def synthesize_final_solution(self, agent_responses: Dict[str, Any], debate_results: Dict[str, Any],
+                                      user_question: str, conversation_history: Optional[List] = None) -> Dict[str, Any]:
         """최종 통합 해결책 생성"""
 
         # 대화 기록 컨텍스트 추가
@@ -320,20 +320,19 @@ class DebateModerator:
 
     async def handle_single_agent_response(self, state: AgentState) -> AgentState:
         """단일 Agent 응답 처리"""
-        agent_responses = state.get('agent_responses', {})
-        user_question = state.get('user_message', '')
+        agent_responses = state.get('agent_responses') or {}
 
         if len(agent_responses) == 1:
             agent_name, response_data = list(agent_responses.items())[0]
             
             # AgentResponse 객체인 경우 속성으로 접근
             if hasattr(response_data, 'response'):
-                agent_response = response_data.response
-                agent_confidence = response_data.confidence
+                agent_response = getattr(response_data, 'response', '')
+                agent_confidence = getattr(response_data, 'confidence', 0.7)
             else:
                 # dict인 경우 get으로 접근
-                agent_response = response_data.get('response', '')
-                agent_confidence = response_data.get('confidence', 0.7)
+                agent_response = response_data.get('response', '') if isinstance(response_data, dict) else ''
+                agent_confidence = response_data.get('confidence', 0.7) if isinstance(response_data, dict) else 0.7
             
             # 기본 구조화
             final_recommendation = {
@@ -358,14 +357,14 @@ class DebateModerator:
 
         state.update({
             'final_recommendation': final_recommendation,
-            'processing_steps': state.get('processing_steps', []) + ['single_agent_processed']
+            'processing_steps': (state.get('processing_steps') or []) + ['single_agent_processed']
         })
 
         return state
     
-    def _parse_analysis_text(self, text: str) -> dict:
+    def _parse_analysis_text(self, text: str) -> Dict[str, Any]:
         """분석 텍스트를 파싱해서 구조화"""
-        result = {
+        result: Dict[str, Any] = {
             "common_points": [],
             "differences": [],
             "synthesis_needed": True
@@ -407,9 +406,9 @@ class DebateModerator:
         
         return result
     
-    def _parse_debate_text(self, text: str, participants: list) -> dict:
+    def _parse_debate_text(self, text: str, participants: List[str]) -> Dict[str, Any]:
         """토론 텍스트를 파싱해서 구조화"""
-        result = {
+        result: Dict[str, Any] = {
             "debate_rounds": [],
             "consensus_points": [],
             "final_agreement": "",
@@ -453,9 +452,9 @@ class DebateModerator:
         
         return result
     
-    def _parse_solution_text(self, text: str, agent_responses: dict, debate_results: dict) -> dict:
+    def _parse_solution_text(self, text: str, agent_responses: Dict[str, Any], debate_results: Dict[str, Any]) -> Dict[str, Any]:
         """솔루션 텍스트를 파싱해서 구조화"""
-        result = {
+        result: Dict[str, Any] = {
             "executive_summary": "",
             "immediate_actions": [],
             "cost_estimation": {"parts": "", "labor": "", "total": ""},
@@ -531,7 +530,7 @@ class DebateModerator:
         
         return result
     
-    def _generate_fallback_solution(self, agent_responses: dict, debate_results: dict) -> dict:
+    def _generate_fallback_solution(self, agent_responses: Dict[str, Any], debate_results: Dict[str, Any]) -> Dict[str, Any]:
         """Agent 응답 기반 기본 솔루션 생성 (최후의 fallback)"""
         try:
             if not agent_responses:
@@ -599,7 +598,7 @@ class DebateModerator:
                 "error": True
             }
 
-    def handle_debate_failure(self, state: AgentState, agent_responses: Dict) -> AgentState:
+    def handle_debate_failure(self, state: AgentState, agent_responses: Dict[str, Any]) -> AgentState:
         """토론 실패 시 폴백 처리"""
 
         # 가장 높은 신뢰도의 Agent 응답 선택
@@ -640,7 +639,7 @@ class DebateModerator:
 
         state.update({
             'final_recommendation': fallback_recommendation,
-            'processing_steps': state.get('processing_steps', []) + ['debate_fallback']
+            'processing_steps': (state.get('processing_steps') or []) + ['debate_fallback']
         })
 
         return state

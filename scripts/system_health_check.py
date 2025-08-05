@@ -125,13 +125,13 @@ async def comprehensive_system_check():
         try:
             test_response = requests.get("http://localhost:8000/chat/test", timeout=5)
             print(f"✅ Chat Test 엔드포인트: {test_response.status_code}")
-        except:
-            print(f"⚠️  Chat Test 엔드포인트: 서버가 실행되지 않음")
+        except Exception:
+            print("⚠️  Chat Test 엔드포인트: 서버가 실행되지 않음")
         
         results['api'] = health_response.status_code == 200
         
-    except Exception as e:
-        print(f"❌ API 연결 오류: 서버가 실행되지 않았을 수 있습니다")
+    except Exception:
+        print("❌ API 연결 오류: 서버가 실행되지 않았을 수 있습니다")
         results['api'] = False
     
     # 결과 요약

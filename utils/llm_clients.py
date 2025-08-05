@@ -20,7 +20,7 @@ class LLMResponse:
 
 
 class LLMError(Exception):
-    def __init__(self, message: str, error_code: str = None):
+    def __init__(self, message: str, error_code: Optional[str] = None):
         super().__init__(message)
         self.error_code = error_code
 
@@ -92,7 +92,7 @@ class GeminiClient:
 
             return LLMResponse(
                 content=response.text,
-                model=LLM_CONFIGS['google']['model'],
+                model=str(LLM_CONFIGS['google']['model']),
                 tokens_used=response.usage_metadata.total_token_count if hasattr(response, 'usage_metadata') else 0,
                 confidence=0.82,
                 timestamp=datetime.now(),

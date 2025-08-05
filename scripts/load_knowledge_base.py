@@ -21,7 +21,7 @@ class KnowledgeBaseLoader:
 
     def load_json_files(self) -> Dict[str, List[Dict[str, Any]]]:
         """Load all JSON files from knowledge base directory"""
-        knowledge_data = {}
+        knowledge_data: Dict[str, List[Dict[str, Any]]] = {}
 
         if not self.data_dir.exists():
             print(f"❌ Knowledge base directory not found: {self.data_dir}")

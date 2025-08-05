@@ -4,7 +4,6 @@
 """
 
 import requests
-import json
 import time
 
 def test_api_endpoints():
@@ -31,7 +30,7 @@ def test_api_endpoints():
         return
     
     # 2. Chat Test
-    print(f"\n2️⃣ Chat Test 엔드포인트")
+    print("\n2️⃣ Chat Test 엔드포인트")
     print("-" * 30)
     
     try:
@@ -45,7 +44,7 @@ def test_api_endpoints():
         print(f"❌ Chat Test 실패: {str(e)}")
     
     # 3. 실제 Chat 요청 (첫 번째)
-    print(f"\n3️⃣ 실제 Chat 요청 - 첫 번째 (메모리 없음)")
+    print("\n3️⃣ 실제 Chat 요청 - 첫 번째 (메모리 없음)")
     print("-" * 50)
     
     first_chat_data = {
@@ -78,7 +77,7 @@ def test_api_endpoints():
             session_id = first_result.get('session_id')
             
             # 4. 두 번째 Chat 요청 (메모리 활용)
-            print(f"\n4️⃣ 실제 Chat 요청 - 두 번째 (메모리 활용)")
+            print("\n4️⃣ 실제 Chat 요청 - 두 번째 (메모리 활용)")
             print("-" * 50)
             
             # 잠시 대기
@@ -121,7 +120,7 @@ def test_api_endpoints():
     except Exception as e:
         print(f"❌ Chat 요청 실패: {str(e)}")
     
-    print(f"\n" + "=" * 60)
+    print("\n" + "=" * 60)
     print("🎯 API 테스트 완료")
     print("=" * 60)
     print("✅ 모든 테스트가 성공하면 완전한 시스템이 작동 중입니다!")
