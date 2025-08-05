@@ -27,7 +27,7 @@ class TokenManager:
             return TOKEN_LIMITS["emergency"]
         
         # 기술적 질문 - 더 많은 토큰 필요
-        if is_technical or "기술" in question_type or "분석" in question_type:
+        if is_technical or (question_type and ("기술" in question_type or "분석" in question_type)):
             if agent_name == "gemini":
                 return TOKEN_LIMITS["technical"]
             else:
@@ -123,7 +123,9 @@ class TokenManager:
         )
         
         # 컨텍스트 조정
-        rag_count = len(rag_results.get('chroma_results', [])) + len(rag_results.get('elasticsearch_results', []))
+        rag_count = 0
+        if rag_results:
+            rag_count = len(rag_results.get('chroma_results', [])) + len(rag_results.get('elasticsearch_results', []))
         adjusted_limit = self.adjust_for_context(
             base_limit=base_limit,
             rag_results_count=rag_count,

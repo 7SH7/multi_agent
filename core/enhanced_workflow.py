@@ -96,7 +96,9 @@ class EnhancedWorkflowManager:
         if any(agent.lower() == 'gpt' for agent in selected_agents):
             try:
                 logger.info("GPT Agent 실행 시작")
-                response = await self.gpt_agent.analyze_and_respond(state)
+                # state를 dict 형태로 변환하여 전달 (conversation_history 포함)
+                state_dict = dict(state)
+                response = await self.gpt_agent.analyze_and_respond(state_dict)
                 agent_responses = state.get('agent_responses') or {}
                 agent_responses['GPT'] = response  # 대문자로 저장
                 state['agent_responses'] = agent_responses
@@ -133,7 +135,9 @@ class EnhancedWorkflowManager:
         if any(agent.lower() == 'gemini' for agent in selected_agents):
             try:
                 logger.info("Gemini Agent 실행 시작")
-                response = await self.gemini_agent.analyze_and_respond(state)
+                # state를 dict 형태로 변환하여 전달 (conversation_history 포함)
+                state_dict = dict(state)
+                response = await self.gemini_agent.analyze_and_respond(state_dict)
                 agent_responses = state.get('agent_responses') or {}
                 agent_responses['Gemini'] = response  # 대문자로 저장
                 state['agent_responses'] = agent_responses
@@ -165,7 +169,9 @@ class EnhancedWorkflowManager:
         if any(agent.lower() == 'clova' for agent in selected_agents):
             try:
                 logger.info("Clova Agent 실행 시작")
-                response = await self.clova_agent.analyze_and_respond(state)
+                # state를 dict 형태로 변환하여 전달 (conversation_history 포함)
+                state_dict = dict(state)
+                response = await self.clova_agent.analyze_and_respond(state_dict)
                 agent_responses = state.get('agent_responses') or {}
                 agent_responses['Clova'] = response  # 대문자로 저장
                 state['agent_responses'] = agent_responses

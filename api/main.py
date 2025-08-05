@@ -392,19 +392,22 @@ def create_application() -> FastAPI:
             if not result.success:
                 raise HTTPException(status_code=500, detail=f"워크플로우 실행 실패: {result.error_message}")
             
-            # Update session with conversation
+            # Build final recommendation from result FIRST (before saving)
+            final_recommendation = result.final_state.get('final_recommendation', {})
+            executive_summary = final_recommendation.get('executive_summary', result.final_state.get('final_response', '답변 생성 실패'))
+            
+            # Update session with conversation (save the actual response)
             await session_manager.add_conversation(
                 session_id, 
                 request.user_message, 
-                result.final_state.get('final_response', '답변 생성 실패')
+                executive_summary
             )
             
             # Record metrics
             monitor.record_histogram("workflow_execution_time", result.execution_time)
             monitor.increment_counter("successful_conversations")
             
-            # Build final recommendation from result
-            final_recommendation = result.final_state.get('final_recommendation', {})
+            # final_recommendation already built above
             
             # 실패한 Agent 정보 처리 (테스트 엔드포인트용)
             failed_agents_data = result.final_state.get('failed_agents', [])

@@ -116,13 +116,22 @@ class GeminiAgent(BaseAgent):
             conversation_context = "\n이전 기술 상담 기록:\n"
             for i, conv in enumerate(conversation_history[-3:], 1):  # 최근 3개만
                 if isinstance(conv, dict):
-                    user_msg = conv.get('user_message', '')
-                    timestamp = conv.get('timestamp', '')
-                    agents_used = conv.get('agents_used', [])
-                    if user_msg:
-                        conversation_context += f"{i}. [{timestamp[:16]}] 기술 문의: {user_msg}\n"
-                        if agents_used:
-                            conversation_context += f"   → 분석 전문가: {', '.join(agents_used)}\n"
+                    # 메시지 형식과 기존 형식 모두 지원
+                    if conv.get('role') == 'user':
+                        user_msg = conv.get('content', '')
+                        conversation_context += f"{i}. 사용자: {user_msg}\n"
+                    elif conv.get('role') == 'assistant':
+                        bot_msg = conv.get('content', '')
+                        conversation_context += f"   → 이전 답변: {bot_msg[:100]}...\n"
+                    else:
+                        # 기존 형식 지원
+                        user_msg = conv.get('user_message', '')
+                        timestamp = conv.get('timestamp', '')
+                        agents_used = conv.get('agents_used', [])
+                        if user_msg:
+                            conversation_context += f"{i}. [{timestamp[:16]}] 기술 문의: {user_msg}\n"
+                            if agents_used:
+                                conversation_context += f"   → 분석 전문가: {', '.join(agents_used)}\n"
 
         # 이슈 기술 정보
         technical_context = ""

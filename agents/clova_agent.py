@@ -256,7 +256,7 @@ class ClovaAgent(BaseAgent):
 
         # 실무 사례 추출
         practical_cases = ""
-        if rag_context.get('elasticsearch_results'):
+        if rag_context and rag_context.get('elasticsearch_results'):
             practical_cases += "유사 사례 및 해결 방법:\n"
             for i, result in enumerate(rag_context['elasticsearch_results'][:3], 1):
                 # RAGResult 객체와 dictionary 둘 다 처리
@@ -266,23 +266,63 @@ class ClovaAgent(BaseAgent):
                     content = result.get('content', '')[:200]
                 practical_cases += f"{i}. {content}...\n"
 
-        # 대화 기록 정리 (실무 관점)
+        # 대화 기록 정리 (실무 관점) - 사용자 정보 추출 강화
         conversation_context = ""
+        user_name = None
+        user_problem = None
+        
         if conversation_history:
             conversation_context = "\n이전 현장 상담 기록:\n"
+            
+            # 먼저 사용자 정보 추출
+            for conv in conversation_history:
+                if isinstance(conv, dict) and conv.get('role') == 'user':
+                    content = conv.get('content', '')
+                    # 이름 추출 패턴
+                    name_patterns = [
+                        r"제?\s*(?:이름은|성함은)\s*([가-힣]{2,4})",
+                        r"저는\s*([가-힣]{2,4})(?:입니다|이에요|예요)",
+                        r"([가-힣]{2,4})(?:입니다|이에요|예요)"
+                    ]
+                    for pattern in name_patterns:
+                        import re
+                        match = re.search(pattern, content)
+                        if match and not user_name:
+                            user_name = match.group(1)
+                            break
+                    
+                    # 문제 상황 키워드
+                    problem_keywords = ["금", "균열", "크랙", "설비", "장비", "문제", "고장", "불량", "이상"]
+                    if any(keyword in content for keyword in problem_keywords):
+                        user_problem = "설비/장비 관련 문제"
+            
+            # 사용자 정보가 있으면 컨텍스트에 추가
+            if user_name or user_problem:
+                conversation_context += f"[고객 정보] 이름: {user_name or '미확인'}, 문제: {user_problem or '미확인'}\n\n"
+            
+            # 대화 기록 추가
             for i, conv in enumerate(conversation_history[-3:], 1):  # 최근 3개만
                 if isinstance(conv, dict):
-                    user_msg = conv.get('user_message', '')
-                    timestamp = conv.get('timestamp', '')
-                    agents_used = conv.get('agents_used', [])
-                    if user_msg:
-                        conversation_context += f"{i}. [{timestamp[:16]}] 현장 문의: {user_msg}\n"
-                        if agents_used:
-                            conversation_context += f"   → 상담 전문가: {', '.join(agents_used)}\n"
+                    # 메시지 형식과 기존 형식 모두 지원
+                    if conv.get('role') == 'user':
+                        user_msg = conv.get('content', '')
+                        conversation_context += f"{i}. 사용자: {user_msg}\n"
+                    elif conv.get('role') == 'assistant':
+                        bot_msg = conv.get('content', '')
+                        conversation_context += f"   → 이전 답변: {bot_msg[:100]}...\n"
+                    else:
+                        # 기존 형식 지원
+                        user_msg = conv.get('user_message', '')
+                        timestamp = conv.get('timestamp', '')
+                        agents_used = conv.get('agents_used', [])
+                        if user_msg:
+                            conversation_context += f"{i}. [{timestamp[:16]}] 현장 문의: {user_msg}\n"
+                            if agents_used:
+                                conversation_context += f"   → 상담 전문가: {', '.join(agents_used)}\n"
 
         # 비용 및 실무 정보
         practical_context = ""
-        if issue_info.get('issue_info') and not issue_info['issue_info'].get('error'):
+        if issue_info and issue_info.get('issue_info') and not issue_info['issue_info'].get('error'):
             issue_data = issue_info['issue_info']
             practical_context = f"""
 현장 정보:
@@ -302,7 +342,8 @@ class ClovaAgent(BaseAgent):
 {practical_cases}
 
 현장 전문가 관점에서 다음을 중점적으로 분석해주세요.
-이전 현장 상담이 있다면 그 연속성을 고려하여 답변하세요:
+이전 현장 상담이 있다면 고객의 이름과 문제를 기억하며 그 연속성을 고려하여 답변하세요.
+특히 고객 정보가 있다면 반드시 언급하여 개인화된 서비스를 제공하세요:
 
 1. 현장에서 바로 적용 가능한 해결책
 2. 최소 비용으로 최대 효과를 내는 방법

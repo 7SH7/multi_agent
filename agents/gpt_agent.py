@@ -55,12 +55,22 @@ class GPTAgent(BaseAgent):
         try:
             logger.info(f"GPT Agent 분석 시작 - 모델: {self.model}")
 
+            # 대화 히스토리를 포함한 메시지 구성
+            messages = [{"role": "system", "content": self.get_system_prompt()}]
+            
+            # 이전 대화 히스토리 추가
+            if conversation_history:
+                for conv in conversation_history:
+                    if isinstance(conv, dict):
+                        if conv.get("role") and conv.get("content"):
+                            messages.append(conv)
+            
+            # 현재 질문 추가
+            messages.append({"role": "user", "content": prompt})
+
             response = await self.client.chat.completions.create(
                 model=self.model,
-                messages=[
-                    {"role": "system", "content": self.get_system_prompt()},
-                    {"role": "user", "content": prompt}
-                ],
+                messages=messages,
                 temperature=self.config.temperature,
                 max_tokens=dynamic_max_tokens
             )

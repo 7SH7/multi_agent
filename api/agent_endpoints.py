@@ -34,9 +34,43 @@ class AgentChatResponse(BaseModel):
         protected_namespaces = ()
 
 # Agent 인스턴스 생성 (lazy loading)
-from typing import Union, Dict, Any
+from typing import Union, Dict, Any, List
+import re
 
 _agents: Dict[str, Any] = {}
+
+def extract_user_info_from_messages(messages: List[Dict[str, str]]) -> Dict[str, Any]:
+    """대화에서 사용자 정보 추출"""
+    user_info = {
+        "name": None,
+        "problem": None,
+        "issues": []
+    }
+    
+    for message in messages:
+        if message.get("role") == "user":
+            content = message.get("content", "")
+            
+            # 이름 추출 패턴
+            name_patterns = [
+                r"제?\s*(?:이름은|성함은)\s*([가-힣]{2,4})",
+                r"저는\s*([가-힣]{2,4})(?:입니다|이에요|예요)",
+                r"([가-힣]{2,4})(?:입니다|이에요|예요).*(?:문제|고민)"
+            ]
+            
+            for pattern in name_patterns:
+                match = re.search(pattern, content)
+                if match and not user_info["name"]:
+                    user_info["name"] = match.group(1)
+                    break
+            
+            # 문제 상황 추출
+            problem_keywords = ["금", "균열", "크랙", "설비", "장비", "문제", "고장", "불량", "이상"]
+            if any(keyword in content for keyword in problem_keywords):
+                user_info["problem"] = "설비/장비 관련 문제"
+                user_info["issues"].append(content)
+    
+    return user_info
 
 def get_agent(agent_name: str) -> Union[GPTAgent, GeminiAgent, ClovaAgent, AnthropicClient]:
     """Agent 인스턴스 가져오기 (lazy loading)"""
@@ -103,6 +137,9 @@ async def process_agent_request(agent_name: str, request: AgentChatRequest) -> A
         # 현재 메시지 추가
         messages.append({"role": "user", "content": request.message})
         
+        # 사용자 정보 추출 (첫 대화에서 이름 등 추출)
+        user_info = extract_user_info_from_messages(messages)
+        
         # Agent별 응답 생성 방식
         if agent_name == "claude":
             # Anthropic client 사용
@@ -123,7 +160,7 @@ async def process_agent_request(agent_name: str, request: AgentChatRequest) -> A
                 response_type="first_question" if len(messages) == 1 else "follow_up",
                 user_message=request.message,
                 issue_code="GENERAL",
-                user_id=f"user_{agent_name}",
+                user_id=user_info.get("name") or f"user_{agent_name}",
                 issue_classification=None,
                 question_category=None,
                 rag_context={},
@@ -140,7 +177,7 @@ async def process_agent_request(agent_name: str, request: AgentChatRequest) -> A
                 root_causes=None,
                 severity_level=None,
                 analysis_confidence=None,
-                conversation_history=[],
+                conversation_history=messages[:-1],  # 현재 메시지 제외한 이전 대화들
                 processing_steps=[],
                 total_processing_time=0.0,
                 timestamp=datetime.now(),

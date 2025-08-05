@@ -235,28 +235,85 @@ class DebateModerator:
                                       user_question: str, conversation_history: Optional[List] = None) -> Dict[str, Any]:
         """최종 통합 해결책 생성"""
 
-        # 대화 기록 컨텍스트 추가
+        # 대화 기록 컨텍스트 추가 - 사용자 정보 추출 강화
         conversation_context = ""
+        user_name = None
+        user_problem = None
+        
         if conversation_history:
             conversation_context = "\n이전 대화 맥락:\n"
-            for i, conv in enumerate(conversation_history[-2:], 1):  # 최근 2개만
+            
+            # 사용자 정보 추출
+            for conv in conversation_history:
                 if isinstance(conv, dict):
+                    # 메시지 형식 처리
+                    if conv.get('role') == 'user':
+                        content = conv.get('content', '')
+                        # 이름 추출 - 패턴 강화
+                        import re
+                        name_patterns = [
+                            r"제?\s*(?:이름은|성함은)\s*([가-힣]{2,4})",
+                            r"저는\s*([가-힣]{2,4})(?:입니다|이에요|예요)",
+                            r"([가-힣]{2,4})(?:입니다|이에요|예요)",
+                            r"안녕하세요[.\s]*저는\s*([가-힣]{2,4})",
+                            r"([가-힣]{2,4})라고?\s*합니다",
+                            r"제\s*이름은?\s*([가-힣]{2,4})"
+                        ]
+                        for pattern in name_patterns:
+                            match = re.search(pattern, content)
+                            if match and not user_name:
+                                user_name = match.group(1)
+                                break
+                        
+                        # 문제 상황 키워드
+                        problem_keywords = ["금", "균열", "크랙", "설비", "장비", "문제", "고장", "불량", "이상"]
+                        if any(keyword in content for keyword in problem_keywords):
+                            user_problem = "설비/장비 관련 문제"
+                    
+                    # 기존 형식 처리
                     user_msg = conv.get('user_message', '')
                     timestamp = conv.get('timestamp', '')
                     if user_msg:
-                        conversation_context += f"{i}. [{timestamp[:16]}] 이전 문의: {user_msg}\n"
+                        conversation_context += f"[{timestamp[:16]}] 이전 문의: {user_msg}\n"
+                        
+                        # 이름과 문제 추출 (기존 형식에서도) - 강화된 패턴
+                        import re
+                        name_patterns = [
+                            r"제?\s*(?:이름은|성함은)\s*([가-힣]{2,4})",
+                            r"저는\s*([가-힣]{2,4})(?:입니다|이에요|예요)",
+                            r"([가-힣]{2,4})(?:입니다|이에요|예요)",
+                            r"안녕하세요[.\s]*저는\s*([가-힣]{2,4})",
+                            r"([가-힣]{2,4})라고?\s*합니다",
+                            r"제\s*이름은?\s*([가-힣]{2,4})"
+                        ]
+                        for pattern in name_patterns:
+                            match = re.search(pattern, user_msg)
+                            if match and not user_name:
+                                user_name = match.group(1)
+                                break
+                        
+                        problem_keywords = ["금", "균열", "크랙", "설비", "장비", "문제", "고장", "불량", "이상"]
+                        if any(keyword in user_msg for keyword in problem_keywords):
+                            user_problem = "설비/장비 관련 문제"
+            
+            # 사용자 정보가 있으면 컨텍스트에 추가
+            if user_name or user_problem:
+                conversation_context = f"\n**중요 고객 정보**: 이름={user_name or '미확인'}, 문제={user_problem or '미확인'}\n" + conversation_context
 
         synthesis_prompt = f"""
 질문: {user_question}
+{conversation_context}
 
 전문가 합의:
 - {', '.join(debate_results.get('consensus_points', []))}
 - {debate_results.get('final_agreement', '')}
 
-간결한 최종 솔루션을 다음 형식으로 (JSON 없이):
+**절대 규칙**: 고객 정보에서 이름이 확인되었다면, 응답을 반드시 "○○○님,"으로 시작해야 합니다. 이름이 없으면 일반적으로 답변하세요.
+
+간결한 최종 솔루션을 다음 형식으로 작성하세요 (JSON 없이):
 
 핵심 해결책:
-핵심 해결책 요약
+[고객 이름이 있다면 "○○○님,"] 핵심 해결책 요약
 
 즉시 조치:
 - 조치1
@@ -270,7 +327,7 @@ class DebateModerator:
 - 안전수칙2
 
 전문가 합의:  
-합의 내용 요약
+합의 내용 요약 (고객 상황 고려)
 """
 
         try:
