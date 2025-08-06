@@ -19,9 +19,12 @@ async def test_multi_agent_memory():
     
     try:
         response_1 = requests.post(
-            f"{base_url}/chat/test",
+            f"{base_url}/chat",
             json=test_data_1,
-            headers={"Content-Type": "application/json"},
+            headers={
+                "Content-Type": "application/json",
+                "X-API-Key": "test-key"  # 테스트용 API 키
+            },
             timeout=60
         )
         
@@ -51,9 +54,12 @@ async def test_multi_agent_memory():
     
     try:
         response_2 = requests.post(
-            f"{base_url}/chat/test",
+            f"{base_url}/chat",
             json=test_data_2,
-            headers={"Content-Type": "application/json"},
+            headers={
+                "Content-Type": "application/json",
+                "X-API-Key": "test-key"  # 테스트용 API 키
+            },
             timeout=60
         )
         

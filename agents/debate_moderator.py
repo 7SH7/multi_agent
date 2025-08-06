@@ -240,7 +240,9 @@ class DebateModerator:
         user_name = None
         user_problem = None
         
+        print(f"🔍 Debate Moderator - conversation_history 수: {len(conversation_history) if conversation_history else 0}")
         if conversation_history:
+            print(f"🔍 Debate Moderator - 첫 번째 대화: {conversation_history[0]}")
             conversation_context = "\n이전 대화 맥락:\n"
             
             # 사용자 정보 추출
