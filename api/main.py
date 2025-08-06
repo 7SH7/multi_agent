@@ -7,6 +7,7 @@ from typing import Optional
 from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import logging
 
@@ -23,6 +24,9 @@ from config.settings import settings
 from utils.validators import ConfigValidator
 from api.agent_endpoints import agent_router
 from api.knowledge_api import router as knowledge_router
+from api.kafka_endpoints import kafka_router
+from api.chatbot_workflow import chatbot_workflow_router
+from services.kafka_manager import kafka_manager
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +39,9 @@ class ChatRequest(BaseModel):
 
 class SessionEndRequest(BaseModel):
     reason: Optional[str] = None
+
+class SessionCompleteRequest(BaseModel):
+    final_summary: Optional[str] = None
 
 def create_application() -> FastAPI:
     # 시작시 설정 검증
@@ -147,6 +154,14 @@ def create_application() -> FastAPI:
                 session_data = await session_manager.get_session(request.session_id)
                 if not session_data:
                     raise HTTPException(status_code=404, detail="세션을 찾을 수 없습니다")
+                
+                # 종료된 세션인지 확인
+                if session_data.metadata.get('isTerminated', False):
+                    raise HTTPException(
+                        status_code=400, 
+                        detail="이미 해결완료된 세션입니다. 더 이상 대화할 수 없습니다."
+                    )
+                
                 session_id = request.session_id
             else:
                 session_data = await session_manager.create_session(
@@ -225,24 +240,31 @@ def create_application() -> FastAPI:
                 failed_names = [f['agent_name'] for f in failed_agents_data]
                 executive_summary += f"\n\n⚠️ 주의: {', '.join(failed_names)} 전문가 분석에 오류가 발생했습니다. 다른 전문가의 의견을 바탕으로 답변을 제공합니다."
 
-            # Update session with conversation history and other details
+            # Update session with conversation history and other details - FORCE SAVE
             # This will also increment conversation_count and save to Redis
-            await session_manager.add_conversation_detailed(
-                session_id,
-                {
-                    'user_message': request.user_message,
-                    'bot_response': executive_summary, # Save the actual bot's response
-                    'timestamp': datetime.now().isoformat(),
-                    'agents_used': result_state.get('selected_agents', []),
-                    'processing_time': processing_time,
-                    'issue_code': request.issue_code,
-                    'user_id': request.user_id,
-                    'agent_responses': result_state.get('agent_responses', {}),
-                    'debate_history': result_state.get('debate_rounds', []),
-                    'processing_steps': result_state.get('processing_steps', []),
-                    'confidence_level': final_recommendation.get('confidence_level', 0.5)
-                }
-            )
+            try:
+                print(f"🔍 저장 시도 - 세션 ID: {session_id}")
+                print(f"🔍 사용자 메시지: {request.user_message[:50]}...")
+                print(f"🔍 봇 응답: {executive_summary[:50]}...")
+                
+                # 대화 저장 - add_conversation이 conversation_count도 증가시킴
+                simple_save_success = await session_manager.add_conversation(
+                    session_id, 
+                    request.user_message, 
+                    executive_summary
+                )
+                print(f"✅ 대화 저장 결과: {simple_save_success}")
+                
+                if simple_save_success:
+                    # 저장 후 즉시 확인
+                    check_session = await session_manager.get_session(session_id)
+                    if check_session:
+                        print(f"✅ 저장 후 대화수: {check_session.conversation_count}")
+                        print(f"✅ 저장 후 히스토리 수: {len(check_session.metadata.get('conversation_history', []))}")
+                
+            except Exception as save_error:
+                print(f"❌ 대화 저장 오류: {str(save_error)}")
+                # 저장 실패해도 계속 진행
             
             # Re-fetch session_data to get the updated conversation_count and other fields
             # This is crucial to ensure the ChatResponse has the correct, updated values
@@ -321,6 +343,119 @@ def create_application() -> FastAPI:
         
         return {"message": "세션이 종료되었습니다", "session_id": session_id}
     
+    @app.post("/session/{session_id}/complete")
+    async def complete_session(
+        session_id: str,
+        request: SessionCompleteRequest,
+        session_manager: SessionManager = Depends(get_session_manager)
+    ):
+        """세션 해결완료 처리 (isTerminated = True)"""
+        try:
+            # 세션 존재 확인
+            session_data = await session_manager.get_session(session_id)
+            if not session_data:
+                raise HTTPException(status_code=404, detail="세션을 찾을 수 없습니다")
+            
+            # 이미 완료된 세션인지 확인
+            if session_data.metadata.get('isTerminated', False):
+                raise HTTPException(status_code=400, detail="이미 완료된 세션입니다")
+            
+            # 세션을 완료 상태로 변경
+            update_data = {
+                'isTerminated': True,
+                'terminated_at': datetime.now().isoformat(),
+                'final_summary': request.final_summary
+            }
+            
+            # 세션 메타데이터 업데이트
+            session_data.metadata.update(update_data)
+            session_data.updated_at = datetime.now()
+            success = await session_manager.update_session(session_data)
+            
+            if not success:
+                raise HTTPException(status_code=500, detail="세션 완료 처리 중 오류가 발생했습니다")
+            
+            return {
+                "message": "세션이 해결완료 처리되었습니다",
+                "session_id": session_id,
+                "isTerminated": True,
+                "terminated_at": update_data['terminated_at']
+            }
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"세션 완료 처리 오류: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"세션 완료 처리 중 오류: {str(e)}")
+    
+    @app.get("/session/{session_id}/download-report")
+    async def download_session_report(
+        session_id: str,
+        session_manager: SessionManager = Depends(get_session_manager)
+    ):
+        """세션 대화 내역 PDF 보고서 다운로드 (isReported = True)"""
+        try:
+            from utils.pdf_generator import generate_session_report
+            
+            # 세션 존재 확인
+            session_data = await session_manager.get_session(session_id)
+            if not session_data:
+                raise HTTPException(status_code=404, detail="세션을 찾을 수 없습니다")
+            
+            # 완료된 세션인지 확인
+            if not session_data.metadata.get('isTerminated', False):
+                raise HTTPException(status_code=400, detail="완료되지 않은 세션은 보고서를 생성할 수 없습니다")
+            
+            # 대화 내역 가져오기
+            conversation_history = session_data.metadata.get('conversation_history', [])
+            
+            # 세션 정보 준비
+            session_info = {
+                'session_id': session_id,
+                'user_id': session_data.user_id,
+                'issue_code': session_data.issue_code,
+                'created_at': session_data.created_at.strftime('%Y-%m-%d %H:%M:%S') if session_data.created_at else 'N/A',
+                'ended_at': session_data.metadata.get('terminated_at', 'N/A'),
+                'conversation_count': session_data.conversation_count,
+                'participating_agents': session_data.metadata.get('all_agents_used', session_data.selected_agents or [])
+            }
+            
+            # 최종 요약
+            final_summary = session_data.metadata.get('final_summary')
+            
+            # PDF 생성
+            pdf_buffer = await generate_session_report(
+                session_id=session_id,
+                conversation_history=conversation_history,
+                session_info=session_info,
+                final_summary=final_summary
+            )
+            
+            # 보고서 생성 완료 표시 (isReported = True)
+            session_data.metadata['isReported'] = True
+            session_data.metadata['report_generated_at'] = datetime.now().isoformat()
+            session_data.updated_at = datetime.now()
+            await session_manager.update_session(session_data)
+            
+            # PDF 파일명 생성
+            filename = f"chatbot_report_{session_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+            
+            # StreamingResponse로 PDF 반환
+            return StreamingResponse(
+                pdf_buffer,
+                media_type='application/pdf',
+                headers={
+                    'Content-Disposition': f'attachment; filename="{filename}"',
+                    'Content-Type': 'application/pdf'
+                }
+            )
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"PDF 보고서 생성 오류: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"PDF 보고서 생성 중 오류: {str(e)}")
+    
     @app.get("/ping")
     async def ping():
         """단순 ping - 의존성 없는 헬스체크"""
@@ -341,6 +476,14 @@ def create_application() -> FastAPI:
                 session_data = await session_manager.get_session(request.session_id)
                 if not session_data:
                     raise HTTPException(status_code=404, detail="세션을 찾을 수 없습니다")
+                
+                # 종료된 세션인지 확인
+                if session_data.metadata.get('isTerminated', False):
+                    raise HTTPException(
+                        status_code=400, 
+                        detail="이미 해결완료된 세션입니다. 더 이상 대화할 수 없습니다."
+                    )
+                
                 session_id = request.session_id
             else:
                 session_data = await session_manager.create_session(
@@ -535,11 +678,46 @@ def create_application() -> FastAPI:
         
         return {"message": "세션이 삭제되었습니다", "session_id": session_id}
     
+    
+
     # Individual Agent 라우터 추가
     app.include_router(agent_router)
     
     # Knowledge Base API 라우터 추가
     app.include_router(knowledge_router)
+    
+    # Kafka Management API 라우터 추가
+    app.include_router(kafka_router)
+    
+    # Chatbot Workflow API 라우터 추가
+    app.include_router(chatbot_workflow_router)
+    
+    # Startup/Shutdown 이벤트 추가
+    @app.on_event("startup")
+    async def startup_event():
+        """애플리케이션 시작시 실행"""
+        try:
+            logger.info("애플리케이션 시작 - Kafka Consumer 초기화 중...")
+            # Kafka Consumer는 선택적으로 시작 (환경변수로 제어 가능)
+            kafka_enabled = getattr(settings, 'KAFKA_ENABLED', True)
+            if kafka_enabled:
+                await kafka_manager.start()
+                logger.info("Kafka Consumer 시작 완료")
+            else:
+                logger.info("Kafka Consumer 비활성화됨 (KAFKA_ENABLED=False)")
+        except Exception as e:
+            logger.error(f"Kafka Consumer 시작 실패: {str(e)}")
+            # Kafka 실패해도 애플리케이션은 계속 실행
+    
+    @app.on_event("shutdown")
+    async def shutdown_event():
+        """애플리케이션 종료시 실행"""
+        try:
+            logger.info("애플리케이션 종료 - Kafka Consumer 정리 중...")
+            await kafka_manager.stop()
+            logger.info("Kafka Consumer 정리 완료")
+        except Exception as e:
+            logger.error(f"Kafka Consumer 정리 실패: {str(e)}")
     
     return app
 

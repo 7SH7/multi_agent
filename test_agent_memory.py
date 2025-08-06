@@ -1,11 +1,12 @@
 import requests
 import json
 import time
+from typing import Optional
 
 BASE_URL = "http://localhost:8000"
 API_KEY = "user-key-456"
 
-def send_chat_message(user_message: str, session_id: str = None, user_id: str = "test_user"):
+def send_chat_message(user_message: str, session_id: Optional[str] = None, user_id: str = "test_user"):
     headers = {
         "Content-Type": "application/json",
         "X-API-Key": API_KEY

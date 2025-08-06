@@ -2,7 +2,6 @@
 
 import openai
 from typing import Dict, List, Optional, Any
-from models.agent_state import AgentState
 from agents.base_agent import BaseAgent, AgentConfig, AgentResponse, AgentError
 from config.settings import LLM_CONFIGS
 from utils.knowledge_connector import get_knowledge_connector
@@ -40,6 +39,12 @@ class GPTAgent(BaseAgent):
         rag_context = state.get('rag_context', {})
         issue_classification = state.get('issue_classification', {})
         conversation_history = state.get('conversation_history', [])
+        
+        print(f"🔍 GPT Agent - conversation_history 수: {len(conversation_history)}")
+        if conversation_history:
+            print(f"🔍 GPT Agent - 첫 번째 대화: {conversation_history[0]}")
+        else:
+            print(f"🔍 GPT Agent - conversation_history가 비어있음")
         
         # 동적 토큰 한계 계산
         from utils.token_manager import get_token_manager
@@ -158,10 +163,13 @@ class GPTAgent(BaseAgent):
             for i, conv in enumerate(conversation_history[-3:], 1):  # 최근 3개만
                 if isinstance(conv, dict):
                     user_msg = conv.get('user_message', '')
+                    bot_response = conv.get('bot_response', '')
                     timestamp = conv.get('timestamp', '')
                     agents_used = conv.get('agents_used', [])
                     if user_msg:
                         conversation_context += f"{i}. [{timestamp[:16]}] 사용자: {user_msg}\n"
+                        if bot_response:
+                            conversation_context += f"   어시스턴트: {bot_response[:200]}...\n"
                         if agents_used:
                             conversation_context += f"   → 참여 전문가: {', '.join(agents_used)}\n"
 

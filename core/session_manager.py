@@ -50,8 +50,9 @@ class SessionManager:
             )
         return self.redis_client
 
-    async def create_session(self, user_id: Optional[str] = None, issue_code: Optional[str] = None) -> SessionData:
-        session_id = f"sess_{uuid.uuid4().hex[:12]}"
+    async def create_session(self, user_id: Optional[str] = None, issue_code: Optional[str] = None, session_id: Optional[str] = None) -> SessionData:
+        if session_id is None:
+            session_id = f"sess_{uuid.uuid4().hex[:12]}"
         now = datetime.now()
 
         session_data = SessionData(
@@ -150,6 +151,8 @@ class SessionManager:
         session_data.status = SessionStatus.COMPLETED
         return await self.update_session(session_data)
 
+    
+
     async def delete_session(self, session_id: str) -> bool:
         redis_client = await self._get_redis_client()
         session_key = f"chatbot_session:{session_id}"
@@ -225,9 +228,16 @@ class SessionManager:
 
     async def add_conversation(self, session_id: str, user_message: str, bot_response: str) -> bool:
         """세션에 대화 기록 추가"""
+        print(f"🔍 add_conversation 호출됨 - 세션 ID: {session_id}")
+        print(f"🔍 사용자 메시지: {user_message[:100]}...")
+        print(f"🔍 봇 응답: {bot_response[:100]}...")
+        
         session_data = await self.get_session(session_id)
         if not session_data:
+            print(f"❌ 세션을 찾을 수 없음: {session_id}")
             return False
+        
+        print(f"✅ 세션 찾음: {session_id}, 현재 대화수: {session_data.conversation_count}")
         
         # 대화 기록을 metadata에 저장
         if 'conversation_history' not in session_data.metadata:
