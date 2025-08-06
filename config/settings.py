@@ -21,12 +21,15 @@ class Settings(BaseSettings):
     # Computed DATABASE_URL property
     @property
     def DATABASE_URL(self) -> str:
+        from urllib.parse import quote_plus
         # Extract host and port from DB_HOST
         if '://' in self.DB_HOST:
             host_part = self.DB_HOST.split('://')[-1]
         else:
             host_part = self.DB_HOST
-        return f"mysql://{self.DB_USERNAME}:{self.DB_PASSWORD}@{host_part}/{self.DB_NAME}"
+        # URL 인코딩으로 특수문자 처리
+        encoded_password = quote_plus(self.DB_PASSWORD) if self.DB_PASSWORD else ""
+        return f"mysql://{self.DB_USERNAME}:{encoded_password}@{host_part}/{self.DB_NAME}"
     
     # MySQL 자격증명 (Docker용)
     MYSQL_ROOT_PASSWORD: str = ""

@@ -34,13 +34,28 @@ class KafkaIssueConsumer:
     
     def __init__(self):
         # 비동기 데이터베이스 엔진 설정
-        self.database_url = f"mysql+aiomysql://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
-        self.engine = create_async_engine(
-            self.database_url,
-            echo=False,
-            pool_size=10,
-            max_overflow=20
-        )
+        try:
+            # Use the DATABASE_URL from settings, but replace mysql:// with mysql+aiomysql://
+            self.database_url = settings.DATABASE_URL.replace('mysql://', 'mysql+aiomysql://')
+            is_mysql = True
+        except Exception:
+            # Fallback to SQLite
+            self.database_url = "sqlite+aiosqlite:///./temp_database.db"
+            is_mysql = False
+        
+        # Create engine with appropriate settings
+        if is_mysql:
+            self.engine = create_async_engine(
+                self.database_url,
+                echo=False,
+                pool_size=10,
+                max_overflow=20
+            )
+        else:
+            self.engine = create_async_engine(
+                self.database_url,
+                echo=False
+            )
         self.async_session = sessionmaker(
             self.engine, 
             class_=AsyncSession, 

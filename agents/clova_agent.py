@@ -37,6 +37,12 @@ class ClovaAgent(BaseAgent):
         issue_classification = state.get('issue_classification', {})
         conversation_history = state.get('conversation_history', [])
         
+        print(f"🔍 Clova Agent - conversation_history 수: {len(conversation_history)}")
+        if conversation_history:
+            print(f"🔍 Clova Agent - 첫 번째 대화: {conversation_history[0]}")
+        else:
+            print(f"🔍 Clova Agent - conversation_history가 비어있음")
+        
         # 동적 토큰 한계 계산
         from utils.token_manager import get_token_manager
         token_manager = get_token_manager()

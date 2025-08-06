@@ -243,9 +243,17 @@ def create_application() -> FastAPI:
             # Update session with conversation history and other details - FORCE SAVE
             # This will also increment conversation_count and save to Redis
             try:
-                print(f"🔍 저장 시도 - 세션 ID: {session_id}")
-                print(f"🔍 사용자 메시지: {request.user_message[:50]}...")
-                print(f"🔍 봇 응답: {executive_summary[:50]}...")
+                print(f"🔍 [MAIN.PY] 저장 시도 - 세션 ID: {session_id}")
+                print(f"🔍 [MAIN.PY] 사용자 메시지: {request.user_message[:50]}...")
+                print(f"🔍 [MAIN.PY] 봇 응답: {executive_summary[:50]}...")
+                
+                # 세션이 존재하는지 먼저 확인
+                current_session = await session_manager.get_session(session_id)
+                if current_session:
+                    print(f"🔍 [MAIN.PY] 저장 전 대화수: {current_session.conversation_count}")
+                    print(f"🔍 [MAIN.PY] 저장 전 히스토리: {len(current_session.metadata.get('conversation_history', []))}")
+                else:
+                    print(f"❌ [MAIN.PY] 세션을 찾을 수 없음: {session_id}")
                 
                 # 대화 저장 - add_conversation이 conversation_count도 증가시킴
                 simple_save_success = await session_manager.add_conversation(
@@ -253,17 +261,30 @@ def create_application() -> FastAPI:
                     request.user_message, 
                     executive_summary
                 )
-                print(f"✅ 대화 저장 결과: {simple_save_success}")
+                print(f"✅ [MAIN.PY] 대화 저장 결과: {simple_save_success}")
                 
                 if simple_save_success:
                     # 저장 후 즉시 확인
                     check_session = await session_manager.get_session(session_id)
                     if check_session:
-                        print(f"✅ 저장 후 대화수: {check_session.conversation_count}")
-                        print(f"✅ 저장 후 히스토리 수: {len(check_session.metadata.get('conversation_history', []))}")
+                        print(f"✅ [MAIN.PY] 저장 후 대화수: {check_session.conversation_count}")
+                        print(f"✅ [MAIN.PY] 저장 후 히스토리 수: {len(check_session.metadata.get('conversation_history', []))}")
+                        
+                        # 히스토리 내용도 확인
+                        history = check_session.metadata.get('conversation_history', [])
+                        if history:
+                            last_conv = history[-1]
+                            print(f"✅ [MAIN.PY] 마지막 대화 - 사용자: {last_conv.get('user_message', '')[:30]}...")
+                            print(f"✅ [MAIN.PY] 마지막 대화 - 봇: {last_conv.get('bot_response', '')[:30]}...")
+                    else:
+                        print(f"❌ [MAIN.PY] 저장 후 세션 조회 실패")
+                else:
+                    print(f"❌ [MAIN.PY] 대화 저장 실패")
                 
             except Exception as save_error:
-                print(f"❌ 대화 저장 오류: {str(save_error)}")
+                print(f"❌ [MAIN.PY] 대화 저장 오류: {str(save_error)}")
+                import traceback
+                traceback.print_exc()
                 # 저장 실패해도 계속 진행
             
             # Re-fetch session_data to get the updated conversation_count and other fields

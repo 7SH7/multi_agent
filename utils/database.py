@@ -109,22 +109,54 @@ async def save_chat_session(session_data: Dict[str, Any]) -> bool:
 # SQLAlchemy Async 데이터베이스 설정
 def get_async_database_url():
     """비동기 데이터베이스 URL 생성"""
-    return f"mysql+aiomysql://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
+    try:
+        # Use the DATABASE_URL from settings, but replace mysql:// with mysql+aiomysql://
+        return settings.DATABASE_URL.replace('mysql://', 'mysql+aiomysql://')
+    except (AttributeError, Exception) as e:
+        print(f"MySQL 설정 오류, SQLite로 fallback: {e}")
+        # 데이터베이스 설정이 없으면 SQLite 사용
+        return "sqlite+aiosqlite:///./temp_database.db"
 
 
 # Async 엔진 및 세션 설정
-async_engine = create_async_engine(
-    get_async_database_url(),
-    echo=False,
-    pool_size=10,
-    max_overflow=20
-)
+database_url = get_async_database_url()
+is_mysql = 'mysql+aiomysql' in database_url
 
-AsyncSessionLocal = sessionmaker(
-    async_engine,
-    class_=AsyncSession,
-    expire_on_commit=False
-)
+try:
+    if is_mysql:
+        print(f"✅ MySQL 사용: {database_url.replace(settings.DB_PASSWORD, '***')}")
+        async_engine = create_async_engine(
+            database_url,
+            echo=False,
+            pool_size=10,
+            max_overflow=20
+        )
+    else:
+        print(f"⚠️ SQLite 사용: {database_url}")
+        async_engine = create_async_engine(
+            database_url,
+            echo=False
+        )
+
+    AsyncSessionLocal = sessionmaker(
+        async_engine,
+        class_=AsyncSession,
+        expire_on_commit=False
+    )
+    
+except Exception as e:
+    print(f"데이터베이스 엔진 생성 오류: {str(e)}")
+    # 최종 SQLite fallback
+    print("🔄 SQLite로 최종 fallback")
+    async_engine = create_async_engine(
+        "sqlite+aiosqlite:///./temp_database.db",
+        echo=False
+    )
+    AsyncSessionLocal = sessionmaker(
+        async_engine,
+        class_=AsyncSession,
+        expire_on_commit=False
+    )
 
 
 async def get_async_db() -> AsyncSession:
