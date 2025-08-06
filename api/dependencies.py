@@ -93,14 +93,22 @@ async def validate_request(request: Request) -> Dict[str, Any]:
 async def check_api_keys(
     request: Request,
     authorization: Optional[HTTPAuthorizationCredentials] = Depends(security),
-    x_api_key: Optional[str] = Header(None)
+    x_api_key: Optional[str] = Header(None),
+    x_authenticated_user: Optional[str] = Header(None),
+    x_user_role: Optional[str] = Header(None)
 ) -> Optional[str]:
-    """API Key validation"""
+    """API Key validation or Spring Gateway authentication"""
     
     # Skip API key check in development
     if APP_CONFIG.get('debug', False):
         return "admin"
     
+    # Check if request comes from Spring Gateway (authenticated)
+    if x_authenticated_user and x_user_role:
+        # Request already authenticated by Spring Gateway
+        return x_user_role or "user"
+    
+    # Fallback to API key validation for direct access
     api_key = None
     
     # Check Authorization header
@@ -113,7 +121,7 @@ async def check_api_keys(
     if not api_key:
         raise HTTPException(
             status_code=401,
-            detail="API key required"
+            detail="Authentication required - use Spring Gateway or provide API key"
         )
     
     security_manager = get_security_manager()
