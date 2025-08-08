@@ -84,6 +84,11 @@ class Settings(BaseSettings):
     # Admin API Keys
     ADMIN_API_KEY: str = ""
     USER_API_KEY: str = ""
+    
+    # Kafka Configuration
+    KAFKA_ENABLED: bool = True   # CDC를 위해 Kafka 활성화
+    KAFKA_BOOTSTRAP_SERVERS: str = "localhost:9092"
+    KAFKA_CONSUMER_GROUP: str = "chatbot-issue-consumer-group"
 
     class Config:
         env_file = ".env"

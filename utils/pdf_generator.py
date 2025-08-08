@@ -28,8 +28,24 @@ class ChatbotReportGenerator:
         self.setup_custom_styles()
     
     def setup_fonts(self):
-        """한글 폰트 설정"""
+        """한글 폰트 설정 (다중 환경 지원)"""
         try:
+            # 환경 강제 설정
+            import os
+            os.environ.setdefault('PYTHONIOENCODING', 'utf-8')
+            
+            # 로케일 설정 시도
+            try:
+                import locale
+                if os.name == 'nt':  # Windows
+                    try:
+                        locale.setlocale(locale.LC_ALL, 'Korean_Korea.utf8')
+                    except:
+                        locale.setlocale(locale.LC_ALL, 'ko_KR.UTF-8')
+                else:  # Linux/Mac
+                    locale.setlocale(locale.LC_ALL, 'ko_KR.UTF-8')
+            except Exception as e:
+                logger.warning(f"로케일 설정 실패: {e}")
             # 시스템 폰트 경로 시도 (UTF-8 지원 폰트들)
             font_paths = [
                 "C:/Windows/Fonts/malgun.ttf",  # 맑은 고딕
@@ -327,26 +343,47 @@ class ChatbotReportGenerator:
         return story
     
     def _ensure_utf8_encoding(self, text: str) -> str:
-        """텍스트의 UTF-8 인코딩 보장"""
+        """텍스트의 UTF-8 인코딩 보장 (강화된 버전)"""
         if not text:
             return ""
         
         try:
-            # 이미 문자열인 경우, UTF-8로 인코딩 후 다시 디코딩하여 안전성 확보
+            # 이미 문자열인 경우
             if isinstance(text, str):
-                # 문제가 될 수 있는 특수문자 처리
-                text = text.encode('utf-8', errors='ignore').decode('utf-8')
-                # HTML 엔티티나 특수문자 정리
+                # 1단계: 기본 UTF-8 안전성 확보
+                try:
+                    text = text.encode('utf-8', errors='replace').decode('utf-8')
+                except:
+                    # 인코딩 실패시 강제 변환
+                    text = str(text).encode('utf-8', errors='replace').decode('utf-8')
+                
+                # 2단계: 문제가 될 수 있는 특수문자 처리
                 text = text.replace('\u200b', '')  # 제로폭 공백 제거
-                text = text.replace('\ufeff', '')  # BOM 제거
+                text = text.replace('\ufeff', '')  # BOM 제거  
+                text = text.replace('\x00', '')    # NULL 문자 제거
+                
+                # 3단계: ReportLab에서 문제가 되는 문자들 처리
+                problematic_chars = {
+                    '\u2028': '\n',  # Line separator
+                    '\u2029': '\n',  # Paragraph separator
+                    '\u00a0': ' ',   # Non-breaking space
+                }
+                for old, new in problematic_chars.items():
+                    text = text.replace(old, new)
+                
                 return text
             else:
                 # bytes인 경우 UTF-8로 디코딩
-                return text.decode('utf-8', errors='ignore')
+                return text.decode('utf-8', errors='replace')
+                
         except Exception as e:
-            logger.warning(f"UTF-8 인코딩 처리 중 오류: {e}")
-            # 오류 발생 시 안전한 ASCII 변환
-            return str(text).encode('ascii', errors='ignore').decode('ascii')
+            logger.warning(f"UTF-8 인코딩 처리 중 오류: {e} - 텍스트: {str(text)[:50]}...")
+            # 최후의 수단: 안전한 변환
+            try:
+                safe_text = str(text).encode('ascii', errors='ignore').decode('ascii')
+                return safe_text if safe_text else "[텍스트 변환 실패]"
+            except:
+                return "[텍스트 변환 실패]"
     
     def _create_summary_section(self, final_summary: str) -> List:
         """최종 요약 섹션 생성"""
