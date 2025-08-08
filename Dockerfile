@@ -30,13 +30,17 @@ RUN pip install --no-cache-dir -r requirements.txt
 # ==========================================
 # 최종 런타임 이미지
 # ==========================================
-FROM python:3.11-slim
+FROM python:3.10-slim
 
-# 시스템 패키지 설치 (런타임 필요)
+# 시스템 패키지 설치 (런타임 필요 + 한글 폰트)
 RUN apt-get update && apt-get install -y \
     libhdf5-103 \
     libopenblas0 \
     curl \
+    fonts-nanum \
+    fonts-nanum-coding \
+    fontconfig \
+    && fc-cache -fv \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
@@ -47,7 +51,7 @@ RUN groupadd -r chatbot && useradd -r -g chatbot chatbot
 WORKDIR /app
 
 # 빌더 스테이지에서 설치된 Python 패키지 복사
-COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # 애플리케이션 코드 복사 (소유자 변경)
