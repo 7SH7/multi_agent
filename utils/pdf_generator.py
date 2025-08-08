@@ -47,10 +47,18 @@ class ChatbotReportGenerator:
             for font_path in font_paths:
                 if os.path.exists(font_path):
                     try:
-                        pdfmetrics.registerFont(TTFont('Korean', font_path))
-                        font_registered = True
-                        logger.info(f"한글 폰트 등록 성공: {font_path}")
-                        break
+                        # 기존 폰트가 등록되어 있는지 확인
+                        try:
+                            pdfmetrics.getFont('Korean')
+                            font_registered = True
+                            logger.info(f"한글 폰트 이미 등록됨: Korean")
+                            break
+                        except:
+                            # 폰트가 등록되지 않은 경우에만 등록
+                            pdfmetrics.registerFont(TTFont('Korean', font_path))
+                            font_registered = True
+                            logger.info(f"한글 폰트 등록 성공: {font_path}")
+                            break
                     except Exception as e:
                         logger.warning(f"폰트 등록 실패 {font_path}: {e}")
                         continue
@@ -137,6 +145,13 @@ class ChatbotReportGenerator:
     ) -> BytesIO:
         """대화 내역을 PDF 보고서로 생성"""
         try:
+            # 입력 데이터 검증
+            if not session_id:
+                raise ValueError("session_id는 필수입니다")
+            if not isinstance(conversation_history, list):
+                conversation_history = []
+            if not isinstance(session_info, dict):
+                session_info = {}
             buffer = BytesIO()
             doc = SimpleDocTemplate(
                 buffer,
@@ -144,8 +159,7 @@ class ChatbotReportGenerator:
                 rightMargin=72,
                 leftMargin=72,
                 topMargin=72,
-                bottomMargin=18,
-                encoding='utf-8'  # UTF-8 인코딩 명시
+                bottomMargin=18
             )
             
             # 보고서 내용 구성
@@ -180,7 +194,26 @@ class ChatbotReportGenerator:
             
         except Exception as e:
             logger.error(f"PDF 보고서 생성 오류: {e}")
-            raise
+            logger.error(f"Session ID: {session_id}")
+            logger.error(f"Conversation count: {len(conversation_history) if conversation_history else 0}")
+            logger.error(f"Session info keys: {list(session_info.keys()) if session_info else []}")
+            
+            # 기본 PDF 생성 시도
+            try:
+                buffer = BytesIO()
+                doc = SimpleDocTemplate(buffer, pagesize=A4)
+                story = [
+                    Paragraph("PDF 생성 오류", self.custom_styles.get('Title', self.styles['Title'])),
+                    Paragraph(f"오류: {str(e)}", self.custom_styles.get('Normal', self.styles['Normal'])),
+                    Paragraph(f"세션 ID: {session_id}", self.custom_styles.get('Normal', self.styles['Normal']))
+                ]
+                doc.build(story)
+                buffer.seek(0)
+                logger.info(f"기본 오류 PDF 생성 완료: {session_id}")
+                return buffer
+            except Exception as fallback_error:
+                logger.error(f"기본 PDF 생성도 실패: {fallback_error}")
+                raise e
     
     def _create_session_info_section(self, session_info: Dict[str, Any]) -> List:
         """세션 정보 섹션 생성"""
