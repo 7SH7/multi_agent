@@ -3,7 +3,7 @@
 # ==========================================
 
 # Multi-stage build for optimized image size
-FROM python:3.11-slim as builder
+FROM python:3.10-slim as builder
 
 # 시스템 패키지 업데이트 및 빌드 도구 설치
 RUN apt-get update && apt-get install -y \

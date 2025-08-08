@@ -30,12 +30,17 @@ class ChatbotReportGenerator:
     def setup_fonts(self):
         """한글 폰트 설정"""
         try:
-            # 시스템 폰트 경로 시도
+            # 시스템 폰트 경로 시도 (UTF-8 지원 폰트들)
             font_paths = [
                 "C:/Windows/Fonts/malgun.ttf",  # 맑은 고딕
+                "C:/Windows/Fonts/malgunbd.ttf",  # 맑은 고딕 Bold
+                "C:/Windows/Fonts/gulim.ttc",  # 굴림
+                "C:/Windows/Fonts/batang.ttc",  # 바탕
                 "C:/Windows/Fonts/NanumGothic.ttf",  # 나눔고딕
+                "C:/Windows/Fonts/NanumBarunGothic.ttf",  # 나눔바른고딕
                 "/System/Library/Fonts/AppleSDGothicNeo.ttc",  # macOS
-                "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"  # Linux
+                "/usr/share/fonts/truetype/nanum/NanumGothic.ttf",  # Linux
+                "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"  # Linux 대체
             ]
             
             font_registered = False
@@ -139,7 +144,8 @@ class ChatbotReportGenerator:
                 rightMargin=72,
                 leftMargin=72,
                 topMargin=72,
-                bottomMargin=18
+                bottomMargin=18,
+                encoding='utf-8'  # UTF-8 인코딩 명시
             )
             
             # 보고서 내용 구성
@@ -184,15 +190,15 @@ class ChatbotReportGenerator:
         heading = Paragraph("상담 정보", self.custom_styles['Heading'])
         story.append(heading)
         
-        # 테이블 데이터 준비
+        # 테이블 데이터 준비 - UTF-8 인코딩 보장
         data = [
-            ['세션 ID', session_info.get('session_id', 'N/A')],
-            ['사용자 ID', session_info.get('user_id', 'N/A')],
-            ['이슈 코드', session_info.get('issue_code', 'N/A')],
-            ['상담 시작', session_info.get('created_at', 'N/A')],
-            ['상담 종료', session_info.get('ended_at', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))],
+            ['세션 ID', self._ensure_utf8_encoding(session_info.get('session_id', 'N/A'))],
+            ['사용자 ID', self._ensure_utf8_encoding(session_info.get('user_id', 'N/A'))],
+            ['이슈 코드', self._ensure_utf8_encoding(session_info.get('issue_code', 'N/A'))],
+            ['상담 시작', self._ensure_utf8_encoding(session_info.get('created_at', 'N/A'))],
+            ['상담 종료', self._ensure_utf8_encoding(session_info.get('ended_at', datetime.now().strftime('%Y-%m-%d %H:%M:%S')))],
             ['총 대화 수', str(session_info.get('conversation_count', 0))],
-            ['참여 에이전트', ', '.join(session_info.get('participating_agents', []))]
+            ['참여 에이전트', self._ensure_utf8_encoding(', '.join(session_info.get('participating_agents', [])))]
         ]
         
         # 테이블 생성
@@ -246,7 +252,9 @@ class ChatbotReportGenerator:
                                                   textColor=colors.HexColor('#0056B3')))
                 story.append(user_label)
                 
-                user_msg = Paragraph(conversation['user_message'], self.custom_styles['UserMessage'])
+                # UTF-8 인코딩 보장
+                user_message = self._ensure_utf8_encoding(conversation['user_message'])
+                user_msg = Paragraph(user_message, self.custom_styles['UserMessage'])
                 story.append(user_msg)
                 story.append(Spacer(1, 6))
             
@@ -265,6 +273,8 @@ class ChatbotReportGenerator:
                 if len(bot_response) > 1000:
                     bot_response = bot_response[:1000] + "... (내용이 길어 요약됨)"
                 
+                # UTF-8 인코딩 보장
+                bot_response = self._ensure_utf8_encoding(bot_response)
                 bot_msg = Paragraph(bot_response, self.custom_styles['BotMessage'])
                 story.append(bot_msg)
             
@@ -283,6 +293,28 @@ class ChatbotReportGenerator:
         
         return story
     
+    def _ensure_utf8_encoding(self, text: str) -> str:
+        """텍스트의 UTF-8 인코딩 보장"""
+        if not text:
+            return ""
+        
+        try:
+            # 이미 문자열인 경우, UTF-8로 인코딩 후 다시 디코딩하여 안전성 확보
+            if isinstance(text, str):
+                # 문제가 될 수 있는 특수문자 처리
+                text = text.encode('utf-8', errors='ignore').decode('utf-8')
+                # HTML 엔티티나 특수문자 정리
+                text = text.replace('\u200b', '')  # 제로폭 공백 제거
+                text = text.replace('\ufeff', '')  # BOM 제거
+                return text
+            else:
+                # bytes인 경우 UTF-8로 디코딩
+                return text.decode('utf-8', errors='ignore')
+        except Exception as e:
+            logger.warning(f"UTF-8 인코딩 처리 중 오류: {e}")
+            # 오류 발생 시 안전한 ASCII 변환
+            return str(text).encode('ascii', errors='ignore').decode('ascii')
+    
     def _create_summary_section(self, final_summary: str) -> List:
         """최종 요약 섹션 생성"""
         story = []
@@ -291,7 +323,8 @@ class ChatbotReportGenerator:
         heading = Paragraph("상담 요약", self.custom_styles['Heading'])
         story.append(heading)
         
-        # 요약 내용
+        # 요약 내용 - UTF-8 인코딩 보장
+        final_summary = self._ensure_utf8_encoding(final_summary)
         summary = Paragraph(final_summary, self.custom_styles['Summary'])
         story.append(summary)
         
