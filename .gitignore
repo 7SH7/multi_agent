@@ -333,7 +333,6 @@ downloads/
 scratch/
 
 # Docker 관련
-.dockerignore
 docker-compose.override.yml
 .docker/
 
